@@ -1,0 +1,1921 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Takip Başkanlığı | Ağırlıklı Performans Paneli</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; transition: background-color 0.3s, color 0.3s; }
+        .modern-card { border-radius: 16px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); border: 1px solid rgba(229, 231, 235, 0.5); transition: background-color 0.3s, border-color 0.3s; }
+        .table-container { max-height: 600px; overflow-y: auto; }
+        thead th { position: sticky; top: 0; z-index: 20; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: background-color 0.3s, color 0.3s; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .tab-btn.active { border-bottom: 3px solid #FFB81C; }
+        .tab-btn { border-bottom: 3px solid transparent; transition: all 0.2s; }
+        .sort-icon { display: inline-block; margin-left: 4px; transition: transform 0.2s; color: #cbd5e1; }
+        .sort-active { color: #FFB81C; }
+
+        /* Tıklanabilir Hücre Efekti */
+        .clickable-cell { cursor: pointer; transition: all 0.2s; border-radius: 6px; padding: 4px 8px; }
+        .clickable-cell:hover { background-color: rgba(255, 184, 28, 0.15); color: #b45309; transform: scale(1.02); }
+
+        /* Alt Tablo Kırılımı Stilleri */
+        .sub-row { display: none; } 
+        .sub-row.open { display: table-row; animation: fadeIn 0.3s ease-in-out; }
+        .rotate-icon { transition: transform 0.3s; }
+        .rotate-icon.open { transform: rotate(90deg); }
+        
+        /* Breakdown (Kırılım) Özel Stilleri */
+        .breakdown-badge-1 { background-color: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; } 
+        .breakdown-badge-2 { background-color: #fffbeb; color: #b45309; border: 1px solid #fde68a; } 
+        .breakdown-badge-3 { background-color: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; } 
+
+        /* Grafik Toggle Butonları */
+        .chart-toggle-btn { padding: 6px 12px; font-size: 0.85rem; font-weight: 600; border-radius: 8px; transition: all 0.2s; border: 1px solid transparent; }
+        .chart-toggle-btn.active { background-color: #FFB81C; color: #ffffff; border-color: #d99a16; }
+        .chart-toggle-btn.inactive { background-color: #f3f4f6; color: #6b7280; border-color: #e5e7eb; }
+        .chart-toggle-btn.inactive:hover { background-color: #e5e7eb; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- TEMA YÖNETİMİ CSS --- */
+        body.theme-day { background-color: #f3f4f6; color: #1e293b; }
+        body.theme-day .modern-card { background: #ffffff; }
+        body.theme-day thead th { background-color: #f8fafc; }
+        body.theme-day .active-tab-text { color: #1e293b; }
+
+        body.theme-night { background-color: #0f172a; color: #e2e8f0; }
+        body.theme-night nav { background-color: #1e293b !important; border-bottom-color: #334155 !important; }
+        body.theme-night .modern-card { background-color: #1e293b; border-color: #334155; }
+        body.theme-night .text-brand-dark { color: #f1f5f9 !important; }
+        body.theme-night .text-gray-500, body.theme-night .text-gray-600, body.theme-night .text-gray-700, body.theme-night .text-gray-800, body.theme-night .text-gray-900,body.theme-night .text-slate-800 { color: #f1f5f9 !important; }
+        body.theme-night thead th { background-color: #0f172a !important; color: #cbd5e1; border-bottom-color: #334155; }
+        body.theme-night tbody tr { border-bottom-color: #334155; }
+        body.theme-night .bg-gray-50 { background-color: #1e293b !important; } 
+        body.theme-night .bg-white { background-color: #1e293b !important; }
+        body.theme-night .hover\:bg-gray-100:hover { background-color: #334155 !important; }
+        body.theme-night .hover\:bg-blue-50\/50:hover { background-color: #334155 !important; }
+        body.theme-night .bg-blue-50\/30, body.theme-night .bg-blue-50\/50 { background-color: rgba(59, 130, 246, 0.1) !important; color: #e2e8f0 !important; }
+        body.theme-night select { background-color: #0f172a; color: #e2e8f0; border-color: #334155; }
+        body.theme-night .sub-row { background-color: #020617 !important; }
+        body.theme-night .bg-gray-50\/50 { background-color: #0f172a !important; }
+        body.theme-night .active-tab-text { color: #f1f5f9 !important; }
+        body.theme-night .breakdown-badge-1, body.theme-night .breakdown-badge-2, body.theme-night .breakdown-badge-3 { color: #ffffff !important; background-color: rgba(255, 255, 255, 0.1) !important; border-color: rgba(255, 255, 255, 0.2) !important; }
+        body.theme-night .chart-toggle-btn.inactive { background-color: #1e293b; color: #94a3b8; border-color: #334155; }
+        body.theme-night .chart-toggle-btn.inactive:hover { background-color: #334155; }
+
+        body.theme-eye { background-color: #f5f2eb; color: #44403c; }
+        body.theme-eye nav { background-color: #e7e0d3 !important; border-bottom-color: #d6cfc2 !important; }
+        body.theme-eye .modern-card { background-color: #fbf9f5; border-color: #e5e0d6; }
+        body.theme-eye .text-brand-dark { color: #292524 !important; }
+        body.theme-eye thead th { background-color: #e7e0d3 !important; color: #57534e; }
+        body.theme-eye tbody tr { border-bottom-color: #e5e0d6; }
+        body.theme-eye .bg-gray-50 { background-color: #f5f2eb !important; }
+        body.theme-eye .bg-white { background-color: #fbf9f5 !important; }
+        body.theme-eye .hover\:bg-gray-100:hover { background-color: #e7e0d3 !important; }
+        body.theme-eye .bg-blue-50\/30 { background-color: rgba(120, 113, 108, 0.1) !important; }
+        body.theme-eye .sub-row { background-color: #eae5db !important; }
+        body.theme-eye .active-tab-text { color: #292524 !important; }
+
+        body.viewer-mode #admin-controls { display: none !important; }
+        body.viewer-mode #upload-info-text { display: none; }
+        body.viewer-mode #viewer-info-text { display: flex !important; }
+        body.viewer-mode #header-right-section { display: none !important; }
+    </style>
+
+    <script>
+        tailwind.config = {
+            theme: { extend: { colors: { brand: { yellow: '#FFB81C', dark: '#1e293b', gray: '#64748b' } } } }
+        }
+    </script>
+</head>
+<body class="theme-day min-h-screen flex flex-col">
+
+    <nav class="bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center sticky top-0 z-50 shadow-sm transition-colors duration-300">
+        <div class="flex items-center gap-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="64" viewBox="0 0 48 48" height="64"><defs><clipPath id="7590b00e14"><path d="M 1 8.074219 L 47.507812 8.074219 L 47.507812 38.929688 L 1 38.929688 Z M 1 8.074219 " clip-rule="nonzero"></path></clipPath></defs><g clip-path="url(#7590b00e14)"><path fill="#fbc34e" d="M 46.933594 16.664062 C 47.515625 13.335938 44.453125 8.699219 36.109375 8.699219 L 15.382812 8.699219 C 9.703125 8.699219 6.140625 12.597656 5.507812 16.527344 L 1.304688 38.636719 C 4.996094 38.625 29.320312 38.636719 29.269531 38.636719 L 30.851562 38.636719 C 39.5625 38.585938 44.578125 36.628906 45.496094 30.304688 C 46.101562 26.050781 42.367188 23.300781 39.3125 22.71875 C 42.402344 22.15625 46.152344 21.105469 46.933594 16.664062 Z M 46.933594 16.664062 " fill-opacity="1" fill-rule="nonzero"></path></g><path fill="#ffffff" d="M 27.46875 17.960938 C 25.355469 20.640625 17.671875 29.933594 16.117188 31.695312 C 12.648438 35.644531 5.492188 35.054688 5.445312 34.957031 C 5.445312 34.953125 8.023438 22.75 8.859375 19.308594 C 11.152344 9.957031 19.0625 12.171875 19.0625 12.171875 C 19.0625 12.171875 16.953125 12.472656 15.464844 14.371094 C 13.957031 16.296875 12.246094 25.671875 11.28125 30.054688 C 15.8125 24.753906 22.023438 17.921875 23.082031 16.640625 C 27.597656 11.175781 34.667969 11.929688 34.667969 11.929688 31.914062 12.3125 27.46875 17.960938 Z M 27.46875 17.960938 " fill-opacity="1" fill-rule="nonzero"></path></svg>
+            <div class="flex flex-col">
+                <h1 class="text-xl font-bold tracking-tight text-brand-dark">KREDİ RİSK TASFİYE BAŞKANLIĞI</h1>
+                <div class="flex items-center gap-2 mt-0.5">
+                    <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                    <p class="text-xs text-gray-500 font-medium uppercase tracking-wide">Takip Performans Paneli</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex-1 flex justify-end items-center mr-6 gap-4">
+            <div class="bg-blue-50 border border-blue-100 px-4 py-2 rounded-lg flex flex-col items-end">
+                <span class="text-[10px] text-blue-400 font-bold uppercase tracking-wider">RAPOR TARİHİ</span>
+                <span id="reportDateLabel" class="text-sm font-bold text-blue-800 font-mono">--.--.----</span>
+            </div>
+
+            <div class="bg-gray-100 p-1 rounded-lg flex items-center border border-gray-200">
+                <button onclick="setTheme('day')" id="btn-theme-day" class="w-8 h-8 rounded-md flex items-center justify-center text-gray-500 hover:text-brand-yellow hover:bg-white transition-all shadow-sm" title="Gündüz Modu">
+                    <i class="fa-solid fa-sun text-sm"></i>
+                </button>
+                <button onclick="setTheme('night')" id="btn-theme-night" class="w-8 h-8 rounded-md flex items-center justify-center text-gray-500 hover:text-indigo-400 hover:bg-slate-700 transition-all" title="Gece Modu">
+                    <i class="fa-solid fa-moon text-sm"></i>
+                </button>
+                <button onclick="setTheme('eye')" id="btn-theme-eye" class="w-8 h-8 rounded-md flex items-center justify-center text-gray-500 hover:text-orange-700 hover:bg-orange-100 transition-all" title="Göz Koruma">
+                    <i class="fa-solid fa-eye text-sm"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div id="header-right-section" class="flex items-center gap-6">
+            <div class="text-right hidden md:block">
+                <p class="text-xs text-gray-400 font-medium">Veri Kaynağı</p>
+                
+                <div id="upload-info-text" class="flex items-center gap-1 text-sm font-bold text-brand-dark">
+                    <i class="fa-solid fa-database text-brand-yellow"></i>
+                    <span id="fileNameLabel">Sistem Verisi</span>
+                </div>
+
+                <div id="viewer-info-text" class="hidden items-center gap-1 text-sm font-bold text-brand-dark">
+                    <i class="fa-solid fa-lock text-red-500"></i>
+                    <span>Salt Okunur (Arşiv)</span>
+                </div>
+            </div>
+            
+            <div id="admin-controls" class="flex items-center gap-2">
+                <input type="file" id="excelInput" accept=".xlsx, .xls" class="hidden" onchange="handleExcelUpload(event)">
+                
+                <button onclick="document.getElementById('excelInput').click()" class="h-10 px-4 rounded-full bg-green-600 text-white flex items-center gap-2 hover:bg-green-700 transition-colors shadow-sm text-sm font-semibold">
+                    <i class="fa-solid fa-file-excel"></i> Excel Yükle
+                </button>
+                
+                <button onclick="downloadTestExcel()" class="h-10 px-4 rounded-full bg-blue-600 text-white flex items-center gap-2 hover:bg-blue-700 transition-colors shadow-sm text-sm font-semibold">
+                    <i class="fa-solid fa-download"></i> Örnek İndir
+                </button>
+
+                <div class="w-px h-8 bg-gray-300 mx-2"></div>
+
+                <button onclick="exportViewerMode()" class="h-10 px-4 rounded-full bg-indigo-600 text-white flex items-center gap-2 hover:bg-indigo-700 transition-colors shadow-sm text-sm font-semibold">
+                    <i class="fa-solid fa-file-export"></i> Dışa Aktar
+                </button>
+            </div>
+            
+            <div class="h-10 w-10 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center border border-gray-200 shadow-sm">
+                <i class="fa-solid fa-user"></i>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-1 p-8 max-w-[1600px] mx-auto w-full">
+        <div class="flex gap-8 mb-8 border-b border-gray-200">
+            <button onclick="switchTab('mudurluk')" id="tab-mudurluk" class="tab-btn active pb-4 text-brand-dark font-bold text-lg transition-all active-tab-text">
+                <i class="fa-solid fa-building-columns mr-2"></i>MÜDÜRLÜK BAZLI
+            </button>
+            <button onclick="switchTab('takim')" id="tab-takim" class="tab-btn pb-4 text-gray-400 hover:text-gray-600 font-bold text-lg transition-all">
+                <i class="fa-solid fa-users-rectangle mr-2"></i>TAKIM BAZLI
+            </button>
+            <button onclick="switchTab('personel')" id="tab-personel" class="tab-btn pb-4 text-gray-400 hover:text-gray-600 font-bold text-lg transition-all">
+                <i class="fa-solid fa-users mr-2"></i>PORTFÖY BAZLI
+            </button>
+        </div>
+
+        <div id="section-mudurluk" class="space-y-8 animate-fade-in">
+            <div class="modern-card p-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 id="title-mudurluk" class="text-2xl font-bold text-brand-dark">Müdürlük Ağırlıklı Puan Durumu</h2>
+                    <div class="flex bg-gray-100 p-1 rounded-lg gap-1">
+                        <button onclick="setChartMode('mudurluk', 'ratio')" id="btn-mode-mudurluk-ratio" class="chart-toggle-btn active">Genel Başarı</button>
+                        <button onclick="setChartMode('mudurluk', 'daily')" id="btn-mode-mudurluk-daily" class="chart-toggle-btn inactive">Günlük Puan (Son Gün)</button>
+                    </div>
+                </div>
+                <div class="h-[350px] w-full relative"><canvas id="mudurlukChart"></canvas></div>
+            </div>
+            <div class="modern-card p-8 overflow-hidden">
+                <h2 class="text-xl font-bold text-brand-dark mb-4">Müdürlük Detay Tablosu (Kırılımlı)</h2>
+                <div class="flex items-center gap-2 mb-2 text-xs text-gray-500">
+                     <i class="fa-solid fa-circle-info"></i>
+                     <span>Tablo sütunlarına (Hedef, Tahsilat, Puan vb.) tıklayarak detay grafikleri açabilirsiniz. Ağırlıklı Günlük sütunu puan grafiğini açar.</span>
+                </div>
+                <div class="overflow-x-auto rounded-lg border border-gray-100">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="text-gray-500 text-xs uppercase tracking-wider border-b border-gray-200 bg-gray-50">
+                                <th class="p-4 w-8"></th>
+                                <th class="p-4 font-semibold cursor-pointer hover:bg-gray-100" onclick="sortDirectorates('code')">Birim Adı <i class="fa-solid fa-sort sort-icon"></i></th>
+                                <th class="p-4 text-right font-semibold cursor-pointer hover:bg-gray-100" onclick="sortDirectorates('balance')">Asıl Alacak Bakiyesi <i class="fa-solid fa-sort sort-icon"></i></th>
+                                <th class="p-4 text-right font-semibold cursor-pointer hover:bg-gray-100" onclick="sortDirectorates('target')">Toplam Hedef <i class="fa-solid fa-sort sort-icon"></i></th>
+                                <th class="p-4 text-right font-semibold cursor-pointer hover:bg-gray-100 bg-blue-50/50" onclick="sortDirectorates('daily')">Günlük Tahsilat <i class="fa-solid fa-sort sort-icon"></i></th>
+                                <th class="p-4 text-right font-semibold cursor-pointer hover:bg-gray-100" onclick="sortDirectorates('collected')">Toplam Tahsilat <i class="fa-solid fa-sort sort-icon"></i></th>
+                                <th class="p-4 text-center font-semibold cursor-pointer hover:bg-gray-100 bg-blue-50/50" onclick="sortDirectorates('dailyPct')">Ağırlıklı Günlük <i class="fa-solid fa-sort sort-icon"></i></th>
+                                <th class="p-4 text-center font-semibold cursor-pointer hover:bg-gray-100" onclick="sortDirectorates('ratio')">Ağırlıklı Başarı <i class="fa-solid fa-sort sort-icon"></i></th>
+                            </tr>
+                        </thead>
+                        <tbody id="mudurlukTableBody" class="text-sm divide-y divide-gray-100 bg-white"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="section-takim" class="hidden space-y-8 animate-fade-in">
+            <div class="modern-card p-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 id="title-takim" class="text-2xl font-bold text-brand-dark">Takım Bazlı Performans</h2>
+                    <div class="flex bg-gray-100 p-1 rounded-lg gap-1">
+                        <button onclick="setChartMode('takim', 'ratio')" id="btn-mode-takim-ratio" class="chart-toggle-btn active">Genel Başarı</button>
+                        <button onclick="setChartMode('takim', 'daily')" id="btn-mode-takim-daily" class="chart-toggle-btn inactive">Günlük Puan (Son Gün)</button>
+                    </div>
+                </div>
+                <div class="h-[350px] w-full relative"><canvas id="takimChart"></canvas></div>
+            </div>
+            <div class="modern-card p-8 overflow-hidden">
+                <h2 class="text-xl font-bold text-brand-dark mb-4">Takım Detay Tablosu</h2>
+                <div class="flex items-center gap-2 mb-2 text-xs text-gray-500">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <span>Sütun verilerine tıklayarak takım bazlı detay ve puan grafiklerini görebilirsiniz.</span>
+                </div>
+                <div class="overflow-x-auto rounded-lg border border-gray-100">
+                    <table class="w-full text-left border-collapse table-fixed">
+                        <thead>
+                            <tr class="text-gray-500 text-xs uppercase tracking-wider border-b border-gray-200 bg-gray-50">
+                                <th class="p-4 w-12"></th> 
+                                <th class="p-4 w-32 font-semibold">Birim Adı</th> <th class="p-4 w-64 font-semibold cursor-pointer hover:bg-gray-100" onclick="sortTeams('GRUPAMIRI')">Grup Amiri <i class="fa-solid fa-sort sort-icon"></i></th>
+                                <th class="p-4 text-right font-semibold cursor-pointer hover:bg-gray-100" onclick="sortTeams('ASILALACAKBAKIYESI')">Toplam Portföy <i class="fa-solid fa-sort sort-icon"></i></th>
+                                <th class="p-4 text-right font-semibold cursor-pointer hover:bg-gray-100" onclick="sortTeams('HEDEF')">Toplam Hedef <i class="fa-solid fa-sort sort-icon"></i></th>
+                                <th class="p-4 text-right font-semibold cursor-pointer hover:bg-gray-100 bg-blue-50/50" onclick="sortTeams('daily')">Günlük <i class="fa-solid fa-sort sort-icon"></i></th>
+                                <th class="p-4 text-right font-semibold cursor-pointer hover:bg-gray-100" onclick="sortTeams('collected')">Gerçekleşen <i class="fa-solid fa-sort sort-icon"></i></th>
+                                <th class="p-4 text-center font-semibold cursor-pointer hover:bg-gray-100 bg-blue-50/50" onclick="sortTeams('dailyPct')">Ağrırlıklı Günlük <i class="fa-solid fa-sort sort-icon"></i></th>
+                                <th class="p-4 text-center font-semibold cursor-pointer hover:bg-gray-100" onclick="sortTeams('ratio')">Ağrırlıklı Başarı <i class="fa-solid fa-sort sort-icon"></i></th>
+                            </tr>
+                        </thead>
+                        <tbody id="takimTableBody" class="text-sm divide-y divide-gray-100 bg-white"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="section-personel" class="hidden space-y-8">
+            <div class="flex flex-col md:flex-row justify-between items-center modern-card p-5 gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="bg-brand-yellow/10 p-2 rounded-lg text-brand-yellow"><i class="fa-solid fa-filter text-xl"></i></div>
+                    <div><span class="block font-bold text-brand-dark text-sm">Birim Filtresi</span><span class="text-xs text-gray-500">Müdürlük/Birim Adı Seçimi</span></div>
+                </div>
+                <select id="personelCategoryFilter" onchange="applyPersonnelFilters()" class="bg-gray-50 text-gray-700 border border-gray-200 rounded-lg px-4 py-2 text-sm font-medium focus:border-brand-yellow focus:ring-2 focus:ring-brand-yellow/20 outline-none w-full md:w-64 transition-all">
+                    <option value="all">Tüm Birimler</option>
+                </select>
+            </div>
+            <div class="modern-card p-8 relative overflow-hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 id="title-personel" class="text-2xl font-bold text-brand-dark">Portföy Performans Analizi</h2>
+                        <p class="text-sm text-gray-500 mt-1">İlk 10 Portföy Yöneticisi</p>
+                    </div>
+                    <div class="flex bg-gray-100 p-1 rounded-lg gap-1">
+                        <button onclick="setChartMode('personel', 'ratio')" id="btn-mode-personel-ratio" class="chart-toggle-btn active">Genel Başarı</button>
+                        <button onclick="setChartMode('personel', 'daily')" id="btn-mode-personel-daily" class="chart-toggle-btn inactive">Günlük Puan (Son Gün)</button>
+                    </div>
+                </div>
+                <div class="h-[350px] w-full"><canvas id="personelChart"></canvas></div>
+            </div>
+            <div class="modern-card p-8 overflow-hidden">
+                <div class="flex justify-between items-center mb-6">
+                     <h2 class="text-xl font-bold text-brand-dark">Takip Portföy Listesi (Kırılımlı)</h2>
+                     <span class="text-xs bg-gray-100 text-gray-500 px-3 py-1.5 rounded-full font-medium">Toplam <span id="totalStaffCount" class="text-brand-dark font-bold">0</span> Kayıt</span>
+                </div>
+                <div class="table-container rounded-lg border border-gray-100 relative" style="max-height: 800px;">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="text-gray-500 text-xs uppercase tracking-wider border-b border-gray-200">
+                                <th class="p-4 bg-gray-50 font-bold w-12">#</th>
+                                <th class="p-4 bg-gray-50 cursor-pointer hover:bg-gray-100" onclick="sortPersonnel('TAKIPBIRIMKODU')">Birim Adı <i class="fa-solid fa-sort sort-icon"></i></th>
+                                <th class="p-4 bg-gray-50 cursor-pointer hover:bg-gray-100" onclick="sortPersonnel('TAKIPPORTFOY')">Takip Portföy <i class="fa-solid fa-sort sort-icon"></i></th>
+                                <th class="p-4 text-right bg-gray-50 cursor-pointer hover:bg-gray-100" onclick="sortPersonnel('ASILALACAKBAKIYESI')">Toplam Asıl Alacak <i class="fa-solid fa-sort sort-icon"></i></th>
+                                <th class="p-4 text-right bg-gray-50 cursor-pointer hover:bg-gray-100" onclick="sortPersonnel('HEDEF')">Toplam Hedef <i class="fa-solid fa-sort sort-icon"></i></th>
+                                <th class="p-4 text-right bg-gray-50 cursor-pointer hover:bg-gray-100 bg-blue-50/50" onclick="sortPersonnel('daily')">Günlük Tahsilat <i class="fa-solid fa-sort sort-icon"></i></th>
+                                <th class="p-4 text-right bg-gray-50 cursor-pointer hover:bg-gray-100" onclick="sortPersonnel('collected')">Gerçekleşen <i class="fa-solid fa-sort sort-icon"></i></th>
+                                <th class="p-4 text-center bg-gray-50 cursor-pointer hover:bg-gray-100 bg-blue-50/50" onclick="sortPersonnel('dailyPct')">Ağırlıklı Günlük <i class="fa-solid fa-sort sort-icon"></i></th>
+                                <th class="p-4 text-center bg-gray-50 cursor-pointer hover:bg-gray-100" onclick="sortPersonnel('ratio')">Ağırlıklı Başarı <i class="fa-solid fa-sort sort-icon"></i></th>
+                            </tr>
+                        </thead>
+                        <tbody id="personelTableBody" class="text-sm divide-y divide-gray-100 bg-white"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="drilldownModal" class="fixed inset-0 bg-brand-dark/60 hidden items-center justify-center z-[100] backdrop-blur-sm transition-opacity">
+        <div class="bg-white w-full max-w-5xl p-8 rounded-2xl shadow-2xl relative m-4 transform transition-all scale-100 modern-card">
+            <button onclick="closeModal()" class="absolute top-6 right-6 text-gray-400 hover:text-red-500 transition-colors bg-gray-100 hover:bg-red-50 w-8 h-8 rounded-full flex items-center justify-center"><i class="fa-solid fa-times"></i></button>
+            <div class="mb-6">
+                <h2 id="modalTitle" class="text-2xl font-bold text-brand-dark">Detay Grafiği</h2>
+                <div id="modalSubtitleContainer" class="flex gap-4 items-center">
+                    <p id="modalSubtitle" class="text-sm text-gray-500">Hedef Projeksiyonu ve Gerçekleşen</p>
+                    <div id="modalLegend" class="flex items-center gap-2 text-xs">
+                        <span class="w-3 h-1 bg-gray-400 border-dashed border border-gray-600"></span> Beklenen
+                        <span class="w-3 h-3 bg-brand-yellow rounded-full border border-yellow-600 ml-2"></span> Gerçekleşen
+                    </div>
+                </div>
+            </div>
+            <div class="h-[400px] w-full bg-gray-50 rounded-xl p-4 border border-gray-100"><canvas id="drilldownChart"></canvas></div>
+        </div>
+    </div>
+
+    <script id="database-script">
+        /* GÜNCELLENMİŞ RAW TABLE 1 (Her personel için 3 Kırılım Satırı) */
+        const personnelBase = [
+            {"name": "SELIN DEMİR", "sube": "1002", "birim": "TIC-01", "takim": "T1-A", "amir": "MURAT YILMAZ"},
+            {"name": "KEMAL CAN", "sube": "1003", "birim": "TIC-01", "takim": "T1-A", "amir": "MURAT YILMAZ"},
+            {"name": "ZEYNEP GÜL", "sube": "1004", "birim": "TIC-01", "takim": "T1-A", "amir": "MURAT YILMAZ"},
+            {"name": "AHMET VURAL", "sube": "1006", "birim": "TIC-01", "takim": "T1-B", "amir": "ESRA KOÇ"},
+            {"name": "MELİS AKAR", "sube": "1007", "birim": "TIC-01", "takim": "T1-B", "amir": "ESRA KOÇ"},
+            {"name": "CANER ERKİN", "sube": "1008", "birim": "TIC-01", "takim": "T1-B", "amir": "ESRA KOÇ"},
+            {"name": "GAMZE YÜCEL", "sube": "1010", "birim": "TIC-01", "takim": "T1-C", "amir": "HAKAN TAŞ"},
+            {"name": "ONUR ÇEVİK", "sube": "1011", "birim": "TIC-01", "takim": "T1-C", "amir": "HAKAN TAŞ"},
+            {"name": "ELİF NUR", "sube": "1012", "birim": "TIC-01", "takim": "T1-C", "amir": "HAKAN TAŞ"},
+            {"name": "CEM YILDIZ", "sube": "1014", "birim": "TIC-01", "takim": "T1-D", "amir": "DENİZ ARAS"},
+            {"name": "ASLIHAN GÜN", "sube": "1015", "birim": "TIC-01", "takim": "T1-D", "amir": "DENİZ ARAS"},
+            {"name": "BERKANT SU", "sube": "1016", "birim": "TIC-01", "takim": "T1-D", "amir": "DENİZ ARAS"},
+            {"name": "SEDA SAYIN", "sube": "1018", "birim": "TIC-01", "takim": "T1-E", "amir": "LEVENT KORU"},
+            {"name": "METİN TEKİN", "sube": "1019", "birim": "TIC-01", "takim": "T1-E", "amir": "LEVENT KORU"},
+            {"name": "FEYZA IŞIK", "sube": "1020", "birim": "TIC-01", "takim": "T1-E", "amir": "LEVENT KORU"},
+
+            {"name": "AYLİN KONAK", "sube": "2002", "birim": "TIC-02", "takim": "T2-A", "amir": "KEREM BURSALI"},
+            {"name": "BURAK ÖZ", "sube": "2003", "birim": "TIC-02", "takim": "T2-A", "amir": "KEREM BURSALI"},
+            {"name": "DİLAN ÇİÇEK", "sube": "2004", "birim": "TIC-02", "takim": "T2-A", "amir": "KEREM BURSALI"},
+            {"name": "GİZEM KARACA", "sube": "2006", "birim": "TIC-02", "takim": "T2-B", "amir": "SİNAN ENGİN"},
+            {"name": "VOLKAN ŞEN", "sube": "2007", "birim": "TIC-02", "takim": "T2-B", "amir": "SİNAN ENGİN"},
+            {"name": "İREM SAK", "sube": "2008", "birim": "TIC-02", "takim": "T2-B", "amir": "SİNAN ENGİN"},
+            {"name": "EZGİ MOLA", "sube": "2010", "birim": "TIC-02", "takim": "T2-C", "amir": "TOLGA ÇEVİK"},
+            {"name": "SARP APAK", "sube": "2011", "birim": "TIC-02", "takim": "T2-C", "amir": "TOLGA ÇEVİK"},
+            {"name": "BÜŞRA PEKİN", "sube": "2012", "birim": "TIC-02", "takim": "T2-C", "amir": "TOLGA ÇEVİK"},
+            {"name": "EBRU GÜNDEŞ", "sube": "2014", "birim": "TIC-02", "takim": "T2-D", "amir": "BEYAZIT ÖZ"},
+            {"name": "MURAT BOZ", "sube": "2015", "birim": "TIC-02", "takim": "T2-D", "amir": "BEYAZIT ÖZ"},
+            {"name": "HADİSE AÇIK", "sube": "2016", "birim": "TIC-02", "takim": "T2-D", "amir": "BEYAZIT ÖZ"},
+            {"name": "ŞEYMA SUBAŞI", "sube": "2018", "birim": "TIC-02", "takim": "T2-E", "amir": "ACUN ILICA"},
+            {"name": "ALİ TARAN", "sube": "2019", "birim": "TIC-02", "takim": "T2-E", "amir": "ACUN ILICA"},
+            {"name": "GÖKÇE BAHADIR", "sube": "2020", "birim": "TIC-02", "takim": "T2-E", "amir": "ACUN ILICA"},
+
+            {"name": "ARDA TURAN", "sube": "3002", "birim": "KOB-01", "takim": "K-A", "amir": "FATİH TERİM"},
+            {"name": "BURAK YILMAZ", "sube": "3003", "birim": "KOB-01", "takim": "K-A", "amir": "FATİH TERİM"},
+            {"name": "SELÇUK İNAN", "sube": "3004", "birim": "KOB-01", "takim": "K-A", "amir": "FATİH TERİM"},
+            {"name": "SERGEN YALÇIN", "sube": "3006", "birim": "KOB-01", "takim": "K-B", "amir": "ŞENOL GÜNEŞ"},
+            {"name": "RIZA ÇALIMBAY", "sube": "3007", "birim": "KOB-01", "takim": "K-B", "amir": "ŞENOL GÜNEŞ"},
+            {"name": "ERTUĞRUL SAĞLAM", "sube": "3008", "birim": "KOB-01", "takim": "K-B", "amir": "ŞENOL GÜNEŞ"},
+            {"name": "YILMAZ VURAL", "sube": "3010", "birim": "KOB-01", "takim": "K-C", "amir": "MUSTAFA DENİZLİ"},
+            {"name": "SAMET AYBABA", "sube": "3011", "birim": "KOB-01", "takim": "K-C", "amir": "MUSTAFA DENİZLİ"},
+            {"name": "HİKMET KARAMAN", "sube": "3012", "birim": "KOB-01", "takim": "K-C", "amir": "MUSTAFA DENİZLİ"},
+            {"name": "AYKUT KOCAMAN", "sube": "3014", "birim": "KOB-01", "takim": "K-D", "amir": "ERSUN YANAL"},
+            {"name": "İSMAİL KARTAL", "sube": "3015", "birim": "KOB-01", "takim": "K-D", "amir": "ERSUN YANAL"},
+            {"name": "EMRE BELÖZOĞLU", "sube": "3016", "birim": "KOB-01", "takim": "K-D", "amir": "ERSUN YANAL"}
+        ];
+
+        window.rawTable1 = [];
+        
+        personnelBase.forEach(p => {
+            window.rawTable1.push({
+                "TAKIPBIRIMKODU": p.birim, "SUBEKODU": p.sube, "TAKIPPORTFOY": p.name,
+                "ASILALACAKBAKIYESI": Math.floor(Math.random()*3000000)+1000000, "HEDEF": Math.floor(Math.random()*500000)+100000,
+                "TAKIMKODU": p.takim, "GRUPAMIRI": p.amir, "KIRILIM": "1"
+            });
+            window.rawTable1.push({
+                "TAKIPBIRIMKODU": p.birim, "SUBEKODU": p.sube, "TAKIPPORTFOY": p.name,
+                "ASILALACAKBAKIYESI": Math.floor(Math.random()*2000000)+500000, "HEDEF": Math.floor(Math.random()*300000)+50000,
+                "TAKIMKODU": p.takim, "GRUPAMIRI": p.amir, "KIRILIM": "2"
+            });
+            window.rawTable1.push({
+                "TAKIPBIRIMKODU": p.birim, "SUBEKODU": p.sube, "TAKIPPORTFOY": p.name,
+                "ASILALACAKBAKIYESI": Math.floor(Math.random()*1000000)+200000, "HEDEF": Math.floor(Math.random()*200000)+20000,
+                "TAKIMKODU": p.takim, "GRUPAMIRI": p.amir, "KIRILIM": "3"
+            });
+        });
+
+        // --- GÜNCELLENMİŞ DATABASE KISMI ---
+
+        /* B00373 için Test Verisi ve rawTable2 Tanımı */
+        window.rawTable2 = [];
+
+        window.rawTable3 = [];
+        
+        function generateTestTransactions() {
+            const transactions = [];
+            const startDate = new Date('2026-01-01');
+            const personnel = window.rawTable1; 
+            
+            // 1. Standart Personel İşlemleri
+            personnel.forEach(p => {
+                const successFactor = Math.random() * 1.5; 
+                const dailyPotential = (p.HEDEF / 90) * successFactor; 
+                
+                for (let i = 0; i < 90; i++) {
+                    let currentDate = new Date(startDate);
+                    currentDate.setDate(startDate.getDate() + i);
+                    
+                    if (Math.random() > 0.4) {
+                        let amount = dailyPotential * (Math.random() * 2); 
+                        amount = Math.floor(amount);
+
+                        if (amount > 0) {
+                            transactions.push({
+                                "TARIH": currentDate.toISOString().split('T')[0],
+                                "SUBEKODU": p.SUBEKODU,
+                                "TAKIPBIRIMKODU": p.TAKIPBIRIMKODU,
+                                "TAKIPSUREC": Math.random() > 0.5 ? "İdari" : "Yasal",
+                                "TEMINATDURUMU": Math.random() > 0.7 ? "Var" : "Yok",
+                                "TAHSILASILALACAKTUTARI": Math.floor(amount * 0.9),
+                                "TAHSILMASRAFTUTARI": Math.floor(amount * 0.05),
+                                "TAHSILISLAYENFAIZTUTARI": Math.floor(amount * 0.05),
+                                "TOPLAMTAHSILAT": amount,
+                                "KIRILIM": p.KIRILIM 
+                            });
+                        }
+                    }
+                }
+            });
+
+            // 2. ÖZEL BİRİM (B00373) İŞLEMLERİ (Direct Binding)
+            // Personelsiz, doğrudan birime yazılan tahsilatlar
+            const specialTarget = 2500000;
+            const specialDailyPotential = specialTarget / 90;
+
+            for (let i = 0; i < 90; i++) {
+                let currentDate = new Date(startDate);
+                currentDate.setDate(startDate.getDate() + i);
+                
+                // B00373 her gün düzenli tahsilat yapsın
+                if (Math.random() > 0.2) {
+                    let amount = specialDailyPotential * (Math.random() * 1.8); 
+                    amount = Math.floor(amount);
+                    transactions.push({
+                        "TARIH": currentDate.toISOString().split('T')[0],
+                        "SUBEKODU": "9999", // Dummy şube
+                        "TAKIPBIRIMKODU": "B00373", // Kritik Nokta: B00373 kodu
+                        "TAKIPSUREC": "Yasal",
+                        "TEMINATDURUMU": "Yok",
+                        "TAHSILASILALACAKTUTARI": amount,
+                        "TAHSILMASRAFTUTARI": 0,
+                        "TAHSILISLAYENFAIZTUTARI": 0,
+                        "TOPLAMTAHSILAT": amount,
+                        "KIRILIM": "1" // Kırılım önemsiz ama format için 1
+                    });
+                }
+            }
+
+            return transactions;
+        }
+
+        window.rawTable3 = generateTestTransactions();
+
+    </script>
+
+    <script>
+        const unitNames = {
+            'B00373': 'RTTM 1',
+            'B00307': 'RTTM 4',
+            'B00371': 'RTTM 2',
+            'B00380': 'RTTM 3',
+        };
+        
+        const WEIGHTS = {
+            '1': 0.50, // 10 Milyon Altı
+            '2': 0.35, // 10-20 Milyon Arası
+            '3': 0.15  // 20 Milyon Üzeri
+        };
+
+        let processedDirectorates = [];
+        let processedPersonnel = [];
+        let processedTeams = [];
+        
+        // Chart Modes: 'ratio' (Genel Başarı) or 'daily' (Günlük Puan)
+        let chartModes = {
+            mudurluk: 'ratio',
+            takim: 'ratio',
+            personel: 'daily'
+        };
+
+        let currentSort = { column: 'dailyPct', order: 'desc' };
+        let dirSort = { column: 'ratio', order: 'desc' }; 
+        let teamSort = { column: 'ratio', order: 'desc' };
+        let lastDataDate = "";
+        
+        Chart.defaults.font.family = 'Plus Jakarta Sans';
+        Chart.defaults.color = '#64748b';
+        Chart.register(ChartDataLabels);
+
+        let mudurlukChart = null, personelChart = null, drillChart = null, takimChart = null;
+
+        function initApp() {
+            processData();
+            setupFilters();
+
+            // Sadece Personel sekmesine geçiş yap. 
+            // Render işlemi artık switchTab içinde otomatik yapılacak.
+            switchTab('personel');
+            setChartMode('personel', 'daily');
+
+            if(lastDataDate) {
+                document.getElementById('reportDateLabel').innerText = formatDateTR(lastDataDate);
+            }
+
+            const savedTheme = localStorage.getItem('appTheme') || 'eye';
+            setTheme(savedTheme);
+        }
+        
+        function setTheme(theme) {
+            const body = document.body;
+            body.classList.remove('theme-day', 'theme-night', 'theme-eye');
+            body.classList.add('theme-' + theme);
+            
+            document.getElementById('btn-theme-day').classList.remove('bg-white', 'text-brand-yellow', 'shadow-sm');
+            document.getElementById('btn-theme-night').classList.remove('bg-slate-700', 'text-indigo-400', 'shadow-sm');
+            document.getElementById('btn-theme-eye').classList.remove('bg-orange-100', 'text-orange-700', 'shadow-sm');
+            
+            if(theme === 'day') document.getElementById('btn-theme-day').classList.add('bg-white', 'text-brand-yellow', 'shadow-sm');
+            if(theme === 'night') document.getElementById('btn-theme-night').classList.add('bg-slate-700', 'text-indigo-400', 'shadow-sm');
+            if(theme === 'eye') document.getElementById('btn-theme-eye').classList.add('bg-orange-100', 'text-orange-700', 'shadow-sm');
+
+            updateChartsForTheme(theme);
+            localStorage.setItem('appTheme', theme);
+        }
+
+        function updateChartsForTheme(theme) {
+            let textColor = '#64748b';
+            let gridColor = '#e5e7eb';
+            let dataLabelColor = '#1e293b';
+
+            if (theme === 'night') {
+                textColor = '#cbd5e1';
+                gridColor = '#334155';
+                dataLabelColor = '#f1f5f9';
+            } else if (theme === 'eye') {
+                textColor = '#57534e';
+                gridColor = '#d6cfc2';
+                dataLabelColor = '#292524';
+            }
+
+            const charts = [mudurlukChart, takimChart, personelChart, drillChart];
+            charts.forEach(chart => {
+                if (chart) {
+                    chart.options.scales.x.ticks.color = textColor;
+                    chart.options.scales.y.ticks.color = textColor;
+                    if(chart.options.scales.x.grid) chart.options.scales.x.grid.color = 'transparent';
+                    if(chart.options.scales.y.grid) chart.options.scales.y.grid.color = gridColor;
+                    if (chart.options.plugins.datalabels) {
+                        chart.options.plugins.datalabels.color = dataLabelColor;
+                    }
+                    chart.update();
+                }
+            });
+        }
+        
+        function setChartMode(tab, mode) {
+            chartModes[tab] = mode;
+            
+            // Update UI buttons
+            const btnRatio = document.getElementById(`btn-mode-${tab}-ratio`);
+            const btnDaily = document.getElementById(`btn-mode-${tab}-daily`);
+            
+            if (mode === 'ratio') {
+                btnRatio.classList.add('active'); btnRatio.classList.remove('inactive');
+                btnDaily.classList.add('inactive'); btnDaily.classList.remove('active');
+            } else {
+                btnDaily.classList.add('active'); btnDaily.classList.remove('inactive');
+                btnRatio.classList.add('inactive'); btnRatio.classList.remove('active');
+            }
+
+            // Re-render appropriate section
+            if (tab === 'mudurluk') renderMudurlukPage();
+            if (tab === 'takim') renderTakimPage();
+            if (tab === 'personel') applyPersonnelFilters();
+        }
+
+        function processData() {
+            if (window.rawTable3.length > 0) {
+                const maxDate = window.rawTable3.reduce((max, t) => {
+                    return t.TARIH > max ? t.TARIH : max;
+                }, window.rawTable3[0].TARIH);
+                lastDataDate = maxDate;
+            } else {
+                lastDataDate = "";
+            }
+
+            const personnelMap = {};
+            const teamMap = {};
+            const dirMap = {};
+
+            // ADIM 1: Müdürlükleri rawTable2'den oluştur (Base Init)
+            // B00373 burada oluşacak ama personeli olmayacak.
+            if (window.rawTable2 && window.rawTable2.length > 0) {
+                window.rawTable2.forEach(d => {
+                    dirMap[d.TAKIPBIRIMKODU] = {
+                        code: d.TAKIPBIRIMKODU,
+                        name: getDirectorateName(d.TAKIPBIRIMKODU),
+                        isSpecial: (d.TAKIPBIRIMKODU === 'B00373'), // Özel birim bayrağı
+                        baseTarget: parseFloat(d.HEDEFI) || 0,
+                        baseBalance: parseFloat(d.ASILALACAKBAKIYESI) || 0,
+                        directCollected: 0, // Personelsiz tahsilat toplamı
+                        directDaily: 0,
+                        breakdowns: { '1': { target: 0, collected: 0, daily: 0, balance: 0 }, '2': { target: 0, collected: 0, daily: 0, balance: 0 }, '3': { target: 0, collected: 0, daily: 0, balance: 0 } }
+                    };
+                });
+            }
+
+            // ADIM 2: Personel Listesini İşle (rawTable1)
+            // B00373 burada olmadığı için teamMap veya personnelMap'e girmeyecek.
+            window.rawTable1.forEach(row => {
+                const pName = row.TAKIPPORTFOY;
+                const pKey = pName; 
+                const k = String(row.KIRILIM || "1"); 
+
+                if (!personnelMap[pKey]) {
+                    personnelMap[pKey] = {
+                        name: pName,
+                        birim: row.TAKIPBIRIMKODU,
+                        subeList: [],
+                        takim: row.TAKIMKODU,
+                        amir: row.GRUPAMIRI,
+                        breakdowns: {
+                            '1': { target: 0, collected: 0, balance: 0, daily: 0 },
+                            '2': { target: 0, collected: 0, balance: 0, daily: 0 },
+                            '3': { target: 0, collected: 0, balance: 0, daily: 0 }
+                        }
+                    };
+                }
+                
+                const sCode = String(row.SUBEKODU);
+                if(!personnelMap[pKey].subeList.includes(sCode)) {
+                    personnelMap[pKey].subeList.push(sCode);
+                }
+
+                if(personnelMap[pKey].breakdowns[k]) {
+                    personnelMap[pKey].breakdowns[k].target += (parseFloat(row.HEDEF) || 0);
+                    personnelMap[pKey].breakdowns[k].balance += (parseFloat(row.ASILALACAKBAKIYESI) || 0);
+                }
+
+                const tKey = row.TAKIMKODU;
+                if (!teamMap[tKey]) {
+                    teamMap[tKey] = {
+                        code: tKey,
+                        unitCode: row.TAKIPBIRIMKODU,
+                        manager: row.GRUPAMIRI,
+                        breakdowns: { '1': { target: 0, collected: 0, daily: 0, balance: 0 }, '2': { target: 0, collected: 0, daily: 0, balance: 0 }, '3': { target: 0, collected: 0, daily: 0, balance: 0 } },
+                        subeList: []
+                    };
+                }
+                if (!teamMap[tKey].subeList.includes(sCode)) teamMap[tKey].subeList.push(sCode);
+                if(teamMap[tKey].breakdowns[k]) {
+                    teamMap[tKey].breakdowns[k].target += (parseFloat(row.HEDEF) || 0);
+                    teamMap[tKey].breakdowns[k].balance += (parseFloat(row.ASILALACAKBAKIYESI) || 0);
+                }
+
+                // Müdürlük Aggregation (Standart Birimler İçin)
+                const dKey = row.TAKIPBIRIMKODU;
+                if (!dirMap[dKey]) {
+                    // rawTable2'de yoksa bile oluştur (Güvenlik)
+                    dirMap[dKey] = {
+                        code: dKey,
+                        name: getDirectorateName(dKey),
+                        isSpecial: false,
+                        breakdowns: { '1': { target: 0, collected: 0, daily: 0, balance: 0 }, '2': { target: 0, collected: 0, daily: 0, balance: 0 }, '3': { target: 0, collected: 0, daily: 0, balance: 0 } }
+                    };
+                }
+                // Standart birimlerde hedefi personelden topla
+                if(dirMap[dKey].breakdowns[k] && !dirMap[dKey].isSpecial) {
+                    dirMap[dKey].breakdowns[k].target += (parseFloat(row.HEDEF) || 0);
+                    dirMap[dKey].breakdowns[k].balance += (parseFloat(row.ASILALACAKBAKIYESI) || 0);
+                }
+            });
+
+            // ADIM 3: İşlemleri Dağıt (rawTable3)
+            window.rawTable3.forEach(t => {
+                const k = String(t.KIRILIM || "1"); 
+                const amount = parseFloat(t.TOPLAMTAHSILAT) || 0;
+                const isDaily = t.TARIH === lastDataDate;
+                const tSube = String(t.SUBEKODU);
+                const dKey = t.TAKIPBIRIMKODU;
+
+                // A) ÖZEL BİRİM KONTROLÜ (Doğrudan Bağlama)
+                if (dKey === 'B00373' && dirMap['B00373']) {
+                    dirMap['B00373'].directCollected += amount;
+                    if (isDaily) dirMap['B00373'].directDaily += amount;
+                    // B00373 için personnel/team döngüsüne girme
+                    return; 
+                }
+
+                // B) STANDART AKIŞ (Personel ve Takım Eşleştirme)
+                for (const pKey in personnelMap) {
+                    const p = personnelMap[pKey];
+                    if (p.subeList.includes(tSube)) { 
+                        if(p.breakdowns[k]) {
+                            p.breakdowns[k].collected += amount;
+                            if(isDaily) p.breakdowns[k].daily += amount;
+                        }
+                    }
+                }
+                
+                for (const tKey in teamMap) {
+                    const team = teamMap[tKey];
+                    if (team.subeList.includes(tSube)) {
+                         if(team.breakdowns[k]) {
+                            team.breakdowns[k].collected += amount;
+                            if(isDaily) team.breakdowns[k].daily += amount;
+                         }
+                    }
+                }
+
+                // Standart Müdürlük Toplamı
+                if (dirMap[dKey] && !dirMap[dKey].isSpecial) {
+                    if(dirMap[dKey].breakdowns[k]) {
+                        dirMap[dKey].breakdowns[k].collected += amount;
+                        if(isDaily) dirMap[dKey].breakdowns[k].daily += amount;
+                    }
+                }
+            });
+
+            // ADIM 4: Hesaplama (Standart vs Özel)
+            function calculateWeightedStats(breakdowns) {
+                let totalTarget = 0, totalCollected = 0, totalDaily = 0, totalBalance = 0;
+                let weightedRatioSum = 0;
+                let weightedDailySum = 0;
+                let totalWeight = 0; 
+
+                ['1', '2', '3'].forEach(k => {
+                    const b = breakdowns[k];
+                    totalTarget += b.target;
+                    totalCollected += b.collected;
+                    totalDaily += b.daily;
+                    totalBalance += b.balance;
+
+                    if (b.target > 0) {
+                        const rawRatio = (b.collected / b.target) * 100;
+                        const rawDaily = (b.daily / b.target) * 100;
+                        
+                        weightedRatioSum += (rawRatio * WEIGHTS[k]);
+                        weightedDailySum += (rawDaily * WEIGHTS[k]);
+                        totalWeight += WEIGHTS[k];
+                    }
+                });
+
+                let finalRatio = 0;
+                let finalDailyPct = 0;
+
+                if (totalWeight > 0) {
+                    finalRatio = weightedRatioSum / totalWeight; 
+                    finalDailyPct = weightedDailySum / totalWeight; 
+                }
+                if (finalRatio > 1000) finalRatio = 1000; 
+
+                return { target: totalTarget, collected: totalCollected, daily: totalDaily, balance: totalBalance, ratio: Math.min(finalRatio, 999), dailyPct: finalDailyPct };
+            }
+
+            // Personel Dizisi Oluştur
+            processedPersonnel = Object.values(personnelMap).map((p, idx) => {
+                const stats = calculateWeightedStats(p.breakdowns);
+                return {
+                    id: idx,
+                    TAKIPBIRIMKODU: p.birim,
+                    TAKIPPORTFOY: p.name,
+                    ASILALACAKBAKIYESI: stats.balance,
+                    HEDEF: stats.target,
+                    collected: stats.collected,
+                    daily: stats.daily,
+                    dailyPct: stats.dailyPct,
+                    ratio: stats.ratio,
+                    TAKIMKODU: p.takim,
+                    breakdowns: p.breakdowns
+                };
+            });
+
+            // Takım Dizisi Oluştur
+            processedTeams = Object.values(teamMap).map((t, idx) => {
+                const stats = calculateWeightedStats(t.breakdowns);
+                return {
+                    id: idx,
+                    TAKIMKODU: t.code,
+                    unitName: getDirectorateName(t.unitCode),
+                    GRUPAMIRI: t.manager,
+                    ASILALACAKBAKIYESI: stats.balance,
+                    HEDEF: stats.target,
+                    subeList: t.subeList,
+                    collected: stats.collected,
+                    daily: stats.daily,
+                    dailyPct: stats.dailyPct,
+                    ratio: stats.ratio,
+                    breakdowns: t.breakdowns
+                };
+            });
+
+            // Müdürlük Dizisi Oluştur (Exception Logic Dahil)
+            processedDirectorates = Object.values(dirMap).map(d => {
+                if (d.isSpecial) {
+                    // B00373 İÇİN ÖZEL HESAPLAMA (Monoblok, Ağırlıksız)
+                    const tTarget = d.baseTarget;
+                    const tCollected = d.directCollected;
+                    const tDaily = d.directDaily;
+                    
+                    // Basit Oran (Ağırlıksız)
+                    const simpleRatio = tTarget > 0 ? (tCollected / tTarget) * 100 : 0;
+                    const simpleDailyPct = tTarget > 0 ? (tDaily / tTarget) * 100 : 0; // Puan formülü aynı ama ağırlık yok
+
+                    return {
+                        code: d.code,
+                        name: d.name,
+                        target: tTarget,
+                        balance: d.baseBalance,
+                        collected: tCollected,
+                        daily: tDaily,
+                        dailyPct: simpleDailyPct,
+                        ratio: simpleRatio,
+                        breakdowns: null, // Kırılım yok
+                        isSpecial: true
+                    };
+
+                } else {
+                    // STANDART HESAPLAMA
+                    const stats = calculateWeightedStats(d.breakdowns);
+                    return {
+                        code: d.code,
+                        name: d.name,
+                        target: stats.target,
+                        balance: stats.balance,
+                        collected: stats.collected,
+                        daily: stats.daily,
+                        dailyPct: stats.dailyPct,
+                        ratio: stats.ratio,
+                        breakdowns: d.breakdowns,
+                        isSpecial: false
+                    };
+                }
+            });
+        }
+
+        function getDirectorateName(code) {
+            return unitNames[code] || code;
+        }
+
+        function handleExcelUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+                
+                // En az 3 sayfa kontrolü (Personel, Müdürlük, İşlemler)
+                if (workbook.SheetNames.length >= 3) {
+                    // Sayfaları Oku
+                    const s1 = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]); // Personel
+                    const s2 = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[1]]); // Müdürlük Hedef (Burası B00373 için kritik)
+                    const s3 = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[2]]); // İşlemler
+
+                    // Veri Temizliği ve Formatlama (Tarih ve String Dönüşümleri)
+                    const fixedS3 = s3.map(row => {
+                        let dateVal = row['TARIH'];
+                        if (typeof dateVal === 'number') {
+                            const date = new Date(Math.round((dateVal - 25569)*86400*1000));
+                            row['TARIH'] = date.toISOString().split('T')[0];
+                        }
+                        if (!row['KIRILIM']) row['KIRILIM'] = "1";
+                        row['KIRILIM'] = String(row['KIRILIM']); 
+                        return row;
+                    });
+                    
+                    const fixedS1 = s1.map(row => {
+                         if(!row['KIRILIM']) row['KIRILIM'] = "1";
+                         row['KIRILIM'] = String(row['KIRILIM']);
+                         return row;
+                    });
+
+                    // GLOBAL DEĞİŞKENLERİ SIFIRLA VE YENİLERİNİ ATA
+                    // Bu sayede eski TIC-01 vb. hayalet kayıtlar silinir.
+                    window.rawTable1 = fixedS1; 
+                    window.rawTable2 = s2; // Artık Müdürlük/Hedef listesini Excel'den alıyoruz!
+                    window.rawTable3 = fixedS3;
+
+                    document.getElementById('fileNameLabel').innerText = file.name;
+                    initApp(); 
+                    alert("Excel başarıyla yüklendi: \n- Personel Listesi güncellendi.\n- Müdürlük Hedefleri (B00373 dahil) güncellendi.\n- İşlem listesi güncellendi.");
+                } else {
+                    alert("HATA: Excel dosyasında en az 3 sayfa olmalıdır:\n1. Sayfa: Personel Listesi\n2. Sayfa: Müdürlük Hedefleri\n3. Sayfa: İşlem Listesi");
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function exportViewerMode() {
+            const htmlClone = document.documentElement.cloneNode(true);
+            const scriptTag = htmlClone.querySelector('#database-script');
+            if (scriptTag) {
+                scriptTag.textContent = `
+                    window.rawTable1 = ${JSON.stringify(window.rawTable1)};
+                    window.rawTable2 = ${JSON.stringify(window.rawTable2)};
+                    window.rawTable3 = ${JSON.stringify(window.rawTable3)};
+                `;
+            }
+            htmlClone.querySelector('body').classList.add('viewer-mode');
+            const finalHtml = "<!DOCTYPE html>" + htmlClone.outerHTML;
+            const blob = new Blob([finalHtml], {type: 'text/html'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Takip_Agirlikli_Panel_${new Date().toISOString().slice(0,10)}.html`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function downloadTestExcel() {
+            // 1. SAYFA: PERSONEL LİSTESİ (B00373 BURADA YOK)
+            // Sadece standart personel verisi. 
+            // NOT: Test için var olan rawTable1'i kullanıyoruz ama B00373 buraya girmemeli.
+            const ws1_data = window.rawTable1.map(p => ({
+                "TAKIPBIRIMKODU": p.TAKIPBIRIMKODU,
+                "SUBEKODU": p.SUBEKODU,
+                "TAKIPPORTFOY": p.TAKIPPORTFOY,
+                "ASILALACAKBAKIYESI": p.ASILALACAKBAKIYESI,
+                "HEDEF": p.HEDEF,
+                "TAKIMKODU": p.TAKIMKODU,
+                "GRUPAMIRI": p.GRUPAMIRI,
+                "KIRILIM": p.KIRILIM
+            }));
+
+            // 2. SAYFA: MÜDÜRLÜK HEDEF LİSTESİ (B00373 BURADA VAR!)
+            // Eğer sistemde halihazırda yüklü veri varsa onu kullan, yoksa default oluştur.
+            let ws2_data = window.rawTable2;
+            
+            // Eğer rawTable2 boşsa veya test için sıfırdan oluşturuyorsak:
+            if (!ws2_data || ws2_data.length === 0 || ws2_data[0].TAKIPBIRIMKODU === 'TIC-01') {
+                ws2_data = [
+                    {"TAKIPBIRIMKODU": "TIC-01", "ASILALACAKBAKIYESI": 0, "HEDEFI": 0}, // Personellerden toplanacak (0 bırakılabilir)
+                    {"TAKIPBIRIMKODU": "TIC-02", "ASILALACAKBAKIYESI": 0, "HEDEFI": 0},
+                    {"TAKIPBIRIMKODU": "KOB-01", "ASILALACAKBAKIYESI": 0, "HEDEFI": 0},
+                    // ÖZEL BİRİM:
+                    {"TAKIPBIRIMKODU": "B00373", "ASILALACAKBAKIYESI": 15000000, "HEDEFI": 2500000}
+                ];
+            }
+
+            // 3. SAYFA: İŞLEM LİSTESİ
+            // Hem personellerin hem de B00373'ün işlemlerini içerir.
+            const ws3_data = window.rawTable3.map(t => ({
+                "TARIH": t.TARIH, // Excel tarih formatına çevrilebilir ama string ISO formatı da çalışır
+                "SUBEKODU": t.SUBEKODU,
+                "TAKIPBIRIMKODU": t.TAKIPBIRIMKODU,
+                "TAKIPSUREC": t.TAKIPSUREC,
+                "TEMINATDURUMU": t.TEMINATDURUMU,
+                "TAHSILASILALACAKTUTARI": t.TAHSILASILALACAKTUTARI,
+                "TAHSILMASRAFTUTARI": t.TAHSILMASRAFTUTARI,
+                "TAHSILISLAYENFAIZTUTARI": t.TAHSILISLAYENFAIZTUTARI,
+                "TOPLAMTAHSILAT": t.TOPLAMTAHSILAT,
+                "KIRILIM": t.KIRILIM
+            }));
+            
+            const wb = XLSX.utils.book_new();
+            // Sayfa isimleri kodun okuma sırasıyla aynı olmalı
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(ws1_data), "Personel_Listesi");
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(ws2_data), "Mudurluk_Listesi");
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(ws3_data), "Islem_Listesi");
+            
+            XLSX.writeFile(wb, "Takip_Performans_Test_Datasi.xlsx");
+        }
+
+        function renderMudurlukPage() {
+            // Data Sorting for Table (Independent of chart mode)
+            processedDirectorates.sort((a, b) => {
+                let valA = a[dirSort.column];
+                let valB = b[dirSort.column];
+                if(['target','collected','balance','ratio','daily','dailyPct'].includes(dirSort.column)) { valA = parseFloat(valA); valB = parseFloat(valB); }
+                if (valA < valB) return dirSort.order === 'asc' ? -1 : 1;
+                if (valA > valB) return dirSort.order === 'asc' ? 1 : -1;
+                return 0;
+            });
+
+            // CHART LOGIC
+            const ctx = document.getElementById('mudurlukChart').getContext('2d');
+            if(mudurlukChart) mudurlukChart.destroy();
+
+            let chartData = [...processedDirectorates];
+            let chartLabel = 'Ağırlıklı Başarı (%)';
+            let dataKey = 'ratio';
+            let barColor = '#FFB81C';
+            let isDailyMode = chartModes.mudurluk === 'daily';
+
+            if (isDailyMode) {
+                // If Daily mode, sort by dailyPct DESC specifically for chart
+                chartData.sort((a, b) => b.dailyPct - a.dailyPct);
+                chartLabel = 'Günlük Ağırlıklı Puan';
+                dataKey = 'dailyPct';
+                barColor = '#FFB81C';
+            }
+
+            mudurlukChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: chartData.map(d => d.name),
+                    datasets: [{
+                        label: chartLabel,
+                        data: chartData.map(d => d[dataKey].toFixed(2)),
+                        backgroundColor: (ctx) => { return barColor; }, 
+                        borderRadius: 8, barPercentage: 0.6
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    onClick: (e, activeEls) => { 
+                        if(activeEls.length > 0) {
+                            const selectedDir = chartData[activeEls[0].index];
+                            if (isDailyMode) {
+                                openDailyPerformanceChart(selectedDir.code, selectedDir.name, 'dir');
+                            } else {
+                                openDrilldown(selectedDir.code, selectedDir.name, 'dir', selectedDir.target); 
+                            }
+                        }
+                    },
+                    scales: { 
+                        y: { beginAtZero: true }, 
+                        x: { 
+                            grid: {display:false},
+                            ticks: {
+                                font: { weight: 'bold', family: 'Plus Jakarta Sans' } 
+                            }
+                        } 
+                    }, 
+                    plugins: { 
+                        legend: {display:false},
+                        datalabels: {
+                            color: '#1e293b', 
+                            font: { weight: 'bold', family: 'Plus Jakarta Sans', size: 14 }, 
+                            formatter: (value) => (isDailyMode ? '' : '%') + parseFloat(value).toFixed(2).replace('.', ','), 
+                            anchor: 'center',
+                            align: 'center'
+                        }
+                    }
+                }
+            });
+
+            // Table Rendering (Same as before)
+            const tbody = document.getElementById('mudurlukTableBody');
+            tbody.innerHTML = '';
+            
+            processedDirectorates.forEach(d => {
+                let rBarColor = d.ratio >= 100 ? 'bg-green-500' : (d.ratio >= 75 ? 'bg-brand-yellow' : 'bg-red-500');
+                let dailyVal = parseFloat(d.dailyPct);
+                let dailyBadgeColor = 'bg-red-100 text-red-700 border-red-200'; 
+                if (dailyVal > 1.0) dailyBadgeColor = 'bg-green-100 text-green-700 border-green-200';
+                else if (dailyVal >= 0.5) dailyBadgeColor = 'bg-yellow-100 text-yellow-700 border-yellow-200';
+
+                // B00373 İÇİN UI KONTROLLERİ
+                const isSpecial = d.isSpecial; // ProcessData'dan gelen flag
+                const rowClickAttr = isSpecial ? '' : `onclick="toggleSubRow('dir-${d.code}', this)"`;
+                const cursorClass = isSpecial ? 'cursor-default' : 'cursor-pointer group';
+                const iconHtml = isSpecial ? '<span class="text-xs font-bold text-blue-600 bg-blue-100 px-2 py-0.5 rounded">-</span>' : '<i class="fa-solid fa-chevron-right rotate-icon text-gray-400"></i>';
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-100 transition-colors ${cursorClass} border-b border-gray-100" ${rowClickAttr}>
+                        <td class="p-4 text-center">${iconHtml}</td>
+                        <td class="p-4">
+                            <div class="flex flex-col">
+                                <span class="font-bold text-gray-700 text-sm">${d.name}</span>
+                                <span class="font-mono text-xs text-gray-400">${d.code}</span>
+                            </div>
+                        </td>
+                        <td class="p-4 text-right">
+                             <div class="clickable-cell text-gray-500 font-mono" onclick="event.stopPropagation(); openDrilldown('${d.code}', '${d.name}', 'dir', ${d.target})">${formatMoney(d.balance)}</div>
+                        </td>
+                        <td class="p-4 text-right">
+                             <div class="clickable-cell text-gray-600 font-mono" onclick="event.stopPropagation(); openDrilldown('${d.code}', '${d.name}', 'dir', ${d.target})">${formatMoney(d.target)}</div>
+                        </td>
+                        <td class="p-4 text-right bg-blue-50/30">
+                             <div class="clickable-cell text-brand-dark font-bold font-mono" onclick="event.stopPropagation(); openDrilldown('${d.code}', '${d.name}', 'dir', ${d.target})">${formatMoney(d.daily)}</div>
+                        </td>
+                        <td class="p-4 text-right">
+                             <div class="clickable-cell text-brand-dark font-bold font-mono text-lg" onclick="event.stopPropagation(); openDrilldown('${d.code}', '${d.name}', 'dir', ${d.target})">${formatMoney(d.collected)}</div>
+                        </td>
+                        <td class="p-4 text-center align-middle bg-blue-50/30">
+                            <div class="clickable-cell flex justify-center" onclick="event.stopPropagation(); openDailyPerformanceChart('${d.code}', '${d.name}', 'dir')">
+                                <span class="inline-block px-2 py-1 rounded-md text-xs font-bold border ${dailyBadgeColor}">${d.dailyPct.toFixed(2)} Puan</span>
+                            </div>
+                        </td>
+                        <td class="p-4 text-center align-middle">
+                             <div class="clickable-cell" onclick="event.stopPropagation(); openDrilldown('${d.code}', '${d.name}', 'dir', ${d.target})">
+                                <div class="flex flex-col items-center gap-1">
+                                    <div class="w-full bg-gray-200 h-2 rounded-full overflow-hidden w-24">
+                                        <div class="h-full ${rBarColor}" style="width: ${Math.min(d.ratio, 100)}%"></div>
+                                    </div>
+                                    <span class="text-[10px] font-bold text-gray-500">%${d.ratio.toFixed(1)}</span>
+                                </div>
+                             </div>
+                        </td>
+                    </tr>
+                `;
+
+                // SADECE STANDARD BİRİMLER İÇİN KIRILIM SATIRLARI
+                if (!isSpecial && d.breakdowns) {
+                    ['1', '2', '3'].forEach(k => {
+                        const b = d.breakdowns[k];
+                        const weightPct = WEIGHTS[k] * 100;
+                        const bDailyPct = b.target > 0 ? (b.daily / b.target) * 100 : 0;
+                        const bRatio = b.target > 0 ? (b.collected / b.target) * 100 : 0;
+                        const bDailyContrib = bDailyPct * WEIGHTS[k]; 
+                        
+                        let badgeClass = k === '1' ? 'breakdown-badge-1' : (k === '2' ? 'breakdown-badge-2' : 'breakdown-badge-3');
+                        let kLabel = k === '1' ? '10 Milyon Altı' : (k === '2' ? '10-20 Milyon' : '20 Milyon Üstü');
+
+                        tbody.innerHTML += `
+                            <tr class="sub-row sub-row-dir-${d.code} border-b border-gray-50 bg-gray-50/50">
+                                <td></td>
+                                <td class="p-3 pl-8">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${badgeClass}">
+                                        ${kLabel} (Ağr: %${weightPct})
+                                    </span>
+                                </td>
+                                <td class="p-3 text-right text-xs text-gray-500 font-mono">${formatMoney(b.balance)}</td>
+                                <td class="p-3 text-right text-xs text-gray-500 font-mono">${formatMoney(b.target)}</td>
+                                <td class="p-3 text-right text-xs text-gray-800 font-mono bg-blue-50/20">${formatMoney(b.daily)}</td>
+                                <td class="p-3 text-right text-xs text-gray-800 font-mono">${formatMoney(b.collected)}</td>
+                                <td class="p-3 text-center text-xs text-gray-500 bg-blue-50/20">
+                                    <span class="font-bold text-gray-700">%${bDailyPct.toFixed(2)}</span> 
+                                    <span class="text-[9px] text-gray-400 block">(Katkı: ${bDailyContrib.toFixed(2)})</span>
+                                </td>
+                                <td class="p-3 text-center text-xs text-gray-500">
+                                    <span class="font-bold text-gray-700">%${bRatio.toFixed(1)}</span>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                }
+            });
+
+            // --- MÜDÜRLÜK GENEL TOPLAM (GÜVENLİ HESAPLAMA) ---
+            const tBalance = processedDirectorates.reduce((sum, d) => sum + d.balance, 0);
+            const tTarget = processedDirectorates.reduce((sum, d) => sum + d.target, 0);
+            const tDaily = processedDirectorates.reduce((sum, d) => sum + d.daily, 0);
+            const tCollected = processedDirectorates.reduce((sum, d) => sum + d.collected, 0);
+            
+            // Oranları ortalamıyoruz, genel toplama göre yeniden hesaplıyoruz
+            const tDailyPct = tTarget > 0 ? (tDaily / tTarget) * 100 : 0; 
+            const tRatio = tTarget > 0 ? (tCollected / tTarget) * 100 : 0;
+            const tBarColor = tRatio >= 100 ? 'bg-green-500' : (tRatio >= 75 ? 'bg-brand-yellow' : 'bg-red-500');
+
+            tbody.innerHTML += `
+                <tr class="bg-gray-800 text-white font-bold border-t-2 border-gray-300 sticky bottom-0 z-20 shadow-[0_-5px_15px_rgba(0,0,0,0.3)]">
+                    <td></td>
+                    <td class="p-4 text-sm">GENEL TOPLAM</td>
+                    <td class="p-4 text-right font-mono text-sm">${formatMoney(tBalance)}</td>
+                    <td class="p-4 text-right font-mono text-sm">${formatMoney(tTarget)}</td>
+                    <td class="p-4 text-right font-mono text-brand-yellow">${formatMoney(tDaily)}</td>
+                    <td class="p-4 text-right font-mono text-lg">${formatMoney(tCollected)}</td>
+                    <td class="p-4 text-center">
+                        <span class="inline-block px-2 py-1 rounded-md text-xs bg-white/20 text-white border border-white/30">%${tDailyPct.toFixed(2)}</span>
+                    </td>
+                    <td class="p-4 text-center">
+                         <div class="flex flex-col items-center gap-1">
+                            <div class="w-full bg-gray-600 h-2 rounded-full overflow-hidden w-24">
+                                <div class="h-full ${tBarColor}" style="width: ${Math.min(tRatio, 100)}%"></div>
+                            </div>
+                            <span class="text-[10px] text-gray-300">%${tRatio.toFixed(1)}</span>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            // --- TOPLAM SONU ---
+
+        }
+
+        function renderTakimPage() {
+            // Sort for Table
+            processedTeams.sort((a, b) => {
+                let valA = a[teamSort.column];
+                let valB = b[teamSort.column];
+                if(['target','collected','ASILALACAKBAKIYESI','ratio','daily','dailyPct'].includes(teamSort.column)) { 
+                    valA = parseFloat(valA); valB = parseFloat(valB); 
+                } else {
+                     if (typeof valA === 'string') valA = valA.toLowerCase(); 
+                     if (typeof valB === 'string') valB = valB.toLowerCase();
+                }
+                if (valA < valB) return teamSort.order === 'asc' ? -1 : 1;
+                if (valA > valB) return teamSort.order === 'asc' ? 1 : -1;
+                return 0;
+            });
+
+            // CHART LOGIC
+            const ctx = document.getElementById('takimChart').getContext('2d');
+            if(takimChart) takimChart.destroy();
+
+            let chartData = [...processedTeams];
+            let chartLabel = 'Ağırlıklı Başarı (%)';
+            let dataKey = 'ratio';
+            let barColor = '#FFB81C';
+            let isDailyMode = chartModes.takim === 'daily';
+
+            if (isDailyMode) {
+                chartData.sort((a, b) => b.dailyPct - a.dailyPct);
+                chartLabel = 'Günlük Ağırlıklı Puan';
+                dataKey = 'dailyPct';
+                barColor = '#FFB81C';
+            }
+
+            takimChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: chartData.map(t => t.GRUPAMIRI),
+                    datasets: [{
+                        label: chartLabel,
+                        data: chartData.map(t => t[dataKey].toFixed(2)),
+                        backgroundColor: barColor, borderRadius: 8, barPercentage: 0.6
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    onClick: (e, activeEls) => { 
+                        if(activeEls.length > 0) {
+                            const selectedTeam = chartData[activeEls[0].index];
+                            if (isDailyMode) {
+                                openDailyPerformanceChart(selectedTeam.TAKIMKODU, selectedTeam.GRUPAMIRI + " Takımı", 'team');
+                            } else {
+                                openDrilldown(selectedTeam.TAKIMKODU, selectedTeam.GRUPAMIRI + " Takımı", 'team', selectedTeam.HEDEF); 
+                            }
+                        }
+                    },
+                    scales: { 
+                        y: { beginAtZero: true }, 
+                        x: { 
+                            grid: {display:false}, 
+                            ticks: {
+                                autoSkip: false, 
+                                maxRotation: 45, 
+                                minRotation: 0,
+                                font: { weight: 'bold', family: 'Plus Jakarta Sans' }
+                            } 
+                        } 
+                    }, 
+                    plugins: { 
+                        legend: {display:false},
+                        datalabels: {
+                            color: '#1e293b', 
+                            font: { weight: 'bold', family: 'Plus Jakarta Sans', size: 14 }, 
+                            formatter: (value) => (isDailyMode ? '' : '%') + parseFloat(value).toFixed(2).replace('.', ','), 
+                            anchor: 'center',
+                            align: 'center'
+                        }
+                    }
+                }
+            });
+
+            // Table Rendering
+            const tbody = document.getElementById('takimTableBody');
+            tbody.innerHTML = '';
+            
+            processedTeams.forEach(t => {
+                let rBarColor = t.ratio >= 100 ? 'bg-green-500' : (t.ratio >= 75 ? 'bg-brand-yellow' : 'bg-red-500');
+                let dailyVal = parseFloat(t.dailyPct);
+                let dailyBadgeColor = 'bg-red-100 text-red-700 border-red-200'; 
+                if (dailyVal > 1.0) dailyBadgeColor = 'bg-green-100 text-green-700 border-green-200';
+                else if (dailyVal >= 0.5) dailyBadgeColor = 'bg-yellow-100 text-yellow-700 border-yellow-200';
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-blue-50/50 transition-colors border-b border-gray-100 cursor-pointer" onclick="toggleTeamRow('${t.TAKIMKODU}', this)">
+                        <td class="p-4 text-center text-gray-400"><i class="fa-solid fa-chevron-right rotate-icon"></i></td>
+                        <td class="p-4 text-xs font-bold text-gray-500">${t.unitName}</td> <td class="p-4 text-sm font-semibold text-gray-600 flex items-center gap-2">
+                             <div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700"><i class="fa-solid fa-user-tie"></i></div>
+                             ${t.GRUPAMIRI}
+                        </td>
+                        <td class="p-4 text-right"><div class="clickable-cell text-gray-500 font-mono text-sm" onclick="event.stopPropagation(); openDrilldown('${t.TAKIMKODU}', '${t.GRUPAMIRI} Takımı', 'team', ${t.HEDEF})">${formatMoney(t.ASILALACAKBAKIYESI)}</div></td>
+                        <td class="p-4 text-right"><div class="clickable-cell text-gray-600 font-mono text-sm" onclick="event.stopPropagation(); openDrilldown('${t.TAKIMKODU}', '${t.GRUPAMIRI} Takımı', 'team', ${t.HEDEF})">${formatMoney(t.HEDEF)}</div></td>
+                        <td class="p-4 text-right bg-blue-50/30"><div class="clickable-cell text-brand-dark font-bold font-mono" onclick="event.stopPropagation(); openDrilldown('${t.TAKIMKODU}', '${t.GRUPAMIRI} Takımı', 'team', ${t.HEDEF})">${formatMoney(t.daily)}</div></td>
+                        <td class="p-4 text-right"><div class="clickable-cell text-brand-dark font-bold font-mono" onclick="event.stopPropagation(); openDrilldown('${t.TAKIMKODU}', '${t.GRUPAMIRI} Takımı', 'team', ${t.HEDEF})">${formatMoney(t.collected)}</div></td>
+                        <td class="p-4 text-center align-middle bg-blue-50/30">
+                            <div class="clickable-cell flex justify-center" onclick="event.stopPropagation(); openDailyPerformanceChart('${t.TAKIMKODU}', '${t.GRUPAMIRI} Takımı', 'team')">
+                                <span class="inline-block px-2 py-1 rounded-md text-xs font-bold border ${dailyBadgeColor}">${t.dailyPct.toFixed(2)} Puan</span>
+                            </div>
+                        </td>
+                        <td class="p-4 text-center align-middle">
+                            <div class="clickable-cell" onclick="event.stopPropagation(); openDrilldown('${t.TAKIMKODU}', '${t.GRUPAMIRI} Takımı', 'team', ${t.HEDEF})">
+                                <div class="flex flex-col items-center gap-1">
+                                    <div class="w-full bg-gray-200 h-2 rounded-full overflow-hidden w-24">
+                                        <div class="h-full ${rBarColor}" style="width: ${Math.min(t.ratio, 100)}%"></div>
+                                    </div>
+                                    <span class="text-[10px] font-bold text-gray-500">%${t.ratio.toFixed(1)}</span>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>`;
+
+                const teamMembers = processedPersonnel.filter(p => p.TAKIMKODU === t.TAKIMKODU);
+                teamMembers.forEach(m => {
+                    let mBarColor = m.ratio >= 100 ? 'bg-green-500' : (m.ratio >= 75 ? 'bg-brand-yellow' : 'bg-red-500');
+                    tbody.innerHTML += `
+                        <tr class="sub-row team-child-${t.TAKIMKODU} border-b border-gray-100 bg-gray-50/50">
+                            <td></td>
+                            <td></td> <td class="p-4 pl-12 flex items-center gap-3 text-sm text-gray-600 relative">
+                                <i class="fa-solid fa-turn-up rotate-90 text-gray-300 text-xs"></i>
+                                <span class="font-medium">${m.TAKIPPORTFOY}</span>
+                            </td>
+                            <td class="p-4 text-right text-gray-500 font-mono text-sm">${formatMoney(m.ASILALACAKBAKIYESI)}</td>
+                            <td class="p-4 text-right text-gray-500 font-mono text-sm">${formatMoney(m.HEDEF)}</td>
+                            <td class="p-4 text-right text-brand-dark font-bold font-mono bg-blue-50/30">${formatMoney(m.daily)}</td>
+                            <td class="p-4 text-right text-brand-dark font-bold font-mono text-sm">${formatMoney(m.collected)}</td>
+                            <td class="p-4 text-center align-middle bg-blue-50/30">
+                                <span class="text-xs font-bold text-gray-700">${m.dailyPct.toFixed(2)} Puan</span>
+                            </td>
+                            <td class="p-4 text-center align-middle">
+                                <div class="flex flex-col items-center gap-1">
+                                    <div class="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden w-20">
+                                        <div class="h-full ${mBarColor}" style="width: ${Math.min(m.ratio, 100)}%"></div>
+                                    </div>
+                                    <span class="text-[10px] font-bold text-gray-500">%${m.ratio.toFixed(1)}</span>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+            });
+
+            // --- TAKIM GENEL TOPLAM (GÜVENLİ HESAPLAMA) ---
+            const tmBalance = processedTeams.reduce((sum, t) => sum + t.ASILALACAKBAKIYESI, 0);
+            const tmTarget = processedTeams.reduce((sum, t) => sum + t.HEDEF, 0);
+            const tmDaily = processedTeams.reduce((sum, t) => sum + t.daily, 0);
+            const tmCollected = processedTeams.reduce((sum, t) => sum + t.collected, 0);
+
+            // Havuz hesaplama yöntemi
+            const tmDailyPct = tmTarget > 0 ? (tmDaily / tmTarget) * 100 : 0;
+            const tmRatio = tmTarget > 0 ? (tmCollected / tmTarget) * 100 : 0;
+            const tmBarColor = tmRatio >= 100 ? 'bg-green-500' : (tmRatio >= 75 ? 'bg-brand-yellow' : 'bg-red-500');
+
+            tbody.innerHTML += `
+                <tr class="bg-gray-800 text-white font-bold border-t-2 border-gray-300 sticky bottom-0 z-20 shadow-[0_-5px_15px_rgba(0,0,0,0.3)]">
+                    <td></td>
+                    <td class="p-4" colspan="2">TÜM TAKIMLAR TOPLAMI</td>
+                    <td class="p-4 text-right font-mono text-S">${formatMoney(tmBalance)}</td>
+                    <td class="p-4 text-right font-mono text-S">${formatMoney(tmTarget)}</td>
+                    <td class="p-4 text-right font-mono text-brand-yellow">${formatMoney(tmDaily)}</td>
+                    <td class="p-4 text-right font-mono">${formatMoney(tmCollected)}</td>
+                    <td class="p-4 text-center">
+                        <span class="inline-block px-2 py-1 rounded-md text-xs bg-white/20 text-white border border-white/30">%${tmDailyPct.toFixed(2)}</span>
+                    </td>
+                    <td class="p-4 text-center">
+                        <div class="flex flex-col items-center gap-1">
+                            <div class="w-full bg-gray-600 h-2 rounded-full overflow-hidden w-24">
+                                <div class="h-full ${tmBarColor}" style="width: ${Math.min(tmRatio, 100)}%"></div>
+                            </div>
+                            <span class="text-[10px] text-gray-300">%${tmRatio.toFixed(1)}</span>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            // --- TOPLAM SONU ---
+        }
+
+        function toggleSubRow(uniqueClass, rowEl) {
+            const rows = document.querySelectorAll(`.sub-row-${uniqueClass}`);
+            const icon = rowEl.querySelector('.rotate-icon');
+            
+            let isOpening = false;
+            rows.forEach(row => {
+                if (row.classList.contains('open')) {
+                    row.classList.remove('open');
+                    setTimeout(() => { row.style.display = 'none'; }, 300);
+                } else {
+                    row.style.display = 'table-row';
+                    setTimeout(() => { row.classList.add('open'); }, 10);
+                    isOpening = true;
+                }
+            });
+
+            if(icon) {
+                if (isOpening) icon.classList.add('open');
+                else icon.classList.remove('open');
+            }
+        }
+
+        function toggleTeamRow(teamCode, rowEl) {
+            const rows = document.querySelectorAll(`.team-child-${teamCode}`);
+            const icon = rowEl.querySelector('.rotate-icon');
+            
+            let isOpening = false;
+            rows.forEach(row => {
+                if (row.classList.contains('open')) {
+                    row.classList.remove('open');
+                    setTimeout(() => { row.style.display = 'none'; }, 300); 
+                } else {
+                    row.style.display = 'table-row'; 
+                    setTimeout(() => { row.classList.add('open'); }, 10);
+                    isOpening = true;
+                }
+            });
+
+            if(icon) {
+                if (isOpening) icon.classList.add('open');
+                else icon.classList.remove('open');
+            }
+        }
+
+        function sortDirectorates(column) {
+            if (dirSort.column === column) { dirSort.order = dirSort.order === 'asc' ? 'desc' : 'asc'; } else { dirSort.column = column; dirSort.order = 'desc'; }
+            renderMudurlukPage();
+        }
+        function sortTeams(column) {
+            if (teamSort.column === column) { teamSort.order = teamSort.order === 'asc' ? 'desc' : 'asc'; } else { teamSort.column = column; teamSort.order = 'desc'; }
+            renderTakimPage();
+        }
+        function sortPersonnel(column) {
+            if (currentSort.column === column) { currentSort.order = currentSort.order === 'asc' ? 'desc' : 'asc'; } else { currentSort.column = column; currentSort.order = 'desc'; }
+            applyPersonnelFilters();
+        }
+
+        function setupFilters() {
+            const uniqueUnits = [...new Set(window.rawTable1.map(item => item.TAKIPBIRIMKODU))];
+            const select = document.getElementById('personelCategoryFilter');
+            select.innerHTML = '<option value="all">Tüm Birimler</option>';
+            uniqueUnits.forEach(u => {
+                const opt = document.createElement('option'); 
+                opt.value = u; 
+                opt.innerText = getDirectorateName(u); 
+                select.appendChild(opt);
+            });
+        }
+
+        function applyPersonnelFilters() {
+            const cat = document.getElementById('personelCategoryFilter').value;
+
+            let filtered = processedPersonnel.filter(p => {
+                if (cat !== 'all' && p.TAKIPBIRIMKODU !== cat) return false;
+                return true;
+            });
+
+            // Table Sort
+            filtered.sort((a, b) => {
+                let valA = a[currentSort.column]; let valB = b[currentSort.column];
+                if (typeof valA === 'string') valA = valA.toLowerCase(); if (typeof valB === 'string') valB = valB.toLowerCase();
+                if (valA < valB) return currentSort.order === 'asc' ? -1 : 1; if (valA > valB) return currentSort.order === 'asc' ? 1 : -1; return 0;
+            });
+
+            document.getElementById('totalStaffCount').innerText = filtered.length;
+            renderPersonnelChart(filtered);
+            renderPersonnelTable(filtered);
+        }
+
+        function renderPersonnelChart(data) {
+            const ctx = document.getElementById('personelChart').getContext('2d');
+            if(personelChart) personelChart.destroy();
+            
+            // CHART LOGIC
+            let chartData = [...data];
+            let chartLabel = 'Ağırlıklı Başarı (%)';
+            let dataKey = 'ratio';
+            let barColor = '#FFB81C';
+            let isDailyMode = chartModes.personel === 'daily';
+
+            if (isDailyMode) {
+                // Sort full filtered list by daily score desc
+                chartData.sort((a, b) => b.dailyPct - a.dailyPct);
+                chartLabel = 'Günlük Ağırlıklı Puan';
+                dataKey = 'dailyPct';
+                barColor = '#FFB81C';
+            }
+
+            // Top 10 for display
+            chartData = chartData.slice(0, 10);
+
+            personelChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: chartData.map(p => p.TAKIPPORTFOY), 
+                    datasets: [{
+                        label: chartLabel, 
+                        data: chartData.map(p => p[dataKey].toFixed(2)),
+                        backgroundColor: barColor, borderRadius: 8, barPercentage: 0.6
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    onClick: (e, activeEls) => { 
+                        if(activeEls.length > 0) { 
+                            const p = chartData[activeEls[0].index]; 
+                            if (isDailyMode) {
+                                openDailyPerformanceChart(p.TAKIPPORTFOY, p.TAKIPPORTFOY, 'personel');
+                            } else {
+                                openDrilldown(p.TAKIPPORTFOY, p.TAKIPPORTFOY, 'personel', p.HEDEF); 
+                            }
+                        } 
+                    },
+                    scales: { 
+                        y: { border: {display:false} }, 
+                        x: { 
+                            grid: {display:false}, 
+                            ticks: {
+                                autoSkip: false, 
+                                maxRotation: 90, 
+                                minRotation: 45,
+                                font: { weight: 'bold', family: 'Plus Jakarta Sans' } 
+                            } 
+                        } 
+                    }, 
+                    plugins: { 
+                        legend: {display:false},
+                        datalabels: {
+                            color: '#1e293b', 
+                            font: { weight: 'bold', family: 'Plus Jakarta Sans', size: 14 }, 
+                            formatter: (value) => (isDailyMode ? '' : '%') + parseFloat(value).toFixed(2).replace('.', ','), 
+                            anchor: 'center',
+                            align: 'center',
+                            rotation: 0 
+                        }
+                    }
+                }
+            });
+            const currentTheme = localStorage.getItem('appTheme') || 'day';
+            updateChartsForTheme(currentTheme);
+        }
+
+        function renderPersonnelTable(data) {
+            const tbody = document.getElementById('personelTableBody');
+            tbody.innerHTML = '';
+            data.forEach((p, idx) => {
+                let barColor = p.ratio >= 100 ? 'bg-green-500' : (p.ratio >= 75 ? 'bg-brand-yellow' : 'bg-red-500');
+                let dailyVal = p.dailyPct; 
+                let dailyBadgeColor = 'bg-red-100 text-red-700 border-red-200'; 
+                if (dailyVal > 1.0) dailyBadgeColor = 'bg-green-100 text-green-700 border-green-200';
+                else if (dailyVal >= 0.5) dailyBadgeColor = 'bg-yellow-100 text-yellow-700 border-yellow-200';
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-blue-50/30 transition-colors border-b border-gray-50 cursor-pointer" onclick="toggleSubRow('pers-${p.id}', this)">
+                        <td class="p-4 text-center"><i class="fa-solid fa-chevron-right rotate-icon text-gray-400"></i></td>
+                        <td class="p-4 text-xs font-semibold text-gray-600">${getDirectorateName(p.TAKIPBIRIMKODU)}</td>
+                        <td class="p-4 font-semibold text-gray-800 flex items-center gap-2"><div class="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-[10px] text-gray-500 font-bold">${p.TAKIPPORTFOY.charAt(0)}</div>${p.TAKIPPORTFOY}</td>
+                        <td class="p-4 text-right"><div class="clickable-cell text-gray-500 font-mono text-xs" onclick="event.stopPropagation(); openDrilldown('${p.TAKIPPORTFOY}', '${p.TAKIPPORTFOY}', 'personel', ${p.HEDEF})">${formatMoney(p.ASILALACAKBAKIYESI)}</div></td>
+                        <td class="p-4 text-right"><div class="clickable-cell text-gray-600 font-mono text-xs" onclick="event.stopPropagation(); openDrilldown('${p.TAKIPPORTFOY}', '${p.TAKIPPORTFOY}', 'personel', ${p.HEDEF})">${formatMoney(p.HEDEF)}</div></td>
+                        <td class="p-4 text-right bg-blue-50/30"><div class="clickable-cell text-brand-dark font-bold font-mono" onclick="event.stopPropagation(); openDrilldown('${p.TAKIPPORTFOY}', '${p.TAKIPPORTFOY}', 'personel', ${p.HEDEF})">${formatMoney(p.daily)}</div></td>
+                        <td class="p-4 text-right"><div class="clickable-cell text-brand-dark font-bold font-mono" onclick="event.stopPropagation(); openDrilldown('${p.TAKIPPORTFOY}', '${p.TAKIPPORTFOY}', 'personel', ${p.HEDEF})">${formatMoney(p.collected)}</div></td>
+                        <td class="p-4 text-center align-middle bg-blue-50/30">
+                            <div class="clickable-cell flex justify-center" onclick="event.stopPropagation(); openDailyPerformanceChart('${p.TAKIPPORTFOY}', '${p.TAKIPPORTFOY}', 'personel')">
+                                <span class="inline-block px-2 py-1 rounded-md text-xs font-bold border ${dailyBadgeColor}">${p.dailyPct.toFixed(2)} Puan</span>
+                            </div>
+                        </td>
+                        <td class="p-4 text-center align-middle">
+                            <div class="clickable-cell" onclick="event.stopPropagation(); openDrilldown('${p.TAKIPPORTFOY}', '${p.TAKIPPORTFOY}', 'personel', ${p.HEDEF})">
+                                <div class="flex flex-col items-center gap-1"><div class="w-full bg-gray-200 h-2 rounded-full overflow-hidden w-24"><div class="h-full ${barColor}" style="width: ${Math.min(p.ratio, 100)}%"></div></div><span class="text-[10px] font-bold text-gray-500">%${p.ratio.toFixed(0)}</span></div>
+                            </div>
+                        </td>
+                    </tr>`;
+
+                ['1', '2', '3'].forEach(k => {
+                    const b = p.breakdowns[k];
+                    const weightPct = WEIGHTS[k] * 100;
+                    const bDailyPct = b.target > 0 ? (b.daily / b.target) * 100 : 0;
+                    const bRatio = b.target > 0 ? (b.collected / b.target) * 100 : 0;
+                    const bDailyContrib = bDailyPct * WEIGHTS[k];
+
+                    let badgeClass = k === '1' ? 'breakdown-badge-1' : (k === '2' ? 'breakdown-badge-2' : 'breakdown-badge-3');
+                    let kLabel = k === '1' ? '10 Milyon Altı' : (k === '2' ? '10-20 Milyon' : '20 Milyon Üstü');
+
+                    tbody.innerHTML += `
+                        <tr class="sub-row sub-row-pers-${p.id} border-b border-gray-50 bg-gray-50/50">
+                            <td></td>
+                            <td></td>
+                            <td class="p-3 pl-8">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-medium ${badgeClass}">
+                                    ${kLabel} (Ağr: %${weightPct})
+                                </span>
+                            </td>
+                            <td class="p-3 text-right text-[10px] text-gray-500 font-mono">${formatMoney(b.balance)}</td>
+                            <td class="p-3 text-right text-[10px] text-gray-500 font-mono">${formatMoney(b.target)}</td>
+                            <td class="p-3 text-right text-[10px] text-gray-800 font-mono bg-blue-50/20">${formatMoney(b.daily)}</td>
+                            <td class="p-3 text-right text-[10px] text-gray-800 font-mono">${formatMoney(b.collected)}</td>
+                            <td class="p-3 text-center text-[10px] text-gray-500 bg-blue-50/20">
+                                <span class="font-bold text-gray-700">%${bDailyPct.toFixed(2)}</span>
+                                <span class="text-[9px] text-gray-400 block">(Katkı: ${bDailyContrib.toFixed(2)})</span>
+                            </td>
+                            <td class="p-3 text-center text-[10px] text-gray-500">
+                                <span class="font-bold text-gray-700">%${bRatio.toFixed(1)}</span>
+                            </td>
+                        </tr>
+                    `;
+                });
+            });
+
+            // --- PERSONEL LİSTE TOPLAMI (GÜVENLİ HESAPLAMA) ---
+            const pBalance = data.reduce((sum, p) => sum + p.ASILALACAKBAKIYESI, 0);
+            const pTarget = data.reduce((sum, p) => sum + p.HEDEF, 0);
+            const pDaily = data.reduce((sum, p) => sum + p.daily, 0);
+            const pCollected = data.reduce((sum, p) => sum + p.collected, 0);
+
+            // Filtrelenmiş listenin toplam başarısı
+            const pDailyPct = pTarget > 0 ? (pDaily / pTarget) * 100 : 0;
+            const pRatio = pTarget > 0 ? (pCollected / pTarget) * 100 : 0;
+            const pBarColor = pRatio >= 100 ? 'bg-green-500' : (pRatio >= 75 ? 'bg-brand-yellow' : 'bg-red-500');
+
+            tbody.innerHTML += `
+                <tr class="bg-gray-800 text-white font-bold border-t-2 border-gray-300 sticky bottom-0 z-20 shadow-[0_-5px_15px_rgba(0,0,0,0.3)]">
+                    <td></td>
+                    <td class="p-4 text-sm" colspan="2">GENEL TOPLAMLAR</td>
+                    <td class="p-4 text-right font-mono text-sm">${formatMoney(pBalance)}</td>
+                    <td class="p-4 text-right font-mono text-sm">${formatMoney(pTarget)}</td>
+                    <td class="p-4 text-right font-mono text-brand-yellow">${formatMoney(pDaily)}</td>
+                    <td class="p-4 text-right font-mono text-lg">${formatMoney(pCollected)}</td>
+                    <td class="p-4 text-center">
+                        <span class="inline-block px-2 py-1 rounded-md text-xs bg-white/20 text-white border border-white/30">%${pDailyPct.toFixed(2)}</span>
+                    </td>
+                    <td class="p-4 text-center">
+                         <div class="flex flex-col items-center gap-1">
+                            <div class="w-full bg-gray-600 h-2 rounded-full overflow-hidden w-24">
+                                <div class="h-full ${pBarColor}" style="width: ${Math.min(pRatio, 100)}%"></div>
+                            </div>
+                            <span class="text-[10px] text-gray-300">%${pRatio.toFixed(1)}</span>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            // --- TOPLAM SONU ---
+        }
+
+        /* --- STANDARD DRILLDOWN --- */
+        function openDrilldown(id, title, type, targetVal) {
+            document.getElementById('drilldownModal').classList.remove('hidden'); document.getElementById('drilldownModal').classList.add('flex');
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalSubtitle').innerText = "Hedef Projeksiyonu ve Gerçekleşen (Kümülatif)";
+            document.getElementById('modalLegend').style.display = 'flex';
+
+            let transactions = [];
+            
+            if (type === 'dir') {
+                transactions = window.rawTable3.filter(t => t.TAKIPBIRIMKODU == id);
+            } 
+            else if (type === 'team') {
+                const teamObj = processedTeams.find(t => t.TAKIMKODU === id);
+                if (teamObj) {
+                    transactions = window.rawTable3.filter(t => teamObj.subeList.includes(String(t.SUBEKODU)));
+                }
+            }
+            else { 
+                const pRows = window.rawTable1.filter(r => r.TAKIPPORTFOY === id);
+                const subes = pRows.map(r => String(r.SUBEKODU));
+                transactions = window.rawTable3.filter(t => subes.includes(String(t.SUBEKODU)));
+            }
+
+            transactions.sort((a, b) => new Date(a.TARIH) - new Date(b.TARIH));
+            
+            let startDate = transactions.length > 0 ? new Date(transactions[0].TARIH) : new Date('2026-01-01');
+            let lastDate = transactions.length > 0 ? new Date(transactions[transactions.length - 1].TARIH) : new Date(startDate);
+            const totalDays = Math.ceil(Math.abs(lastDate - startDate) / (1000 * 60 * 60 * 24)) + 1; 
+
+            const labels = [], actualData = [], targetData = [];
+            const dailyTotals = {};
+            transactions.forEach(t => { const d = t.TARIH.split('T')[0]; if(!dailyTotals[d]) dailyTotals[d] = 0; dailyTotals[d] += (parseFloat(t.TOPLAMTAHSILAT) || 0); });
+
+            let cumulative = 0;
+            for (let i = 0; i < totalDays; i++) {
+                let currentDate = new Date(startDate); currentDate.setDate(startDate.getDate() + i);
+                let dateStr = currentDate.toISOString().split('T')[0];
+                targetData.push((targetVal / 90) * (i + 1));
+                if (dailyTotals[dateStr]) cumulative += dailyTotals[dateStr];
+                actualData.push(cumulative);
+                labels.push(formatDateTR(dateStr));
+            }
+
+            if (totalDays === 0) { labels.push(formatDateTR(startDate.toISOString().split('T')[0])); actualData.push(0); targetData.push(0); }
+            renderDrillChart(labels, actualData, targetData, 'line');
+        }
+
+        /* --- NEW DAILY PERFORMANCE CHART --- */
+        function openDailyPerformanceChart(id, title, type) {
+            document.getElementById('drilldownModal').classList.remove('hidden'); 
+            document.getElementById('drilldownModal').classList.add('flex');
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalSubtitle').innerText = "Günlük Performans Grafiği (Puan)";
+            document.getElementById('modalLegend').style.display = 'none';
+
+            let transactions = [];
+            const dailyPoints = {};
+
+            // --- SENARYO AYRIMI: ÖZEL BİRİM (B00373) Mİ YOKSA STANDART MI? ---
+            const isSpecialUnit = (id === 'B00373');
+
+            if (isSpecialUnit) {
+                // === ÖZEL BİRİM MANTIĞI (Ağırlıksız, Direkt Oran) ===
+                
+                // 1. Toplam Hedefi Bul
+                const dirObj = processedDirectorates.find(d => d.code === id);
+                const totalTarget = dirObj ? dirObj.target : 0;
+
+                // 2. İşlemleri Çek
+                transactions = window.rawTable3.filter(t => t.TAKIPBIRIMKODU == id);
+                transactions.sort((a, b) => new Date(a.TARIH) - new Date(b.TARIH));
+
+                // 3. Günlük Toplamları Hesapla
+                const dailyAmounts = {};
+                transactions.forEach(t => {
+                    const dStr = t.TARIH.split('T')[0];
+                    if (!dailyAmounts[dStr]) dailyAmounts[dStr] = 0;
+                    dailyAmounts[dStr] += (parseFloat(t.TOPLAMTAHSILAT) || 0);
+                });
+
+                // 4. Günlük Puanı Hesapla: (Günlük Tutar / Toplam Hedef) * 100
+                for (const [dateStr, amount] of Object.entries(dailyAmounts)) {
+                    if (totalTarget > 0) {
+                        dailyPoints[dateStr] = (amount / totalTarget) * 100;
+                    } else {
+                        dailyPoints[dateStr] = 0;
+                    }
+                }
+
+            } else {
+                // === STANDART BİRİM MANTIĞI (Ağırlıklı Sistem) ===
+                
+                let breakdownsTargets = {'1': 0, '2': 0, '3': 0};
+
+                // 1. Hedefleri (Denominator) Bul
+                if (type === 'dir') {
+                    const d = processedDirectorates.find(x => x.code === id);
+                    if(d && d.breakdowns) {
+                        ['1','2','3'].forEach(k => { breakdownsTargets[k] = d.breakdowns[k].target; });
+                    }
+                    transactions = window.rawTable3.filter(t => t.TAKIPBIRIMKODU == id);
+                } 
+                else if (type === 'team') {
+                    const t = processedTeams.find(x => x.TAKIMKODU === id);
+                    if(t && t.breakdowns) {
+                        ['1','2','3'].forEach(k => { breakdownsTargets[k] = t.breakdowns[k].target; });
+                    }
+                    if (t) transactions = window.rawTable3.filter(tr => t.subeList.includes(String(tr.SUBEKODU)));
+                }
+                else { // personel
+                    const p = processedPersonnel.find(x => x.TAKIPPORTFOY === id);
+                    if(p && p.breakdowns) {
+                        ['1','2','3'].forEach(k => { breakdownsTargets[k] = p.breakdowns[k].target; });
+                    }
+                    const pRows = window.rawTable1.filter(r => r.TAKIPPORTFOY === id);
+                    const subes = pRows.map(r => String(r.SUBEKODU));
+                    transactions = window.rawTable3.filter(tr => subes.includes(String(tr.SUBEKODU)));
+                }
+
+                transactions.sort((a, b) => new Date(a.TARIH) - new Date(b.TARIH));
+
+                // 2. Günlük Ağırlıklı Puan Hesapla
+                // Formül: Sum( (TxAmount_k / Target_k) * Weight_k * 100 )
+                transactions.forEach(t => {
+                    const k = String(t.KIRILIM || "1");
+                    const targetK = breakdownsTargets[k] || 0;
+                    if (targetK > 0) {
+                        const amount = parseFloat(t.TOPLAMTAHSILAT) || 0;
+                        const point = (amount / targetK) * WEIGHTS[k] * 100;
+                        
+                        const dStr = t.TARIH.split('T')[0];
+                        if(!dailyPoints[dStr]) dailyPoints[dStr] = 0;
+                        dailyPoints[dStr] += point;
+                    }
+                });
+            }
+
+            // --- ORTAK GRAFİK ÇİZİM KISMI ---
+            
+            // Tarih Aralığı Belirleme (Boş grafik oluşmasın diye kontrol)
+            let startDate = transactions.length > 0 ? new Date(transactions[0].TARIH) : new Date('2026-01-01');
+            let lastDate = transactions.length > 0 ? new Date(transactions[transactions.length - 1].TARIH) : new Date(startDate);
+            const totalDays = Math.ceil(Math.abs(lastDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+
+            const labels = [];
+            const dataPoints = [];
+
+            for (let i = 0; i < totalDays; i++) {
+                let currentDate = new Date(startDate); 
+                currentDate.setDate(startDate.getDate() + i);
+                let dateStr = currentDate.toISOString().split('T')[0];
+                
+                labels.push(formatDateTR(dateStr));
+                dataPoints.push(dailyPoints[dateStr] || 0);
+            }
+
+            renderDrillChart(labels, dataPoints, [], 'dailyLine');
+        }
+
+        function renderDrillChart(labels, actualData, targetData, chartType) {
+            const ctx = document.getElementById('drilldownChart').getContext('2d');
+            
+            if(drillChart) drillChart.destroy();
+            
+            const fillGradient = ctx.createLinearGradient(0,0,0,350);
+            fillGradient.addColorStop(0, 'rgba(255, 184, 28, 0.4)'); 
+            fillGradient.addColorStop(1, 'rgba(255, 184, 28, 0.0)'); 
+            
+            const datasets = [];
+            if (chartType === 'line') {
+                datasets.push({ 
+                    label: 'Gerçekleşen', 
+                    data: actualData, 
+                    borderColor: '#FFB81C', borderWidth: 3, backgroundColor: fillGradient, fill: true, tension: 0.3, 
+                    pointRadius: 4, pointBackgroundColor: '#ffffff', pointBorderColor: '#FFB81C', pointBorderWidth: 2, order: 1,
+                    datalabels: { display: false }
+                });
+                datasets.push({ 
+                    label: 'Hedef', 
+                    data: targetData, 
+                    borderColor: '#94a3b8', borderWidth: 2, borderDash: [6, 6], pointRadius: 0, fill: false, tension: 0, order: 2,
+                    datalabels: { display: false }
+                });
+            } else if (chartType === 'dailyLine') {
+                // Günlük Puan Detay Grafiği: Çizgi/Nokta formatında (Kümülatif değil)
+                datasets.push({
+                    label: 'Günlük Puan',
+                    data: actualData,
+                    borderColor: '#FFB81C',
+                    backgroundColor: 'rgba(255, 184, 28, 0.1)',
+                    borderWidth: 2,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#ffffff',
+                    pointBorderColor: '#FFB81C',
+                    pointBorderWidth: 2,
+                    fill: false, // Dolgu yok
+                    tension: 0.1, // Daha keskin çizgiler
+                    datalabels: {
+                        color: '#1e293b', 
+                        anchor: 'end', 
+                        align: 'top', 
+                        font: {size: 10, weight:'bold'},
+                        formatter: (val) => val > 0.01 ? val.toFixed(2) : ''
+                    }
+                });
+            } else {
+                // Bar Chart (Eğer gerekirse yedek)
+                datasets.push({
+                    label: 'Veri',
+                    data: actualData,
+                    backgroundColor: '#FFB81C',
+                    borderRadius: 4,
+                    datalabels: { display: true }
+                });
+            }
+
+            drillChart = new Chart(ctx, {
+                type: (chartType === 'dailyLine') ? 'line' : chartType,
+                data: {
+                    labels: labels,
+                    datasets: datasets
+                },
+                options: { 
+                    responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+                    scales: { 
+                        y: { 
+                            beginAtZero: true,
+                            grid: { color: '#f3f4f6', borderDash: [5, 5] }, 
+                            ticks: { callback: function(value) { return chartType === 'line' ? new Intl.NumberFormat('tr-TR', { notation: "compact", compactDisplay: "short" }).format(value) : value.toFixed(1); } } 
+                        }, 
+                        x: { grid: { display: false }, ticks: { autoSkip: true, maxTicksLimit: 15 } } 
+                    },
+                    plugins: { 
+                        tooltip: { backgroundColor: '#1e293b', callbacks: { label: function(context) { 
+                            let label = context.dataset.label || '';
+                            if (label) label += ': ';
+                            if(chartType === 'line') return label + new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(context.parsed.y);
+                            else return label + context.parsed.y.toFixed(3) + ' Puan';
+                        } } }, 
+                        legend: { display: false },
+                        datalabels: { display: (chartType === 'dailyLine' || chartType === 'bar') } 
+                    }
+                }
+            });
+            
+            const currentTheme = localStorage.getItem('appTheme') || 'day';
+            updateChartsForTheme(currentTheme);
+        }
+
+        function closeModal() { document.getElementById('drilldownModal').classList.add('hidden'); document.getElementById('drilldownModal').classList.remove('flex'); }
+        function formatMoney(amount) { return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 }).format(amount); }
+        function formatDateTR(dateStr) { if(!dateStr) return ""; const parts = dateStr.split('-'); return `${parts[2]}.${parts[1]}.${parts[0]}`; }
+        
+        function switchTab(tab) {
+            // Tüm sekmeleri gizle
+            document.getElementById('section-mudurluk').classList.add('hidden');
+            document.getElementById('section-personel').classList.add('hidden');
+            if(document.getElementById('section-takim')) document.getElementById('section-takim').classList.add('hidden');
+            
+            // Buton stillerini sıfırla
+            document.querySelectorAll('.tab-btn').forEach(btn => { 
+                btn.classList.remove('active', 'text-brand-dark', 'active-tab-text'); 
+                btn.classList.add('text-gray-400'); 
+            });
+            
+            // Seçilen sekmeyi aç ve butonu aktif yap
+            document.getElementById('tab-'+tab).classList.add('active', 'text-brand-dark', 'active-tab-text');
+            document.getElementById('section-'+tab).classList.remove('hidden');
+
+            // --- KRİTİK DÜZELTME: Sekme açıldığında grafiği yeniden çiz ---
+            // Böylece gizli sekme sorunu ortadan kalkar ve güncel veriyle çizilir.
+            if(tab === 'mudurluk') renderMudurlukPage();
+            if(tab === 'takim' && typeof renderTakimPage === 'function') renderTakimPage();
+            if(tab === 'personel') applyPersonnelFilters();
+        }
+
+        window.addEventListener('DOMContentLoaded', () => { initApp(); });
+    </script>
+</body>
+</html>
