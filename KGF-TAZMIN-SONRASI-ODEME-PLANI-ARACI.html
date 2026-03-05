@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Dış Kaynaklı Krediler Ödeme Planı Aracı</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --bg:#0f172a; --card:#111827; --muted:#94a3b8; --accent:#22c55e; --accent2:#06b6d4; --ink:#e5e7eb; --edge:#1f2a44;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:linear-gradient(135deg,#0b1220,#0f172a);color:var(--ink);
+       font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Inter,Roboto,Arial}
+  header{padding:22px 14px;text-align:center;border-bottom:1px solid #1e293b}
+  h1{margin:0;font-size:22px}
+  .container{max-width:1300px;margin:18px auto;padding:0 14px}
+  .grid{display:grid;gap:14px}
+  @media(min-width:980px){.grid{grid-template-columns:1fr 1.5fr}}
+  .card{background:linear-gradient(180deg,var(--card),#0b1220);border:1px solid var(--edge);
+        border-radius:14px;padding:14px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+  .row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px}
+  label{font-size:12px;color:var(--muted)}
+  input,select,textarea{
+    width:100%;padding:10px 12px;border-radius:10px;border:1px solid #223152;outline:none;
+    background:#0b1220;color:var(--ink);font-size:14px
+  }
+  input:focus,select:focus,textarea:focus{border-color:#2a4c9c;box-shadow:0 0 0 3px rgba(37,99,235,.15)}
+  .btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+  button{border:none;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer;color:white}
+  .primary{background:linear-gradient(135deg,var(--accent),#16a34a)}
+  .secondary{background:linear-gradient(135deg,var(--accent2),#0ea5e9)}
+  .danger{background:linear-gradient(135deg,#ef4444,#dc2626)}
+  .ghost{background:#0b1220;border:1px solid #223152;color:#d1d5db}
+  table{width:100%;border-collapse:collapse;font-size:13px;background:#0a0f1c;border-radius:12px;overflow:hidden}
+  th,td{padding:10px 8px;border: 1px solid #18233c;text-align:right}
+  td:first-child,th:first-child{text-align:left}
+  th{position:sticky;top:0;background:#0f172a;z-index:1}
+  .kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:10px; margin-bottom: 14px;}
+  .tile{background:#0b1220;border:1px solid #223152;border-radius:12px;padding:12px}
+  .tile .v{font-size:18px;font-weight:800}
+  .hint{font-size:12px;color:#9ca3af}
+  .footer{font-size:12px;color:#9ca3af;margin-top:10px; display: flex; flex-direction: column; gap: 8px;}
+  .badge{display:inline-block;padding:2px 8px;border:1px solid #20406e;border-radius:999px;
+         font-size:11px;color:#a5b4fc;background:#0b1220}
+  .tag{display:inline-block;font-size:11px;border:1px solid #1f2a44;border-radius:999px;padding:4px 8px}
+  .totals{font-weight:800}
+  .tazmin-tahsilat-row, .tazmin-oncesi-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 8px;
+    margin-bottom: 8px;
+    align-items: center;
+  }
+  .config-row{margin-top: 10px;}
+  #tableWrap {
+    overflow-x: auto;
+    max-height: 60vh;
+    border: 1px solid var(--edge);
+    border-radius: 12px;
+    background: #0a0f1c;
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent) var(--card);
+  }
+  #tableWrap::-webkit-scrollbar { height: 8px; width: 8px; }
+  #tableWrap::-webkit-scrollbar-track { background: var(--card); border-radius: 4px; }
+  #tableWrap::-webkit-scrollbar-thumb { background-color: var(--accent); border-radius: 4px; }
+  #tableWrap thead th { position: sticky; top: 0; background: #0f172a; z-index: 10; }
+
+  #selection-container {
+    text-align: center;
+    padding: 40px 20px;
+  }
+  #selection-container h2 {
+    color: var(--muted);
+    font-weight: 500;
+    margin-bottom: 24px;
+  }
+  .selection-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .selection-buttons button {
+    padding: 20px 40px;
+    font-size: 18px;
+    min-width: 220px;
+  }
+  .editable-taksit {
+    padding: 6px 8px !important;
+    font-size: 13px !important;
+    text-align: right;
+  }
+
+</style>
+</head>
+<body>
+<header>
+  <h1>Dış Kaynaklı Krediler Ödeme Planı Aracı</h1>
+</header>
+
+<div class="container">
+  <div id="selection-container">
+    <h2>Lütfen bir ödeme planı senaryosu seçin:</h2>
+    <div class="selection-buttons">
+      <button class="primary" id="btn-select-equal">Eşit Taksit</button>
+      <button class="secondary" id="btn-select-flex">Esnek Taksit</button>
+    </div>
+  </div>
+
+  <div id="equal-taksit-container" class="grid" style="display:none;">
+  </div>
+
+  <div id="flex-taksit-container" style="display:none;">
+  </div>
+
+</div>
+
+
+<script>
+// ---------- TEMPLATE HTML (Klonlama için kaynak) ----------
+const appTemplate = `
+  <div class="grid">
+    <div>
+      <div class="card">
+        <div class="row">
+          <div><label>Asıl Alacak</label><input type="text" id="asal" class="sanitize-number" value="100000"></div>
+          <div><label>Masraf</label><input type="text" id="masraf" class="sanitize-number" value="2500"></div>
+        </div>
+        <div class="row">
+          <div><label>Kat Öncesi Faiz-VIT</label><input type="text" id="katOncesiFaizVIT" class="sanitize-number" value="5000"></div>
+          <div><label>Gecikme Faizi (Kat Öncesi)</label><input type="text" id="gecikmeFaizi" class="sanitize-number" value="2000"></div>
+        </div>
+        <div class="row">
+          <div><label>Akdi Faiz (İşlemiş Olan)</label><input type="text" id="akdiFaiz" class="sanitize-number" value="3000"></div>
+          <div><label>Temerrüt Öncesi Faiz-VIT</label><input type="text" id="temerrutOncesiFaizVIT" class="sanitize-number" value="1500"></div>
+        </div>
+         <div class="row">
+          <div><label>KTVÜ (Vekalet Ücreti)</label><input type="text" id="ktvu" class="sanitize-number" value="5000"></div>
+          <div><label>Ödeme Planı Faiz Orani (%)</label><input type="text" id="temerrutYillik" class="sanitize-number" value="36"></div>
+        </div>
+        <div class="row-3">
+          <div><label>Plan Başlangıç Tarihi</label><input type="date" id="baslangic" value=""></div>
+          <div><label>Temerrüt Başlangıç Tarihi<br/><span style="font-size: 10px; color: #64748b;">(Faize Esas Tarih)</span></label><input type="date" id="temerrutBaslangic" value=""></div>
+          <div><label>Vade (Ay)</label><input type="number" id="vade" value="24" min="1" step="1"></div>
+        </div>
+         <div><label>Ödemesiz Dönem (Ay)</label><input type="number" id="odemesiz" value="0" min="0" step="1"></div>
+      </div>
+      <div class="card" style="margin-top:10px">
+        <h2>KGF Tazmin & İade</h2>
+        <div class="row-3">
+          <div><label>Tazmin Tutarı</label><input type="text" id="tazminTutari" class="sanitize-number" value="70000"></div>
+          <div><label>Tazmin Tarihi</label><input type="date" id="tazminTarihi" value=""></div>
+          <div><label>Kefalet Marjı (%)</label><input type="text" id="kefaletMarji" class="sanitize-number" value="90"></div>
+        </div>
+        <div style="margin-top:12px;">
+          <div style="margin-bottom:6px;font-weight:700;color:var(--muted)">Tazmin Öncesi Tahsilatlar</div>
+          <div class="tazminOncesiContainer"></div>
+          <button class="secondary addTazminOncesi" style="padding:6px 10px;font-size:12px;margin-top:6px">+ Tazmin Öncesi Tahsilat Ekle</button>
+        </div>
+        <div style="margin-top:10px">
+          <div style="margin-bottom:6px;font-weight:700;color:var(--muted)">Tazmin Sonrası Tahsilatlar</div>
+          <div class="tazminTahsilatlarContainer" style="margin-top:6px"></div>
+          <button class="secondary addTazminTahsilat" style="padding:6px 10px;font-size:12px;margin-top:6px">+ Tazmin Sonrası Tahsilat Ekle</button>
+        </div>
+      </div>
+      <div class="card" style="margin-top:10px">
+          <h2>Kurallar</h2>
+          <div class="config-row">
+             <label class="tag"><input type="checkbox" id="applyBusinessDayRule" checked> İş Günü Kuralını Uygula</label>
+          </div>
+      </div>
+      <div class="btns" style="margin-top:14px">
+        <button class="ghost btnBugun">Tarihleri Doldur</button>
+        <button class="primary btnHesapla">Planı Hesapla</button>
+        <button class="secondary btnCSV">XLS İndir</button>
+      </div>
+      <div class="footer">
+        <div><span class="badge">İş Günü Kuralı</span> Aktifse, tatillerde taksit tarihi sonraki iş gününe kayar.</div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Özet</h2>
+      <div class="kpi">
+        <div class="tile"><div class="hint">Başlangıç Toplam Borç</div><div class="v k1">—</div></div>
+        <div class="tile"><div class="hint">Aylık Taksit (Eşitse)</div><div class="v k2">—</div></div>
+        <div class="tile"><div class="hint">Toplam KGF İade (Plan)</div><div class="v k3">—</div></div>
+        <div class="tile"><div class="hint">Toplam Tahsilat (Plan)</div><div class="v k4">—</div></div>
+      </div>
+      <div class="footer ozetNot" style="margin-bottom:14px">“Planı Hesapla”ya basın.</div>
+      <h2>Ödeme Planı</h2>
+      <div class="tableWrap">
+        <table class="plan">
+          <thead>
+            <tr>
+              <th>Taksit No</th>
+              <th>Tarih</th>
+              <th>Toplam Taksit</th>
+              <th>Tahsilat</th>
+              <th>KGF İade</th>
+            </tr>
+          </thead>
+          <tbody class="tbody"></tbody>
+          <tfoot>
+            <tr class="totals">
+              <td colspan="2">TOPLAM</td>
+              <td class="tot_toplam" style="text-align:right">—</td>
+              <td class="tot_tahsilat" style="text-align:right">—</td>
+              <td class="tot_kgf" style="text-align:right">—</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+`;
+
+(function(){
+  // --------- Utils (Genel Yardımcı Fonksiyonlar)
+  const fmt = x => isFinite(x) ? new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:2}).format(round2(x)):'—';
+  const round2 = x => Math.round((+x+Number.EPSILON)*100)/100;
+  const toISO = d => d.toISOString().slice(0,10);
+  const fmtDate = dStr => {
+      if (!dStr) return '—';
+      const [y, m, d] = dStr.split('-');
+      return `${d}.${m}.${y}`;
+  };
+  const daysBetween = (a,b) => (b > a) ? Math.floor((b-a)/(1000*60*60*24)) : 0;
+  const sum = a => a.reduce((x,y)=>x+y,0);
+  const addMonthsRobust = (d, m) => {
+      const originalDate = new Date(d);
+      const expectedDay = originalDate.getDate();
+      const newDate = new Date(originalDate.getTime());
+      newDate.setMonth(newDate.getMonth() + m);
+      if (newDate.getDate() !== expectedDay) {
+          newDate.setDate(0);
+      }
+      return newDate;
+  };
+
+  // *** YENİ: GÜVENİLİR TATİL GÜNÜ HESAPLAMA ***
+  const HolidayUtil = (function() {
+      const cache = {};
+      // Türkiye için resmi ve dini bayram tatilleri (Arefe günleri dahil)
+      const HOLIDAY_DATA = {
+        2024: ["2024-01-01","2024-04-09","2024-04-10","2024-04-11","2024-04-12","2024-04-23","2024-05-01","2024-05-19","2024-06-15","2024-06-16","2024-06-17","2024-06-18","2024-06-19","2024-07-15","2024-08-30","2024-10-29"],
+        2025: ["2025-01-01", "2025-03-29", "2025-03-30", "2025-03-31", "2025-04-01", "2025-04-23", "2025-05-01", "2025-05-19", "2025-06-05", "2025-06-06", "2025-06-07", "2025-06-08", "2025-06-09", "2025-07-15", "2025-08-30", "2025-10-29"],
+        2026: ["2026-01-01", "2026-03-19", "2026-03-20", "2026-03-21", "2026-03-22", "2026-04-23", "2026-05-01", "2026-05-19", "2026-05-26", "2026-05-27", "2026-05-28", "2026-05-29", "2026-05-30", "2026-07-15", "2026-08-30", "2026-10-29"],
+        2027: ["2027-01-01", "2027-03-08", "2027-03-09", "2027-03-10", "2027-03-11", "2027-04-23", "2027-05-01", "2027-05-16", "2027-05-17", "2027-05-18", "2027-05-19", "2027-05-20", "2027-07-15", "2027-08-30", "2027-10-29"],
+        2028: ["2028-01-01", "2028-02-25", "2028-02-26", "2028-02-27", "2028-02-28", "2028-04-23", "2028-05-01", "2028-05-04", "2028-05-05", "2028-05-06", "2028-05-07", "2028-05-08", "2028-05-19", "2028-07-15", "2028-08-30", "2028-10-29"],
+	    2029: ["2029-01-01","2029-02-13","2029-02-14","2029-02-15","2029-02-16","2029-04-23","2029-05-01","2029-05-23","2029-05-24","2029-05-25","2029-05-26","2029-05-27","2029-05-19","2029-07-15","2029-08-30","2029-10-29"],
+	    2030: ["2030-01-01","2030-02-03","2030-02-04","2030-02-05","2030-02-06","2030-04-23","2030-05-01","2030-05-13","2030-05-14","2030-05-15","2030-05-16","2030-05-17","2030-05-19","2030-07-15","2030-08-30","2030-10-29"],
+	    2031: ["2031-01-01","2031-01-23","2031-01-24","2031-01-25","2031-01-26","2031-04-23","2031-05-01","2031-05-02","2031-05-03","2031-05-04","2031-05-05","2031-05-06","2031-05-19","2031-07-15","2031-08-30","2031-10-29"],
+	    2032: ["2032-01-01","2032-01-12","2032-01-13","2032-01-14","2032-01-15","2032-04-23","2032-05-01","2032-04-21","2032-04-22","2032-04-23","2032-04-24","2032-04-25","2032-05-19","2032-07-15","2032-08-30","2032-10-29"],
+	    2033: ["2033-01-01","2033-01-01","2033-01-02","2033-01-03","2033-01-04","2033-04-23","2033-05-01","2033-04-10","2033-04-11","2033-04-12","2033-04-13","2033-04-14","2033-05-19","2033-07-15","2033-08-30","2033-10-29"],
+	    2034: ["2034-01-01","2034-03-29","2034-03-30","2034-03-31","2034-04-01","2034-04-23","2034-05-01","2034-05-19","2034-06-26","2034-06-27","2034-06-28","2034-06-29","2034-06-30","2034-07-15","2034-08-30","2034-10-29"],
+	    2035: ["2035-01-01","2035-03-19","2035-03-20","2035-03-21","2035-03-22","2035-04-23","2035-05-01","2035-05-19","2035-06-16","2035-06-17","2035-06-18","2035-06-19","2035-06-20","2035-07-15","2035-08-30","2035-10-29"],
+	    2036: ["2036-01-01","2036-03-07","2036-03-08","2036-03-09","2036-03-10","2036-04-23","2036-05-01","2036-05-19","2036-06-05","2036-06-06","2036-06-07","2036-06-08","2036-06-09","2036-07-15","2036-08-30","2036-10-29"],
+	    2037: ["2037-01-01","2037-02-24","2037-02-25","2037-02-26","2037-02-27","2037-04-23","2037-05-01","2037-05-19","2037-05-25","2037-05-26","2037-05-27","2037-05-28","2037-05-29","2037-07-15","2037-08-30","2037-10-29"],
+	    2038: ["2038-01-01","2038-02-13","2038-02-14","2038-02-15","2038-02-16","2038-04-23","2038-05-01","2038-05-19","2038-05-15","2038-05-16","2038-05-17","2038-05-18","2038-05-19","2038-07-15","2038-08-30","2038-10-29"],
+	    2039: ["2039-01-01","2039-02-02","2039-02-03","2039-02-04","2039-02-05","2039-04-23","2039-05-01","2039-05-19","2039-05-05","2039-05-06","2039-05-07","2039-05-08","2039-05-09","2039-07-15","2039-08-30","2039-10-29"],
+	    2040: ["2040-01-01","2040-01-22","2040-01-23","2040-01-24","2040-01-25","2040-04-23","2040-05-01","2040-05-19","2040-04-23","2040-04-24","2040-04-25","2040-04-26","2040-04-27","2040-07-15","2040-08-30","2040-10-29"],
+	    2041: ["2041-01-01","2041-01-10","2041-01-11","2041-01-12","2041-01-13","2041-04-23","2041-05-01","2041-05-19","2041-04-12","2041-04-13","2041-04-14","2041-04-15","2041-04-16","2041-07-15","2041-08-30","2041-10-29"],
+	    2042: ["2042-01-01","2042-03-31","2042-04-01","2042-04-02","2042-04-03","2042-04-23","2042-05-01","2042-05-19","2042-06-02","2042-06-03","2042-06-04","2042-06-05","2042-06-06","2042-07-15","2042-08-30","2042-10-29"],
+	    2043: ["2043-01-01","2043-03-21","2043-03-22","2043-03-23","2043-03-24","2043-04-23","2043-05-01","2043-05-19","2043-05-23","2043-05-24","2043-05-25","2043-05-26","2043-05-27","2043-07-15","2043-08-30","2043-10-29"],
+	    2044: ["2044-01-01","2044-03-09","2044-03-10","2044-03-11","2044-03-12","2044-04-23","2044-05-01","2044-05-19","2044-05-11","2044-05-12","2044-05-13","2044-05-14","2044-05-15","2044-07-15","2044-08-30","2044-10-29"],
+	    2045: ["2045-01-01","2045-02-26","2045-02-27","2045-02-28","2045-03-01","2045-04-23","2045-05-01","2045-05-19","2045-05-01","2045-05-02","2045-05-03","2045-05-04","2045-05-05","2045-07-15","2045-08-30","2045-10-29"],
+	    2046: ["2046-01-01","2046-02-16","2046-02-17","2046-02-18","2046-02-19","2046-04-23","2046-05-01","2046-05-19","2046-04-20","2046-04-21","2046-04-22","2046-04-23","2046-04-24","2046-07-15","2046-08-30","2046-10-29"],
+	    2047: ["2047-01-01","2047-02-05","2047-02-06","2047-02-07","2047-02-08","2047-04-23","2047-05-01","2047-05-19","2047-04-09","2047-04-10","2047-04-11","2047-04-12","2047-04-13","2047-07-15","2047-08-30","2047-10-29"],
+ 	    2048: ["2048-01-01","2048-03-26","2048-03-27","2048-03-28","2048-03-29","2048-04-23","2048-05-01","2048-05-19","2048-05-28","2048-05-29","2048-05-30","2048-05-31","2048-06-01","2048-07-15","2048-08-30","2048-10-29"],
+	    2049: ["2049-01-01","2049-03-15","2049-03-16","2049-03-17","2049-03-18","2049-04-23","2049-05-01","2049-05-19","2049-05-17","2049-05-18","2049-05-19","2049-05-20","2049-05-21","2049-07-15","2049-08-30","2049-10-29"],
+ 	    2050: ["2050-01-01","2050-04-18","2050-04-19","2050-04-20","2050-04-21","2050-04-23","2050-05-01","2050-05-19","2050-06-09","2050-06-10","2050-06-11","2050-06-12","2050-06-13","2050-07-15","2050-08-30","2050-10-29"]
+      };
+
+      return {
+          getHolidays: function(year) {
+              if (cache[year]) return cache[year];
+              const holidays = HOLIDAY_DATA[year] || [];
+              cache[year] = holidays;
+              return holidays;
+          }
+      };
+  })();
+
+  const isWeekend = d => [0,6].includes(d.getDay());
+  const isHoliday = d => HolidayUtil.getHolidays(d.getFullYear()).includes(toISO(d));
+
+  // ---------- ÇEKİRDEK HESAPLAMA MANTIĞI (Her iki mod için de ortak) ----------
+
+  function toNextBusiness(d, applyRule) {
+    if (!applyRule) return d;
+    const nd = new Date(d);
+    while(isWeekend(nd) || isHoliday(nd)){ nd.setDate(nd.getDate()+1); }
+    return nd;
+  };
+
+  function parseNumberFromInput(el){
+    const s = el.value || '';
+    if(s.trim() === '') return null;
+    const removedDots = s.replace(/\./g,'');
+    const normalized = removedDots.replace(',', '.');
+    const n = parseFloat(normalized);
+    return isFinite(n) ? n : null;
+  }
+
+  function getInputs(context){
+    const $ = s => context.querySelector(s);
+    const $$ = s => context.querySelectorAll(s);
+
+    const asal = parseNumberFromInput($('#asal')) ?? 0;
+    const masraf = parseNumberFromInput($('#masraf')) ?? 0;
+    const ktvu = parseNumberFromInput($('#ktvu')) ?? 0;
+    const katOncesiFaizVIT = parseNumberFromInput($('#katOncesiFaizVIT')) ?? 0;
+    const gecikmeFaizi = parseNumberFromInput($('#gecikmeFaizi')) ?? 0;
+    const akdiFaiz = parseNumberFromInput($('#akdiFaiz')) ?? 0;
+    const temerrutOncesiFaizVIT = parseNumberFromInput($('#temerrutOncesiFaizVIT')) ?? 0;
+    const temerrutYillik = parseNumberFromInput($('#temerrutYillik')) ?? 0;
+    const vade = parseInt($('#vade').value || '0', 10);
+    const odemesiz = parseInt($('#odemesiz').value || '0', 10);
+    const tazminTutari = parseNumberFromInput($('#tazminTutari')) ?? 0;
+    const kefaletMarji = parseNumberFromInput($('#kefaletMarji')) ?? 0;
+    const baslangic = new Date($('#baslangic').value);
+    const temerrutBaslangic = new Date($('#temerrutBaslangic').value);
+    const tazminTarihi = new Date($('#tazminTarihi').value);
+
+    const tazminSonrasiTahsilatlar = Array.from($$('.tazmin-tahsilat-row')).map(row => {
+      const tutarEl = row.querySelector('.tazmin-tahsilat-tutar');
+      const tutar = tutarEl ? (parseNumberFromInput(tutarEl) ?? 0) : 0;
+      const tarihStr = row.querySelector('.tazmin-tahsilat-tarih').value;
+      if (!tarihStr || tutar <= 0) return null;
+      return { tutar, tarih: new Date(tarihStr) };
+    }).filter(Boolean).sort((a,b) => a.tarih - b.tarih);
+
+    const tazminOncesiTahsilatlar = Array.from($$('.tazmin-oncesi-row')).map(row => {
+      const tutarEl = row.querySelector('.tazmin-oncesi-tutar');
+      const tutar = tutarEl ? (parseNumberFromInput(tutarEl) ?? 0) : 0;
+      const tarihStr = row.querySelector('.tazmin-oncesi-tarih').value;
+      if (!tarihStr || tutar <= 0) return null;
+      return { tutar, tarih: new Date(tarihStr) };
+    }).filter(Boolean).sort((a,b) => a.tarih - b.tarih)
+    .filter(t => !isNaN(temerrutBaslangic.getTime()) && !isNaN(tazminTarihi.getTime()) ? (t.tarih >= temerrutBaslangic && t.tarih <= tazminTarihi) : true);
+
+    if(isNaN(baslangic.getTime())||isNaN(temerrutBaslangic.getTime())) throw new Error('Tarih alanlarını doldurun.');
+    if(vade<1) throw new Error('Vade en az 1 ay olmalı.');
+    if(odemesiz < 0 || odemesiz > vade) throw new Error('Ödemesiz dönem 0 ile vade arasında olmalı.');
+    if(kefaletMarji < 0 || kefaletMarji > 100) throw new Error('Kefalet Marjı %0 ile %100 arasında olmalıdır.');
+
+    return {
+      asal, masraf, ktvu, katOncesiFaizVIT, gecikmeFaizi, akdiFaiz, temerrutOncesiFaizVIT,
+      temerrutYillik: temerrutYillik / 100, vade, odemesiz,
+      baslangic, temerrutBaslangic, tazminTarihi, tazminTutari, kefaletMarji: kefaletMarji / 100,
+      tazminSonrasiTahsilatlar, tazminOncesiTahsilatlar,
+      applyBusinessDayRule: $('#applyBusinessDayRule').checked
+    };
+  }
+
+  function scheduleDates(p){
+    const dates=[];
+    for(let i = 0; i < p.vade; i++){
+      const d = addMonthsRobust(p.baslangic, i);
+      dates.push(toNextBusiness(d, p.applyBusinessDayRule));
+    }
+    return {dates};
+  }
+
+  function applyPayment(bal, amt){
+    let remaining = amt;
+    const use = k => { const take=Math.min(Math.max(0,bal[k]||0), remaining); bal[k]=round2((bal[k]||0)-take); remaining=round2(remaining-take); };
+    use('asal'); use('masraf'); use('katOncesiFaizVIT'); use('gecikmeFaizi'); use('akdiFaiz'); use('temerrutOncesiFaizVIT'); use('planFaizi'); use('planFaiziBSMV'); use('ktvu');
+  }
+
+  function accrue(bal, p, from, to){
+    if (to <= from) return;
+    const days = daysBetween(from, to);
+    const faizeEsasTutar = (bal.asal||0) + (bal.katOncesiFaizVIT||0);
+    if (faizeEsasTutar > 0) {
+      const faiz = faizeEsasTutar * p.temerrutYillik * (days / 360);
+      bal.planFaizi += faiz;
+      bal.planFaiziBSMV += faiz * 0.05;
+    }
+  }
+
+  function simulate(p, monthlyTotals) {
+    let bal = { asal: p.asal, masraf: p.masraf, ktvu: p.ktvu, katOncesiFaizVIT: p.katOncesiFaizVIT, gecikmeFaizi: p.gecikmeFaizi, akdiFaiz: p.akdiFaiz, temerrutOncesiFaizVIT: p.temerrutOncesiFaizVIT, planFaizi: 0, planFaiziBSMV: 0 };
+    const { dates: paymentDates } = scheduleDates(p);
+    const hasTazmin = !isNaN(p.tazminTarihi.getTime()) && p.tazminTutari > 0;
+    let kgfOwed = p.tazminTutari;
+    const allEventDates = new Set([p.temerrutBaslangic.getTime()]);
+    if (hasTazmin) allEventDates.add(p.tazminTarihi.getTime());
+    p.tazminOncesiTahsilatlar.forEach(t => allEventDates.add(t.tarih.getTime()));
+    p.tazminSonrasiTahsilatlar.forEach(t => allEventDates.add(t.tarih.getTime()));
+    paymentDates.forEach(d => allEventDates.add(d.getTime()));
+    const sortedDates = [...allEventDates].map(t => new Date(t)).sort((a, b) => a - b);
+    let lastDate = p.temerrutBaslangic;
+    const eventRows = [];
+    for (const currentDate of sortedDates) {
+        if (currentDate <= lastDate) continue;
+        accrue(bal, p, lastDate, currentDate);
+        if (hasTazmin && kgfOwed > 0.01 && currentDate > p.tazminTarihi) {
+            const interestStartDate = (lastDate > p.tazminTarihi) ? lastDate : p.tazminTarihi;
+            const days = daysBetween(interestStartDate, currentDate);
+            if (days > 0) {
+                const interest = kgfOwed * p.temerrutYillik * (days / 360);
+                kgfOwed += interest;
+            }
+        }
+        const preTahsil = p.tazminOncesiTahsilatlar.find(t => t.tarih.getTime() === currentDate.getTime());
+        if (preTahsil) {
+            const amountToApply = round2(Math.min(preTahsil.tutar, bal.asal));
+            bal.asal = Math.max(0, bal.asal - amountToApply);
+            eventRows.push({ type: 'pre', tarih: toISO(currentDate), kgf: 0, tahsilat: amountToApply });
+        }
+        if (hasTazmin && currentDate.getTime() === p.tazminTarihi.getTime()) {
+            bal.asal = Math.max(0, bal.asal - p.tazminTutari);
+            eventRows.push({ type: 'tazmin', tarih: toISO(currentDate), kgf: p.tazminTutari, tahsilat: 0 });
+        }
+        const tsTahsilat = p.tazminSonrasiTahsilatlar.find(t => t.tarih.getTime() === currentDate.getTime());
+        if (tsTahsilat) {
+            const totalAmount = tsTahsilat.tutar;
+            const kgfShare = round2(totalAmount * p.kefaletMarji);
+            const bankaShare = round2(totalAmount - kgfShare);
+            if (kgfShare > 0 && kgfOwed > 0.01) {
+                const actualKgfPayment = round2(Math.min(kgfOwed, kgfShare));
+                kgfOwed = round2(kgfOwed - actualKgfPayment);
+                eventRows.push({ type: 'kgf_direct', tarih: toISO(currentDate), kgf: actualKgfPayment });
+            }
+            if (bankaShare > 0) {
+                applyPayment(bal, bankaShare);
+                eventRows.push({ type: 'banka_direct', tarih: toISO(currentDate), tahsilat: bankaShare });
+            }
+        }
+        const paymentIndex = paymentDates.findIndex(d => d.getTime() === currentDate.getTime());
+        if (paymentIndex > -1) {
+            let toplamTaksit = monthlyTotals[paymentIndex] || 0;
+            let kgfIadeFromThisPayment = 0;
+            if (hasTazmin && currentDate >= p.tazminTarihi && toplamTaksit > 0 && kgfOwed > 0.01) {
+                const potentialIade = toplamTaksit * p.kefaletMarji;
+                kgfIadeFromThisPayment = round2(Math.min(kgfOwed, potentialIade));
+            }
+            const tahsilat = round2(toplamTaksit - kgfIadeFromThisPayment);
+            applyPayment(bal, tahsilat);
+            kgfOwed = round2(kgfOwed - kgfIadeFromThisPayment);
+            eventRows.push({ type: 'installment', no: paymentIndex + 1, tarih: toISO(currentDate), toplam: toplamTaksit, tahsilat: tahsilat, kgf: kgfIadeFromThisPayment });
+        }
+        lastDate = currentDate;
+    }
+    eventRows.sort((a, b) => new Date(a.tarih) - new Date(b.tarih));
+    const totals = {
+        toplam: round2(sum(eventRows.filter(r => r.type === 'installment').map(r => r.toplam || 0))),
+        tahsilat: round2(sum(eventRows.filter(r => r.type === 'installment' || r.type === 'banka_direct' || r.type === 'pre').map(r => r.tahsilat || 0))),
+        kgf: round2(sum(eventRows.filter(r => r.type === 'installment' || r.type === 'kgf_direct' || r.type === 'tazmin').map(r => r.kgf || 0)))
+    };
+    const remaining = round2(Object.values(bal).reduce((s, v) => s + Math.max(0, v || 0), 0));
+    return { rows: eventRows, totals, remaining };
+  }
+
+  function solveEqualMonthly(p){
+    const payMonths = p.vade - p.odemesiz;
+    if(payMonths<=0) return 0;
+    const totalStart = p.asal + p.masraf + p.ktvu + p.katOncesiFaizVIT + p.gecikmeFaizi + p.akdiFaiz + p.temerrutOncesiFaizVIT;
+    let lo=0, hi=(totalStart * 2.5) / payMonths;
+    for(let iter=0; iter<50; iter++){
+      const mid=(lo+hi)/2;
+      const monthly = Array.from({length:p.vade}, (_,i)=> (i < p.odemesiz)?0:mid);
+      const sim = simulate(p, monthly);
+      if(sim.remaining > 0.01){ lo=mid; } else { hi=mid; }
+      if(Math.abs(hi-lo) < 0.01) break;
+    }
+    return round2(hi);
+  }
+
+  function solveFlexMonthly(p, fixedPayments) {
+      const flexibleIndices = fixedPayments.map((p, i) => p === null ? i : -1).filter(i => i !== -1);
+      const nonPayingMonths = flexibleIndices.filter(i => i < p.odemesiz).length;
+      const payMonths = flexibleIndices.length - nonPayingMonths;
+      if (payMonths <= 0) return 0;
+
+      const totalStart = p.asal + p.masraf + p.ktvu + p.katOncesiFaizVIT + p.gecikmeFaizi + p.akdiFaiz + p.temerrutOncesiFaizVIT;
+      let lo = 0, hi = (totalStart * 2.5) / payMonths;
+
+      for(let iter = 0; iter < 50; iter++) {
+          const mid = (lo + hi) / 2;
+          const monthly = [...fixedPayments];
+          flexibleIndices.forEach(i => {
+              monthly[i] = (i < p.odemesiz) ? 0 : mid;
+          });
+
+          const sim = simulate(p, monthly);
+          if(sim.remaining > 0.01) { lo = mid; } else { hi = mid; }
+          if(Math.abs(hi - lo) < 0.01) break;
+      }
+      return round2(hi);
+  }
+
+
+  // ---------- ARAYÜZ YÖNETİMİ VE OLAY DİNLEYİCİLERİ ----------
+
+  function initializeApp(context, mode) {
+    const $ = s => context.querySelector(s);
+    const $$ = s => context.querySelectorAll(s);
+
+    function attachSanitize(nodeList) {
+        nodeList.forEach(inp=>{
+          inp.addEventListener('input', e => {
+            const val = e.target.value || '';
+            const cleaned = val.replace(/\./g, '');
+            const parts = cleaned.split(',');
+            e.target.value = parts.length <= 1 ? cleaned : parts.shift() + ',' + parts.join('');
+          });
+        });
+    }
+
+    function addTazminTahsilatRow() {
+        const container = $('.tazminTahsilatlarContainer');
+        const div = document.createElement('div');
+        div.className = 'tazmin-tahsilat-row';
+        div.innerHTML = `
+          <div><label>T.S. Tutar</label><input type="text" class="tazmin-tahsilat-tutar sanitize-number" value="0"></div>
+          <div><label>T.S. Tarih</label><input type="date" class="tazmin-tahsilat-tarih"></div>
+          <button class="danger" onclick="this.parentElement.remove()">Sil</button>`;
+        container.appendChild(div);
+        attachSanitize(div.querySelectorAll('.sanitize-number'));
+    }
+
+    function addTazminOncesiRow() {
+        const container = $('.tazminOncesiContainer');
+        const div = document.createElement('div');
+        div.className = 'tazmin-oncesi-row';
+        div.innerHTML = `
+          <div><label>Öncesi Tutar</label><input type="text" class="tazmin-oncesi-tutar sanitize-number" value="0"></div>
+          <div><label>Öncesi Tarih</label><input type="date" class="tazmin-oncesi-tarih"></div>
+          <button class="danger" onclick="this.parentElement.remove()">Sil</button>`;
+        container.appendChild(div);
+        attachSanitize(div.querySelectorAll('.sanitize-number'));
+    }
+
+    $('.btnBugun').addEventListener('click', () => {
+        const today = new Date();
+        $('#baslangic').value = toISO(today);
+        $('#temerrutBaslangic').value = toISO(new Date(today.getFullYear(), today.getMonth(), 1));
+        const tazminDate = new Date(today);
+        tazminDate.setMonth(tazminDate.getMonth() + 1);
+        tazminDate.setDate(10);
+        $('#tazminTarihi').value = toISO(tazminDate);
+    });
+
+    $('.addTazminTahsilat').addEventListener('click', addTazminTahsilatRow);
+    $('.addTazminOncesi').addEventListener('click', addTazminOncesiRow);
+    attachSanitize($$('.sanitize-number'));
+
+    function displayResults(p, finalSim, monthlyTotals, isEditable) {
+        const tbody = $('.tbody');
+        tbody.innerHTML = '';
+        finalSim.rows.forEach(r => {
+            const tr = document.createElement('tr');
+            let cells;
+            if (r.type === 'installment') {
+                const totalCellContent = isEditable
+                    ? `<input type="text" class="editable-taksit sanitize-number" data-no="${r.no}" value="${round2(r.toplam)}">`
+                    : fmt(r.toplam);
+                cells = [r.no, fmtDate(r.tarih), totalCellContent, fmt(r.tahsilat), fmt(r.kgf)];
+            } else if (r.type === 'pre') {
+                cells = ['T.Ö.', fmtDate(r.tarih), '—', fmt(r.tahsilat), '—'];
+            } else if (r.type === 'tazmin') {
+                cells = ['Tazmin', fmtDate(r.tarih), '—', '—', fmt(r.kgf)];
+            } else if (r.type === 'kgf_direct') {
+                cells = ['T.S. KGF', fmtDate(r.tarih), '—', '—', fmt(r.kgf)];
+            } else if (r.type === 'banka_direct') {
+                cells = ['T.S. Banka', fmtDate(r.tarih), '—', fmt(r.tahsilat), '—'];
+            }
+            cells.forEach((v,i) => {
+                const td = document.createElement('td');
+                if (i === 2 && isEditable && r.type === 'installment') {
+                    td.innerHTML = v;
+                } else {
+                    td.textContent = v;
+                }
+                tr.appendChild(td);
+            });
+            tbody.appendChild(tr);
+        });
+        
+        // ----- YENİ EKLENEN KOD BAŞLANGICI -----
+        const headerCell = context.querySelector('.plan th:nth-child(3)');
+        if (headerCell) {
+            if (isEditable) {
+                headerCell.innerHTML = `Toplam Taksit
+                  <button id="btnClearInstallments"
+                          style="font-size: 10px; padding: 2px 6px; margin-left: 8px; border-radius: 5px; border: 1px solid var(--edge); background: var(--card); color: var(--muted); cursor: pointer;">
+                    Temizle
+                  </button>`;
+                const btnClear = headerCell.querySelector('#btnClearInstallments');
+                if (btnClear) {
+                    btnClear.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const editableInputs = tbody.querySelectorAll('.editable-taksit');
+                        editableInputs.forEach(input => {
+                            input.value = '';
+                        });
+                    });
+                }
+            } else {
+                headerCell.innerHTML = 'Toplam Taksit';
+            }
+        }
+        // ----- YENİ EKLENEN KOD SONU -----
+
+        if (isEditable) {
+             attachSanitize($$('.editable-taksit'));
+        }
+
+        $('.tot_toplam').textContent = fmt(finalSim.totals.toplam);
+        $('.tot_tahsilat').textContent = fmt(finalSim.totals.tahsilat);
+        $('.tot_kgf').textContent = fmt(finalSim.totals.kgf);
+
+        const totalStart = p.asal + p.masraf + p.ktvu + p.katOncesiFaizVIT + p.gecikmeFaizi + p.akdiFaiz + p.temerrutOncesiFaizVIT;
+        const monthlyShown = (monthlyTotals.find(v => v > 0) || 0);
+
+        $('.k1').textContent = fmt(totalStart);
+        $('.k2').textContent = (mode === 'equal' || (mode === 'flex' && isEditable)) ? fmt(monthlyShown) : 'Değişken';
+        $('.k3').textContent = fmt(finalSim.totals.kgf);
+        $('.k4').textContent = fmt(finalSim.totals.tahsilat);
+        $('.ozetNot').innerHTML = `Kalan borç: <b>${fmt(finalSim.remaining)}</b>.`;
+        // Store results globally for XLS export
+        window._lastResult = { p, finalSim };
+    }
+
+    // *** YENİ: XLS İNDİRME BUTONU İŞLEVİ ***
+    $('.btnCSV').addEventListener('click', () => {
+        if (!window._lastResult) {
+            alert("Lütfen önce bir ödeme planı hesaplayın.");
+            return;
+        }
+
+        const { p, finalSim } = window._lastResult;
+
+        // 1. Ödeme Planı Sayfası
+        const planData = finalSim.rows.map(r => {
+            let rowObj = {
+                "İşlem Türü": '—',
+                "Taksit No": '—',
+                "Tarih": fmtDate(r.tarih),
+                "Toplam Taksit": 0,
+                "Banka Tahsilatı": 0,
+                "KGF İadesi": 0
+            };
+            if(r.type === 'installment') {
+                rowObj["İşlem Türü"] = 'Taksit';
+                rowObj["Taksit No"] = r.no;
+                rowObj["Toplam Taksit"] = r.toplam;
+                rowObj["Banka Tahsilatı"] = r.tahsilat;
+                rowObj["KGF İadesi"] = r.kgf;
+            } else if (r.type === 'pre') {
+                rowObj["İşlem Türü"] = 'Tazmin Öncesi Tahsilat';
+                rowObj["Banka Tahsilatı"] = r.tahsilat;
+            } else if (r.type === 'tazmin') {
+                rowObj["İşlem Türü"] = 'Tazmin Ödemesi';
+                rowObj["KGF İadesi"] = r.kgf;
+            } else if (r.type === 'kgf_direct') {
+                rowObj["İşlem Türü"] = 'Tazmin Sonrası (KGF)';
+                rowObj["KGF İadesi"] = r.kgf;
+            } else if (r.type === 'banka_direct') {
+                rowObj["İşlem Türü"] = 'Tazmin Sonrası (Banka)';
+                rowObj["Banka Tahsilatı"] = r.tahsilat;
+            }
+            return rowObj;
+        });
+
+        // 2. Giriş Bilgileri Sayfası
+        const inputsData = [
+            { "Parametre": "Asıl Alacak", "Değer": p.asal },
+            { "Parametre": "Masraf", "Değer": p.masraf },
+            { "Parametre": "Kat Öncesi Faiz-VIT", "Değer": p.katOncesiFaizVIT },
+            { "Parametre": "Gecikme Faizi (Kat Öncesi)", "Değer": p.gecikmeFaizi },
+            { "Parametre": "Akdi Faiz (İşlemiş Olan)", "Değer": p.akdiFaiz },
+            { "Parametre": "Temerrüt Öncesi Faiz-VIT", "Değer": p.temerrutOncesiFaizVIT },
+            { "Parametre": "KTVÜ (Vekalet Ücreti)", "Değer": p.ktvu },
+            { "Parametre": "Ödeme Planı Yıllık Faiz Oranı (%)", "Değer": p.temerrutYillik * 100 },
+            { "Parametre": "Plan Başlangıç Tarihi", "Değer": fmtDate(toISO(p.baslangic)) },
+            { "Parametre": "Temerrüt Başlangıç Tarihi", "Değer": fmtDate(toISO(p.temerrutBaslangic)) },
+            { "Parametre": "Vade (Ay)", "Değer": p.vade },
+            { "Parametre": "Ödemesiz Dönem (Ay)", "Değer": p.odemesiz },
+            { "Parametre": "Tazmin Tutarı", "Değer": p.tazminTutari },
+            { "Parametre": "Tazmin Tarihi", "Değer": !isNaN(p.tazminTarihi.getTime()) ? fmtDate(toISO(p.tazminTarihi)) : 'Yok' },
+            { "Parametre": "Kefalet Marjı (%)", "Değer": p.kefaletMarji * 100 },
+        ];
+
+
+        const wb = XLSX.utils.book_new();
+        const wsPlan = XLSX.utils.json_to_sheet(planData);
+        const wsInputs = XLSX.utils.json_to_sheet(inputsData);
+
+        XLSX.utils.book_append_sheet(wb, wsPlan, "Ödeme Planı");
+        XLSX.utils.book_append_sheet(wb, wsInputs, "Giriş Bilgileri");
+
+        XLSX.writeFile(wb, "Odeme_Plani.xlsx");
+    });
+
+    if (mode === 'equal') {
+        $('.btnHesapla').addEventListener('click', () => {
+            try {
+                const p = getInputs(context);
+                const m = solveEqualMonthly(p);
+                let monthlyTotals = Array.from({length: p.vade}, (_, i) => i < p.odemesiz ? 0 : m);
+                const firstSim = simulate(p, [...monthlyTotals]);
+                if (firstSim.remaining > 0.01 && p.vade > 0) {
+                    const lastPaymentIndex = monthlyTotals.length - 1;
+                    monthlyTotals[lastPaymentIndex] = round2(monthlyTotals[lastPaymentIndex] + firstSim.remaining);
+                }
+                const finalSim = simulate(p, monthlyTotals);
+                displayResults(p, finalSim, monthlyTotals, false);
+            } catch (err) { alert(err.message || String(err)); }
+        });
+    } else if (mode === 'flex') {
+        const ilkHesaplaBtn = $('.btnHesapla');
+        const flexHesaplaBtn = document.createElement('button');
+        flexHesaplaBtn.className = 'primary btnHesaplaFlex';
+        flexHesaplaBtn.textContent = 'Esnek Planı Hesapla';
+        flexHesaplaBtn.style.display = 'none';
+        ilkHesaplaBtn.parentElement.appendChild(flexHesaplaBtn);
+        ilkHesaplaBtn.textContent = 'Planı İlk Eşit Hesapla';
+
+        ilkHesaplaBtn.addEventListener('click', () => {
+            try {
+                const p = getInputs(context);
+                const m = solveEqualMonthly(p);
+                let initialEqualInstallments = Array.from({length: p.vade}, (_, i) => i < p.odemesiz ? 0 : m);
+                const firstSim = simulate(p, [...initialEqualInstallments]);
+                 if (firstSim.remaining > 0.01 && p.vade > 0) {
+                    const lastPaymentIndex = initialEqualInstallments.length - 1;
+                    initialEqualInstallments[lastPaymentIndex] = round2(initialEqualInstallments[lastPaymentIndex] + firstSim.remaining);
+                }
+                const finalSim = simulate(p, initialEqualInstallments);
+                displayResults(p, finalSim, initialEqualInstallments, true);
+                flexHesaplaBtn.style.display = 'inline-block';
+            } catch (err) { alert(err.message || String(err)); }
+        });
+
+        flexHesaplaBtn.addEventListener('click', () => {
+             try {
+                const p = getInputs(context);
+                const fixedPayments = Array.from($$('.editable-taksit')).map(input => {
+                    return parseNumberFromInput(input);
+                });
+
+                if (fixedPayments.every(p => p !== null)) {
+                  alert("Yeniden hesaplanacak bir ay bırakmadınız. Lütfen en az bir taksit alanını boş bırakın.");
+                  return;
+                }
+
+                const newEqualAmount = solveFlexMonthly(p, fixedPayments);
+
+                const finalMonthlyTotals = fixedPayments.map((val, i) => {
+                    if (val !== null) return val;
+                    if (i < p.odemesiz) return 0;
+                    return newEqualAmount;
+                });
+
+                const finalSim = simulate(p, finalMonthlyTotals);
+                displayResults(p, finalSim, finalMonthlyTotals, false);
+                ilkHesaplaBtn.style.display = 'inline-block';
+                flexHesaplaBtn.style.display = 'none';
+
+            } catch (err) { alert(err.message || String(err)); }
+        });
+    }
+  }
+
+
+  // ---------- BAŞLANGIÇ VE SEÇİM YÖNETİMİ ----------
+  document.addEventListener('DOMContentLoaded', () => {
+    const selectionContainer = document.getElementById('selection-container');
+    const equalTaksitContainer = document.getElementById('equal-taksit-container');
+    const flexTaksitContainer = document.getElementById('flex-taksit-container');
+
+    document.getElementById('btn-select-equal').addEventListener('click', () => {
+        selectionContainer.style.display = 'none';
+        equalTaksitContainer.innerHTML = appTemplate;
+        equalTaksitContainer.style.display = 'block';
+        initializeApp(equalTaksitContainer, 'equal');
+    });
+
+    document.getElementById('btn-select-flex').addEventListener('click', () => {
+        selectionContainer.style.display = 'none';
+        flexTaksitContainer.innerHTML = appTemplate;
+        flexTaksitContainer.style.display = 'block';
+        initializeApp(flexTaksitContainer, 'flex');
+    });
+  });
+
+})();
+</script>
+</body>
+</html>
