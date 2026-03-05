@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KRTB Çağrı Analiz | Dinamik KPI</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script id="embedded-data-script">
+        window.APP_MODE = 'ADMIN'; 
+        window.EMBEDDED_DATA = null; 
+        window.EMBEDDED_DATE = null; 
+        window.EMBEDDED_WORK_DAYS = null;
+    </script>
+
+    <script>
+        tailwind.config = {
+            theme: { extend: { colors: { brand: { yellow: '#FFB81C', dark: '#1e293b', gray: '#64748b' } } } }
+        }
+    </script>
+
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; transition: background-color 0.3s, color 0.3s; }
+        .modern-card { border-radius: 16px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); border: 1px solid rgba(229, 231, 235, 0.5); transition: background-color 0.3s, border-color 0.3s; }
+        
+        body.theme-day { background-color: #f3f4f6; color: #1e293b; }
+        body.theme-day .modern-card, body.theme-day .sidebar-bg, body.theme-day nav { background: #ffffff; border-color: #e2e8f0; }
+        body.theme-day .text-dynamic { color: #1e293b; }
+        
+        body.theme-night { background-color: #0f172a; color: #e2e8f0; }
+        body.theme-night .modern-card, body.theme-night .sidebar-bg, body.theme-night nav { background-color: #1e293b !important; border-color: #334155 !important; }
+        body.theme-night .text-dynamic { color: #f1f5f9; }
+        body.theme-night .text-gray-500, body.theme-night .text-gray-600, body.theme-night .text-gray-700 { color: #94a3b8 !important; }
+        body.theme-night .bg-gray-50 { background-color: #0f172a !important; }
+        body.theme-night .bg-white { background-color: #1e293b !important; }
+        body.theme-night select, body.theme-night input { background-color: #1e293b; color: #e2e8f0; border-color: #334155; }
+        body.theme-night table tbody tr:hover { background-color: #334155 !important; }
+        body.theme-night .border-gray-200 { border-color: #334155 !important; }
+
+        #sidebar-nav { position: fixed; top: 0; left: 0; height: 100vh; width: 260px; z-index: 40; transition: transform 0.3s ease-in-out; padding: 1.5rem; border-right: 1px solid rgba(0,0,0,0.05); overflow-y: auto; }
+        #sidebar-nav.closed { transform: translateX(-260px); }
+        #main-content-wrapper { transition: margin-left .3s ease-in-out; margin-left: 260px; }
+        #main-content-wrapper.full-width { margin-left: 0; }
+
+        .filter-btn-sidebar { display: block; width: 100%; padding: 0.75rem 1rem; border-radius: 12px; font-weight: 500; font-size: 0.9rem; color: inherit; cursor: pointer; transition: all 0.2s; border: 1px solid transparent; margin-bottom: 0.5rem; }
+        .filter-btn-sidebar:hover { background-color: rgba(255, 184, 28, 0.1); color: #b45309; }
+        input[type="radio"]:checked + .filter-btn-sidebar { background-color: #FFB81C; color: white; font-weight: 700; box-shadow: 0 4px 10px rgba(255, 184, 28, 0.3); }
+
+        .chart-toggle-btn { padding: 6px 12px; font-size: 0.85rem; font-weight: 600; border-radius: 8px; transition: all 0.2s; }
+        input[type="radio"]:checked + .chart-toggle-btn { background-color: #FFB81C; color: white; }
+        input[type="radio"]:not(:checked) + .chart-toggle-btn { background-color: transparent; color: inherit; }
+
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        
+        .viewer-visible { display: none !important; }
+        .admin-visible { display: block; }
+    </style>
+</head>
+<body class="theme-day min-h-screen">
+
+    <div id="sidebar-nav" class="sidebar-bg shadow-lg flex flex-col justify-between">
+        <div>
+            <div class="flex items-center gap-3 mb-8 px-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 48 48"><defs><clipPath id="7590b00e14"><path d="M 1 8.074219 L 47.507812 8.074219 L 47.507812 38.929688 L 1 38.929688 Z M 1 8.074219 " clip-rule="nonzero"/></clipPath></defs><g clip-path="url(#7590b00e14)"><path fill="#fbc34e" d="M 46.933594 16.664062 C 47.515625 13.335938 44.453125 8.699219 36.109375 8.699219 L 15.382812 8.699219 C 9.703125 8.699219 6.140625 12.597656 5.507812 16.527344 L 1.304688 38.636719 C 4.996094 38.625 29.320312 38.636719 29.269531 38.636719 L 30.851562 38.636719 C 39.5625 38.585938 44.578125 36.628906 45.496094 30.304688 C 46.101562 26.050781 42.367188 23.300781 39.3125 22.71875 C 42.402344 22.15625 46.152344 21.105469 46.933594 16.664062 Z M 46.933594 16.664062 " fill-opacity="1" fill-rule="nonzero"/></g><path fill="#ffffff" d="M 27.46875 17.960938 C 25.355469 20.640625 17.671875 29.933594 16.117188 31.695312 C 12.648438 35.644531 5.492188 35.054688 5.445312 34.957031 C 5.445312 34.953125 8.023438 22.75 8.859375 19.308594 C 11.152344 9.957031 19.0625 12.171875 19.0625 12.171875 C 19.0625 12.171875 16.953125 12.472656 15.464844 14.371094 C 13.957031 16.296875 12.246094 25.671875 11.28125 30.054688 C 15.8125 24.753906 22.023438 17.921875 23.082031 16.640625 C 27.597656 11.175781 34.667969 11.929688 34.667969 11.929688 31.914062 12.3125 27.46875 17.960938 Z M 27.46875 17.960938 " fill-opacity="1" fill-rule="nonzero"/></svg>
+                <h1 class="text-xl font-bold tracking-tight text-dynamic"> ÇAĞRI ANALİZ</h1>
+            </div>
+
+            <div class="mb-6 px-2">
+                 <div id="date-display-viewer" class="viewer-visible bg-brand-yellow/10 p-3 rounded-lg border border-brand-yellow/20">
+                    <p class="text-xs text-gray-500 uppercase font-bold">Rapor Dönemi</p>
+                    <p class="text-dynamic font-bold text-lg" id="viewer-date-text">-</p>
+                    <p class="text-xs text-gray-500 mt-1">İş Günü: <span id="viewer-work-days-text" class="font-bold">-</span></p>
+                 </div>
+
+                 <div id="date-selector-admin" class="admin-visible">
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Rapor Tarihi</h3>
+                    <div class="flex gap-2 mb-2">
+                        <select id="select-month" class="w-2/3 bg-gray-50 text-dynamic border border-gray-200 rounded-lg px-2 py-1.5 text-xs font-medium outline-none focus:border-brand-yellow">
+                            <option value="OCAK">OCAK</option>
+                            <option value="ŞUBAT">ŞUBAT</option>
+                            <option value="MART">MART</option>
+                            <option value="NİSAN">NİSAN</option>
+                            <option value="MAYIS">MAYIS</option>
+                            <option value="HAZİRAN">HAZİRAN</option>
+                            <option value="TEMMUZ">TEMMUZ</option>
+                            <option value="AĞUSTOS">AĞUSTOS</option>
+                            <option value="EYLÜL">EYLÜL</option>
+                            <option value="EKİM">EKİM</option>
+                            <option value="KASIM">KASIM</option>
+                            <option value="ARALIK">ARALIK</option>
+                        </select>
+                        <select id="select-year" class="w-1/3 bg-gray-50 text-dynamic border border-gray-200 rounded-lg px-2 py-1.5 text-xs font-medium outline-none focus:border-brand-yellow">
+                            <option value="2024">2024</option>
+                            <option value="2025" selected>2025</option>
+                            <option value="2026">2026</option>
+                        </select>
+                    </div>
+                    <div class="flex gap-2 items-center mt-2 bg-gray-50 border border-gray-200 rounded-lg px-2 py-1">
+                        <label class="text-xs font-bold text-gray-500 flex-1 uppercase tracking-wider">İş Günü</label>
+                        <input type="number" id="work-days-input" value="22" class="w-16 bg-white text-dynamic border border-gray-200 rounded text-center py-1 text-xs font-bold outline-none focus:border-brand-yellow">
+                    </div>
+                 </div>
+            </div>
+
+            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 px-2">Rapor Filtreleri</h3>
+            
+            <div id="call-type-filter-group" class="flex flex-col gap-1">
+                <input type="radio" name="callTypeFilter" value="TOPLAM" checked id="filter-toplam" class="hidden">
+                <label for="filter-toplam" class="filter-btn-sidebar"><i class="fa-solid fa-chart-pie mr-2"></i> Genel Özet</label>
+
+                <input type="radio" name="callTypeFilter" value="ORTALAMA_SURE" id="filter-ortalama-sure" class="hidden">
+                <label for="filter-ortalama-sure" class="filter-btn-sidebar"><i class="fa-solid fa-chart-column mr-2"></i> Ortalama İşlem Verileri</label>
+
+                <input type="radio" name="callTypeFilter" value="MUSTERI_ARAMA" id="filter-musteri-arama" class="hidden">
+                <label for="filter-musteri-arama" class="filter-btn-sidebar"><i class="fa-solid fa-phone-volume mr-2"></i> Sabit Hat Müşteri Aramaları</label> 
+
+                <input type="radio" name="callTypeFilter" value="FCT_GIDEN" id="filter-fct-giden" class="hidden">
+                <label for="filter-fct-giden" class="filter-btn-sidebar"><i class="fa-solid fa-mobile-screen mr-2"></i> FCT Müşteri Aramaları</label>
+
+                <div class="my-2 border-t border-gray-200 dark:border-gray-700"></div>
+
+                <input type="radio" name="callTypeFilter" value="DAHILI" id="filter-dahili" class="hidden">
+                <label for="filter-dahili" class="filter-btn-sidebar"><i class="fa-solid fa-building mr-2"></i> Şube/Birimden Gelen</label>
+            </div>
+        </div>
+        
+        <div class="text-center pb-4 text-xs text-gray-400">
+          Risk Tasfiye Koordinasyon Müdürlüğü
+        </div>
+    </div>
+
+    <div id="main-content-wrapper">
+        <nav class="sticky top-0 z-30 sidebar-bg border-b border-gray-200 px-8 py-4 flex justify-between items-center shadow-sm">
+            <button onclick="toggleSidebar()" class="text-gray-500 hover:text-brand-yellow transition-colors">
+                <i class="fa-solid fa-bars text-xl"></i>
+            </button>
+            
+            <div class="flex items-center gap-4">
+                 <div class="bg-gray-100 p-1 rounded-lg flex items-center border border-gray-200">
+                    <button onclick="setTheme('day')" id="btn-theme-day" class="w-8 h-8 rounded-md flex items-center justify-center text-gray-500 hover:text-brand-yellow hover:bg-white transition-all shadow-sm"><i class="fa-solid fa-sun text-sm"></i></button>
+                    <button onclick="setTheme('night')" id="btn-theme-night" class="w-8 h-8 rounded-md flex items-center justify-center text-gray-500 hover:text-brand-yellow hover:bg-slate-700 transition-all"><i class="fa-solid fa-moon text-sm"></i></button>
+                </div>
+                
+                <div id="admin-tools" class="flex items-center gap-2 admin-visible">
+                    <input type="file" id="data-file-input" accept=".csv,.xlsx,.xls,.xlsb,.xlsm" class="hidden">
+                    <button onclick="document.getElementById('data-file-input').click()" class="bg-brand-yellow text-white px-4 py-2 rounded-lg font-bold text-sm shadow-md hover:bg-yellow-500 transition-all">
+                        <i class="fa-solid fa-cloud-arrow-up mr-2"></i>Veri Yükle
+                    </button>
+                    <button onclick="exportReport()" class="bg-gray-800 text-white px-4 py-2 rounded-lg font-bold text-sm shadow-md hover:bg-gray-900 transition-all">
+                        <i class="fa-solid fa-file-export mr-2"></i>Raporu Dışa Aktar (.html)
+                    </button>
+                </div>
+
+            </div>
+        </nav>
+
+        <div class="p-8 max-w-[1600px] mx-auto w-full">
+            <div class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+                <div>
+                    <h1 class="text-3xl font-bold text-dynamic tracking-tight">Çağrı Performans Raporu</h1>
+                    <p class="text-gray-500 mt-1">Kredi Risk Tasfiye Başkanlığı / Güncel Çağrı Analizleri</p>
+                </div>
+                <div id="report-date-badge" class="bg-blue-100 text-blue-800 text-sm font-bold px-4 py-2 rounded-lg border border-blue-200 shadow-sm hidden">
+                    </div>
+            </div>
+
+            <div id="kpi-cards" class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="modern-card p-6 flex flex-col justify-between relative overflow-hidden group">
+                    <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:scale-110 transition-transform"><i id="kpi-1-icon" class="fa-solid fa-clock text-6xl text-brand-yellow"></i></div>
+                    <div><p id="kpi-1-title" class="text-sm font-semibold text-gray-500 uppercase tracking-wide">Yükleniyor...</p><p id="kpi-1-value" class="text-2xl font-bold text-dynamic mt-2">-</p></div>
+                    <div class="mt-4 h-1 w-full bg-gray-100 rounded-full overflow-hidden"><div id="kpi-1-bar" class="h-full bg-brand-yellow w-full"></div></div>
+                </div>
+                <div class="modern-card p-6 flex flex-col justify-between relative overflow-hidden group">
+                    <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:scale-110 transition-transform"><i id="kpi-2-icon" class="fa-solid fa-list-ol text-6xl text-blue-500"></i></div>
+                    <div><p id="kpi-2-title" class="text-sm font-semibold text-gray-500 uppercase tracking-wide">Yükleniyor...</p><p id="kpi-2-value" class="text-2xl font-bold text-dynamic mt-2">-</p></div>
+                    <div class="mt-4 h-1 w-full bg-gray-100 rounded-full overflow-hidden"><div id="kpi-2-bar" class="h-full bg-blue-500 w-full"></div></div>
+                </div>
+                <div class="modern-card p-6 flex flex-col justify-between relative overflow-hidden group">
+                    <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:scale-110 transition-transform"><i id="kpi-3-icon" class="fa-solid fa-chart-line text-6xl text-green-500"></i></div>
+                    <div><p id="kpi-3-title" class="text-sm font-semibold text-gray-500 uppercase tracking-wide">Yükleniyor...</p><p id="kpi-3-value" class="text-2xl font-bold text-dynamic mt-2">-</p></div>
+                    <div class="mt-4 h-1 w-full bg-gray-100 rounded-full overflow-hidden"><div id="kpi-3-bar" class="h-full bg-green-500 w-full"></div></div>
+                </div>
+                <div class="modern-card p-6 flex flex-col justify-between relative overflow-hidden group">
+                    <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:scale-110 transition-transform"><i id="kpi-4-icon" class="fa-solid fa-percent text-6xl text-purple-500"></i></div>
+                    <div><p id="kpi-4-title" class="text-sm font-semibold text-gray-500 uppercase tracking-wide">Yükleniyor...</p><p id="kpi-4-value" class="text-2xl font-bold text-dynamic mt-2">-</p></div>
+                    <div class="mt-4 h-1 w-full bg-gray-100 rounded-full overflow-hidden"><div id="kpi-4-bar" class="h-full bg-purple-500 w-full"></div></div>
+                </div>
+            </div>
+
+            <div class="modern-card p-8 mb-8">
+                <div class="flex flex-row justify-between items-center mb-6 flex-wrap gap-4">
+                    <div class="flex items-center gap-4">
+                        <h3 class="text-xl font-bold text-dynamic" id="department-chart-container-title">Müdürlük Karşılaştırması</h3>
+                        <button id="department-chart-back-button" class="px-3 py-1 bg-gray-500 text-white rounded-md text-xs hover:bg-gray-600 transition-colors hidden" onclick="resetDepartmentChart()">Geri Dön</button>
+                    </div>
+                    <div id="department-chart-type-group" class="flex bg-gray-100 p-1 rounded-lg gap-1 border border-gray-200">
+                        <input type="radio" name="departmentChartType" value="ADET" checked id="chart-type-adet" class="hidden">
+                        <label for="chart-type-adet" class="chart-toggle-btn cursor-pointer">Sayı Bazında</label>
+                        
+                        <input type="radio" name="departmentChartType" value="SURE" id="chart-type-sure" class="hidden">
+                        <label for="chart-type-sure" class="chart-toggle-btn cursor-pointer">Süre Bazında</label>
+                    </div>
+                </div>
+                <div class="relative w-full h-[400px]">
+                    <canvas id="department-chart"></canvas>
+                </div>
+                <p id="department-chart-subtitle" class="text-xs text-gray-400 mt-2 text-center italic">*Karşılaştırma grafiklerinde veriler personel başına gösterilmektedir.</p>
+            </div>
+
+            <div class="modern-card p-8 overflow-hidden mb-12">
+                 <h3 class="text-xl font-bold text-dynamic mb-4" id="department-summary-title">Müdürlük Detay Tablosu</h3>
+                 <div class="overflow-x-auto rounded-lg border border-gray-200">
+                    <table class="min-w-full">
+                        <thead id="department-table-header" class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider"></thead>
+                        <tbody id="department-performance-table-body" class="text-sm text-dynamic divide-y divide-gray-100">
+                            <tr><td colspan="10" class="text-center py-8 text-gray-400">Veri yüklenmedi.</td></tr>
+                        </tbody>
+                        <tfoot id="department-table-footer" class="bg-gray-50 font-bold text-xs uppercase text-gray-600"></tfoot>
+                    </table>
+                 </div>
+            </div>
+
+            <div class="modern-card p-8 bg-opacity-50">
+                <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-brand-yellow/10 p-2 rounded-lg text-brand-yellow"><i class="fa-solid fa-user-group text-xl"></i></div>
+                        <div><span class="block font-bold text-dynamic text-lg">Personel Detayları</span><span class="text-xs text-gray-500">Müdürlük Bazında Filtreleme</span></div>
+                    </div>
+                    <select id="department-select" class="bg-gray-50 text-dynamic border border-gray-200 rounded-lg px-4 py-2 text-sm font-medium focus:border-brand-yellow focus:ring-2 focus:ring-brand-yellow/20 outline-none w-full md:w-80 transition-all">
+                        <option value="">Lütfen Müdürlük Seçiniz</option>
+                    </select>
+                </div>
+
+                <div class="mb-8 relative">
+                    <div class="flex justify-between items-center mb-4 flex-wrap gap-4">
+                        <div class="flex items-center gap-4">
+                            <h4 class="text-lg font-semibold text-dynamic" id="individual-chart-title">Personel İstatistikleri</h4>
+                            <button id="individual-chart-back-button" class="px-3 py-1 bg-gray-500 text-white rounded-md text-xs hover:bg-gray-600 transition-colors hidden" onclick="clearIndividualChartSelection()">Temizle</button>
+                        </div>
+                        <div id="individual-chart-type-group" class="flex bg-gray-100 p-1 rounded-lg gap-1 border border-gray-200">
+                            <input type="radio" name="individualChartType" value="ADET" checked id="individual-chart-type-adet" class="hidden">
+                            <label for="individual-chart-type-adet" class="chart-toggle-btn cursor-pointer">Sayı Bazında</label>
+                            
+                            <input type="radio" name="individualChartType" value="SURE" id="individual-chart-type-sure" class="hidden">
+                            <label for="individual-chart-type-sure" class="chart-toggle-btn cursor-pointer">Süre Bazında</label>
+                        </div>
+                    </div>
+                    <div class="relative w-full h-[400px]">
+                        <canvas id="individual-chart-canvas"></canvas>
+                    </div>
+                </div>
+
+                <h4 class="text-lg font-semibold text-dynamic mb-4">Personel Liste Detayı</h4>
+                <div class="overflow-x-auto rounded-lg border border-gray-200">
+                    <table class="min-w-full">
+                        <thead id="individual-table-header" class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider"></thead>
+                        <tbody id="individual-performance-table-body" class="text-sm text-dynamic divide-y divide-gray-100">
+                            <tr><td colspan="10" class="text-center py-8 text-gray-400">Lütfen bir müdürlük seçin.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // --- 1. TEMA VE MOD YÖNETİMİ ---
+        function setTheme(theme) {
+            const body = document.body;
+            body.classList.remove('theme-day', 'theme-night');
+            body.classList.add('theme-' + theme);
+            
+            document.getElementById('btn-theme-day').classList.remove('bg-white', 'text-brand-yellow', 'shadow-sm');
+            document.getElementById('btn-theme-night').classList.remove('bg-slate-700', 'text-indigo-400', 'shadow-sm');
+            
+            if(theme === 'day') document.getElementById('btn-theme-day').classList.add('bg-white', 'text-brand-yellow', 'shadow-sm');
+            if(theme === 'night') document.getElementById('btn-theme-night').classList.add('bg-slate-700', 'text-indigo-400', 'shadow-sm');
+
+            updateChartsForTheme(theme);
+            localStorage.setItem('appTheme', theme);
+        }
+
+        function updateChartsForTheme(theme) {
+            let textColor = theme === 'night' ? '#cbd5e1' : '#64748b';
+            let gridColor = theme === 'night' ? '#334155' : '#e5e7eb';
+            let borderColor = theme === 'night' ? '#1e293b' : '#ffffff';
+
+            const charts = [departmentChart, individualChart];
+            charts.forEach(chart => {
+                if (chart) {
+                    if(chart.options.scales.x) {
+                        chart.options.scales.x.ticks.color = textColor;
+                        if(chart.options.scales.x.grid) chart.options.scales.x.grid.color = 'transparent';
+                    }
+                    if(chart.options.scales.y) {
+                        chart.options.scales.y.ticks.color = textColor;
+                        if(chart.options.scales.y.grid) chart.options.scales.y.grid.color = gridColor;
+                    }
+                    if(chart.options.plugins.legend) {
+                         chart.options.plugins.legend.labels.color = textColor;
+                    }
+                    if (chart.config.type === 'doughnut') {
+                        chart.data.datasets.forEach(dataset => {
+                            dataset.borderColor = borderColor;
+                        });
+                    }
+                    chart.update();
+                }
+            });
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar-nav');
+            const mainContent = document.getElementById('main-content-wrapper');
+            sidebar.classList.toggle('closed');
+            mainContent.classList.toggle('full-width');
+        }
+
+        // --- 2. UYGULAMA DEĞİŞKENLERİ ---
+        const EXCEL_EXTENSIONS = ['.xlsx', '.xls', '.xlsb', '.xlsm'];
+        let currentCallTypeFilter = 'TOPLAM'; 
+        let departmentChartMetric = 'ADET';
+        let individualChartMetric = 'ADET';
+        let sortState = {
+            department: { key: 'genel_toplam_sure', direction: 'DESC' },
+            individual: { key: 'genel_toplam_sure', direction: 'DESC' }
+        };
+        let departmentChart = null;
+        let individualChart = null;
+        let departmentChartState = 'OVERVIEW';
+        let selectedComparisonDepartments = [];
+        let individualChartState = 'OVERVIEW';
+        let selectedPersonnelNames = [];
+        const CHART_COLORS = [
+            '#FFB81C', '#3B82F6', '#10B981', '#8B5CF6', '#F97316', '#06B6D4', 
+            '#EC4899', '#6366F1', '#84CC16', '#F43F5E', '#14B8A6', '#A855F7', 
+            '#EAB308', '#64748B'
+        ];
+
+        function getWorkingDays() {
+            if (window.APP_MODE === 'VIEWER' && window.EMBEDDED_WORK_DAYS) return window.EMBEDDED_WORK_DAYS;
+            const el = document.getElementById('work-days-input');
+            return el ? (parseInt(el.value) || 22) : 22;
+        }
+
+        const commonDataLabelStyle = {
+            color: '#FFFFFF', textStrokeColor: '#000000', textStrokeWidth: 2.5, 
+            font: { weight: 'bold', size: 11 }, anchor: 'end', align: 'start', offset: 4
+        };
+
+        const donutDataLabelConfig = {
+            ...commonDataLabelStyle,
+            anchor: 'center', align: 'center', 
+            formatter: (value, context) => {
+                let isSureMetric = false;
+                if (context.chart.canvas.id === 'individual-chart-canvas') { isSureMetric = (individualChartMetric === 'SURE'); } 
+                else if (context.chart.canvas.id === 'department-chart') { isSureMetric = (departmentChartMetric === 'SURE'); }
+                const formattedValue = isSureMetric ? formatTime(value) : formatNumber(value);
+                const total = context.chart.data.datasets[0].data.reduce((acc, data) => acc + data, 0);
+                const percentage = total > 0 ? (value / total) * 100 : 0;
+                return Math.round(percentage) < 4 ? null : `${formattedValue}\n(${Math.round(percentage)}%)`;
+            }
+        }
+
+        const columnMap = {
+            'Müdürlük Adı': ['birim_mudurlugu_adi', 'string'],
+            'Personel Adı': ['calisan_adi_soyadi', 'string'],
+            'Sicil No': ['sicil_no', 'string'],
+            'FCT Giden Süre': ['fct_giden_toplam_sure', 'number'],
+            'FCT Toplam Arama': ['fct_giden_toplam_adet', 'number'],
+            'FCT Cevaplı': ['fct_giden_cevaplanan_adet', 'number'],
+            'FCT Cevapsız': ['fct_giden_cevapsiz_adet', 'number'],
+            'FCT Meşgul': ['fct_giden_mesgul_adet', 'number'],
+            'FCTye Yönelme Oranı': ['fct_yonelme_orani', 'percentage'],
+            'Sabit Hattan Müşteri Arama Süresi': ['giden_harici_sure', 'number'],
+            'Sabit Hattan Müşteri Arama Toplam': ['giden_harici_toplam', 'number'],
+            'Sabit Hattan Müşteri Arama Cevaplı': ['giden_harici_adet_basarili', 'number'],
+            'Sabit Hattan Müşteri Arama Cevapsız': ['giden_harici_adet_basarisiz', 'number'],
+            'Şube/Birimden Gelen Arama Süresi': ['gelen_dahili_sure', 'number'],
+            'Şube/Birime Giden Süre': ['giden_dahili_sure', 'number'],
+            'Şube/Birimden Gelen Cevaplı': ['gelen_dahili_adet_basarili', 'number'],
+            'Şube/Birimden Gelen Cevapsız': ['gelen_dahili_adet_basarisiz', 'number'],
+            'Şube/Birime Giden Cevaplı': ['giden_dahili_adet_basarili', 'number'],
+            'Şube/Birime Giden Cevapsız': ['giden_dahili_adet_basarisiz', 'number'],
+            'Genel Toplam Süre': ['genel_toplam_sure', 'number'],
+            'Genel Toplam Adet': ['toplam_cagri_sayisi', 'number'],
+            'Şube/Birimden Gelen Toplam': ['gelen_dahili_toplam', 'number'],
+            'Şube/Birimden Gelen Aramalara Cevap Vermeme Oranı': ['dahili_cevapsiz_oran', 'percentage'],
+            'Ort. Sabit Müşteri Arama': ['avg_fixed_call', 'number'],
+            'Ort. FCT Müşteri Arama': ['avg_fct', 'number'],
+            'Ort. Şube/Birim Karşılama': ['avg_internal', 'number'],
+            'Günlük Ort. Sabit Arama': ['avg_daily_fixed', 'number'],
+            'Günlük Ort. FCT Arama': ['avg_daily_fct', 'number'],
+            'Günlük Ort. Şube/Birim Gelen': ['avg_daily_internal', 'number']
+        };
+
+        const filterDefinitions = {
+            FCT_GIDEN: {
+                title: 'FCT Giden Aramalar',
+                drilldown_keys: ['fct_giden_cevaplanan_adet', 'fct_giden_cevapsiz_adet', 'fct_giden_mesgul_adet'],
+                drilldown_keys_sure: ['fct_giden_toplam_sure'], 
+                table_keys: ['birim_mudurlugu_adi', 'fct_giden_toplam_sure', 'fct_giden_toplam_adet', 'fct_giden_cevaplanan_adet', 'fct_giden_cevapsiz_adet', 'fct_giden_mesgul_adet'],
+                individual_table_keys: ['calisan_adi_soyadi', 'fct_giden_toplam_sure', 'fct_giden_toplam_adet', 'fct_giden_cevaplanan_adet', 'fct_giden_cevapsiz_adet', 'fct_giden_mesgul_adet'],
+                kpi_config: [
+                    { title: "FCT Giden Süre", key: "fct_giden_toplam_sure", type: "time", icon: "fa-clock", color: "text-brand-yellow", bg: "bg-brand-yellow" },
+                    { title: "FCT Toplam Arama", key: "fct_giden_toplam_adet", type: "number", icon: "fa-mobile-screen", color: "text-blue-500", bg: "bg-blue-500" },
+                    { title: "FCT Cevaplanan", key: "fct_giden_cevaplanan_adet", type: "number", icon: "fa-check", color: "text-green-500", bg: "bg-green-500" },
+                    { title: "FCT Cevapsız/Meşgul", key: "fct_giden_cevapsiz_adet", type: "number", icon: "fa-xmark", color: "text-red-500", bg: "bg-red-500" } 
+                ]
+            },
+            ORTALAMA_SURE: {
+                title: 'Ortalama İşlem Verileri (Süre / Günlük Adet)',
+                table_keys: ['birim_mudurlugu_adi', 'avg_fixed_call', 'avg_daily_fixed', 'avg_fct', 'avg_daily_fct', 'avg_internal', 'avg_daily_internal'],
+                individual_table_keys: ['calisan_adi_soyadi', 'avg_fixed_call', 'avg_daily_fixed', 'avg_fct', 'avg_daily_fct', 'avg_internal', 'avg_daily_internal'],
+                kpi_config: [
+                    { title: "Sabit Müşteri Arama (Ort. Süre)", key: "avg_fixed_call", type: "time", icon: "fa-phone-volume", color: "text-brand-yellow", bg: "bg-brand-yellow" },
+                    { title: "FCT Giden (Ort. Süre)", key: "avg_fct", type: "time", icon: "fa-mobile-screen", color: "text-green-500", bg: "bg-green-500" },
+                    { title: "Sabit Müşteri Arama (Ort. Günlük)", key: "avg_daily_fixed_kpi", type: "number", icon: "fa-phone", color: "text-blue-500", bg: "bg-blue-500" },
+                    { title: "FCT Giden (Ort. Günlük)", key: "avg_daily_fct_kpi", type: "number", icon: "fa-mobile", color: "text-purple-500", bg: "bg-purple-500" }
+                ]
+            },
+            MUSTERI_ARAMA: {
+                title: 'Sabit Hattan Müşteri Aramaları (Giden)',
+                drilldown_keys: ['giden_harici_adet_basarili', 'giden_harici_adet_basarisiz'],
+                drilldown_keys_sure: ['giden_harici_sure'],
+                adet_basarili_keys: ['giden_harici_adet_basarili'], adet_basarisiz_keys: ['giden_harici_adet_basarisiz'], sure_keys: ['giden_harici_sure'], 
+                table_keys: ['birim_mudurlugu_adi', 'giden_harici_sure', 'giden_harici_toplam', 'giden_harici_adet_basarili', 'giden_harici_adet_basarisiz', 'fct_giden_toplam_adet', 'fct_yonelme_orani'],
+                individual_table_keys: ['calisan_adi_soyadi', 'giden_harici_sure', 'giden_harici_toplam', 'giden_harici_adet_basarili', 'giden_harici_adet_basarisiz', 'fct_giden_toplam_adet', 'fct_yonelme_orani'],
+                kpi_config: [
+                    { title: "Müşteri Arama Süresi", key: "giden_harici_sure", type: "time", icon: "fa-clock", color: "text-brand-yellow", bg: "bg-brand-yellow" },
+                    { title: "Müşteri Arama Toplam", key: "giden_harici_toplam", type: "number", icon: "fa-phone-volume", color: "text-blue-500", bg: "bg-blue-500" },
+                    { title: "Ulaşılan Müşteri", key: "giden_harici_adet_basarili", type: "number", icon: "fa-user-check", color: "text-green-500", bg: "bg-green-500" },
+                    { title: "Ulaşılamayan", key: "giden_harici_adet_basarisiz", type: "number", icon: "fa-user-xmark", color: "text-red-500", bg: "bg-red-500" }
+                ]
+            },
+            DAHILI: {
+                title: 'Şube/Birimden Gelen Çağrılar',
+                drilldown_keys: ['gelen_dahili_adet_basarili', 'gelen_dahili_adet_basarisiz'],
+                drilldown_keys_sure: ['gelen_dahili_sure'],
+                adet_basarili_keys: ['gelen_dahili_adet_basarili'], adet_basarisiz_keys: ['gelen_dahili_adet_basarisiz'], sure_keys: ['gelen_dahili_sure'],
+                table_keys: ['birim_mudurlugu_adi', 'gelen_dahili_sure', 'gelen_dahili_toplam', 'gelen_dahili_adet_basarili', 'gelen_dahili_adet_basarisiz', 'dahili_cevapsiz_oran'],
+                individual_table_keys: ['calisan_adi_soyadi', 'gelen_dahili_sure', 'gelen_dahili_toplam', 'gelen_dahili_adet_basarili', 'gelen_dahili_adet_basarisiz', 'dahili_cevapsiz_oran'],
+                kpi_config: [
+                    { title: "Şube/Birimden Gelen Süre", key: "gelen_dahili_sure", type: "time", icon: "fa-building", color: "text-brand-yellow", bg: "bg-brand-yellow" },
+                    { title: "Gelen Dahili Toplam", key: "gelen_dahili_toplam", type: "number", icon: "fa-list-ol", color: "text-blue-500", bg: "bg-blue-500" },
+                    { title: "Karşılanan Dahili", key: "gelen_dahili_adet_basarili", type: "number", icon: "fa-phone", color: "text-green-500", bg: "bg-green-500" },
+                    { title: "Dahili Cevap Vermeme %", key: "dahili_cevapsiz_oran", numKey: "gelen_dahili_adet_basarisiz", denomKey: "gelen_dahili_toplam", type: "percentage", icon: "fa-percent", color: "text-red-500", bg: "bg-red-500" }
+                ]
+            },
+            TOPLAM: {
+                title: 'Genel Toplam Çağrılar',
+                drilldown_keys: ['giden_harici_adet_basarili', 'gelen_dahili_adet_basarili', 'giden_dahili_adet_basarili'],
+                drilldown_keys_sure: ['giden_harici_sure', 'gelen_dahili_sure', 'giden_dahili_sure'],
+                adet_basarili_keys: ['giden_harici_adet_basarili', 'gelen_dahili_adet_basarili', 'giden_dahili_adet_basarili'], adet_basarisiz_keys: ['giden_harici_adet_basarisiz', 'gelen_dahili_adet_basarisiz', 'giden_dahili_adet_basarisiz'], sure_keys: ['giden_harici_sure', 'gelen_dahili_sure', 'giden_dahili_sure'],
+                table_keys: ['birim_mudurlugu_adi', 'genel_toplam_sure', 'toplam_cagri_sayisi', 'giden_harici_toplam', 'giden_harici_adet_basarili', 'giden_dahili_adet_basarili', 'gelen_dahili_adet_basarili'],
+                individual_table_keys: ['calisan_adi_soyadi', 'genel_toplam_sure', 'toplam_cagri_sayisi', 'giden_harici_toplam', 'giden_harici_adet_basarili', 'giden_dahili_adet_basarili', 'gelen_dahili_adet_basarili'],
+                kpi_config: [
+                    { title: "Toplam Çağrı Süresi", key: "genel_toplam_sure", type: "time", icon: "fa-clock", color: "text-brand-yellow", bg: "bg-brand-yellow" },
+                    { title: "Toplam Çağrı Adeti", key: "toplam_cagri_sayisi", type: "number", icon: "fa-list-ol", color: "text-blue-500", bg: "bg-blue-500" },
+                    { title: "Sabit Hat Müşteri Arama Süre", key: "giden_harici_sure", type: "time", icon: "fa-phone", color: "text-green-500", bg: "bg-green-500" },
+                    { title: "Şube/Birime Giden Süre", key: "giden_dahili_sure", type: "time", icon: "fa-arrow-up", color: "text-purple-500", bg: "bg-purple-500" }
+                ]
+            }
+        };
+
+        window.performanceData = null;
+        window.aggregatedDepartmentData = null;
+        window.rawFileData = null;
+
+        // --- HELPER FONKSİYONLAR ---
+        function calculateSuccessRate(basarili, basarisiz) { const total = (basarili || 0) + (basarisiz || 0); return (total > 0) ? (basarili / total) * 100 : 0; }
+        function formatPercentage(num) { if (num === null || num === undefined || isNaN(num)) return "0%"; return Math.round(num).toLocaleString('tr-TR') + '%'; }
+        function formatTime(seconds) { if (!seconds || isNaN(seconds) || seconds <= 0) return "0 sn"; if (seconds > 0 && seconds < 1) return "<1 sn"; const h = Math.floor(seconds / 3600); const m = Math.floor((seconds % 3600) / 60); const s = Math.floor(seconds % 60); let timeStr = ""; if (h > 0) timeStr += h + " sa "; if (m > 0) timeStr += m + " dk "; if (s > 0) timeStr += s + " sn"; return timeStr.trim() || "0 sn"; }
+        function formatNumber(num) { if (num === null || num === undefined || isNaN(num)) return "0"; return Number.isInteger(num) ? num.toLocaleString('tr-TR') : num.toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }); }
+
+        const chartTooltipCallback = {
+            label: function(context) {
+                let label = context.dataset.label || context.label || '';
+                if (label) { label += ': '; }
+                const value = context.raw;
+                let metric = individualChartMetric;
+                if (context.chart.canvas.id === 'department-chart') { metric = departmentChartMetric; }
+                
+                if(currentCallTypeFilter === 'ORTALAMA_SURE') {
+                    if (metric === 'SURE') return label + formatTime(value);
+                    else return label + formatNumber(value) + ' Adet/Gün';
+                }
+
+                if (context.chart.config.type === 'doughnut') {
+                    let isSureMetric = false;
+                    if (context.chart.canvas.id === 'individual-chart-canvas') { isSureMetric = (individualChartMetric === 'SURE'); } 
+                    else if (context.chart.canvas.id === 'department-chart') { isSureMetric = (departmentChartMetric === 'SURE'); }
+                    if (isSureMetric) { label += formatTime(value); } else { label += formatNumber(value) + ' Adet'; }
+                    return label;
+                }
+                if ((currentCallTypeFilter === 'FCT_GIDEN') && (departmentChartState === 'DRILLDOWN' || individualChartState === 'DRILLDOWN')) { label += formatNumber(value) + ' Adet'; return label; }
+                if (metric === 'SURE' || (context.dataset.label && context.dataset.label.toLowerCase().includes('süre'))) { label += formatTime(value); } else if ((context.dataset.label && context.dataset.label.toLowerCase().includes('oran'))) { label += formatPercentage(value); } else { label += formatNumber(value) + ' Adet'; }
+                return label;
+            }
+        };
+
+        // --- DOSYA YÜKLEME ---
+        document.getElementById('data-file-input').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const handleFileRead = (data) => {
+                try {
+                    window.rawFileData = data;
+                    const processedData = processRawData(data);
+                    loadAndDisplayData(processedData, true); 
+                } catch (error) {
+                    alert('Veri işleme hatası! Lütfen dosya sütun başlıklarını ve formatlarını kontrol edin.');
+                    console.error("Veri İşleme Hatası:", error);
+                }
+            };
+            const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+            if (EXCEL_EXTENSIONS.includes(fileExtension)) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], {raw: true});
+                    handleFileRead(jsonData);
+                };
+                reader.readAsArrayBuffer(file);
+            } else {
+                Papa.parse(file, { header: true, dynamicTyping: true, skipEmptyLines: true, complete: (results) => handleFileRead(results.data) });
+            }
+        });
+
+        // İŞ GÜNÜ DEĞİŞİMİ
+        document.getElementById('work-days-input').addEventListener('input', () => {
+             if (window.rawFileData) {
+                 const processedData = processRawData(window.rawFileData);
+                 loadAndDisplayData(processedData, false);
+             } else if (window.performanceData) {
+                 recalculateDailyAverages();
+             }
+        });
+
+        function recalculateDailyAverages() {
+            if(!window.performanceData) return;
+            const wd = getWorkingDays();
+            window.performanceData.forEach(p => {
+                p.avg_daily_fixed = p.giden_harici_toplam / wd;
+                p.avg_daily_fct = p.fct_giden_toplam_adet / wd;
+                p.avg_daily_internal = p.gelen_dahili_toplam / wd;
+            });
+            window.aggregatedDepartmentData.forEach(dept => {
+                dept.avg_daily_fixed = (dept.giden_harici_toplam / dept.personnelCount) / wd;
+                dept.avg_daily_fct = (dept.fct_giden_toplam_adet / dept.personnelCount) / wd;
+                dept.avg_daily_internal = (dept.gelen_dahili_toplam / dept.personnelCount) / wd;
+            });
+            updateKpiCards(window.aggregatedDepartmentData);
+            if(currentCallTypeFilter === 'ORTALAMA_SURE') {
+                renderActiveDepartmentChart();
+                renderActiveIndividualChart();
+                sortTable('department', sortState.department.key, true);
+                sortTable('individual', sortState.individual.key, true);
+            }
+        }
+
+        function loadAndDisplayData(processedData, isNewUpload = false) {
+            window.performanceData = processedData;
+            window.aggregatedDepartmentData = aggregateDepartmentData(window.performanceData);
+            currentCallTypeFilter = document.querySelector('input[name="callTypeFilter"]:checked').value || 'TOPLAM';
+            resetDepartmentChart(); 
+        }
+
+        // --- VERİ İŞLEME ---
+        function processRawData(rawData) {
+             const wd = getWorkingDays();
+             return rawData.map(person => {
+                const findKey = (keys, target) => keys.find(k => k && k.trim().toUpperCase() === target.toUpperCase());
+                const personKeys = Object.keys(person);
+                const getVal = (keyName) => { const val = person[findKey(personKeys, keyName)]; return parseFloat(val) || 0; };
+                const getStr = (keyName) => person[findKey(personKeys, keyName)] || '';
+                
+                const sicil_no = String(getStr("SICIL"));
+                const calisan_adi_soyadi = String(getStr("ADSOYAD"));
+                const birim_mudurlugu_adi = String(getStr("MUDURLUK"));
+                
+                const gelen_dahili_sure = getVal("GELEN_DAHILI_SURE");
+                const giden_dahili_sure = getVal("GIDEN_DAHILI_SURE");
+                const gelen_dahili_adet_basarili = getVal("GELEN_DAHILI_ADET_BASARILI");
+                const gelen_dahili_adet_basarisiz = getVal("GELEN_DAHILI_ADET_BASARISIZ");
+                const giden_dahili_adet_basarili = getVal("GIDEN_DAHILI_ADET_BASARILI");
+                const giden_dahili_adet_basarisiz = getVal("GIDEN_DAHILI_ADET_BASARISIZ");
+
+                const giden_harici_sure = getVal("GIDEN_HARICI_SURE");
+                const giden_harici_adet_basarili = getVal("GIDEN_HARICI_ADET_BASARILI");
+                const giden_harici_adet_basarisiz = getVal("GIDEN_HARICI_ADET_BASARISIZ");
+                
+                const fct_giden_cevaplanan_adet = getVal('FCT_GIDEN_CEVAPLANAN_ADET');
+                const fct_giden_cevapsiz_adet = getVal('FCT_GIDEN_CEVAPSIZ_ADET');
+                const fct_giden_mesgul_adet = getVal('FCT_GIDEN_MESGUL_ADET');
+                const fct_giden_toplam_sure = getVal('FCT_GIDEN_TOPLAM_SURE');
+                const fct_giden_toplam_adet = fct_giden_cevaplanan_adet + fct_giden_cevapsiz_adet + fct_giden_mesgul_adet;
+                
+                const genelToplamSure = gelen_dahili_sure + giden_dahili_sure + giden_harici_sure;
+                const toplamCagriSayisi = gelen_dahili_adet_basarili + giden_dahili_adet_basarili + giden_harici_adet_basarili +
+                                          gelen_dahili_adet_basarisiz + giden_dahili_adet_basarisiz + giden_harici_adet_basarisiz;
+
+                const giden_harici_toplam = giden_harici_adet_basarili + giden_harici_adet_basarisiz;
+                const gelen_dahili_toplam = gelen_dahili_adet_basarili + gelen_dahili_adet_basarisiz;
+
+                const avg_fixed_call = giden_harici_adet_basarili > 0 ? (giden_harici_sure / giden_harici_adet_basarili) : 0;
+                const avg_fct = fct_giden_cevaplanan_adet > 0 ? (fct_giden_toplam_sure / fct_giden_cevaplanan_adet) : 0;
+                const avg_internal = gelen_dahili_adet_basarili > 0 ? (gelen_dahili_sure / gelen_dahili_adet_basarili) : 0;
+
+                const avg_daily_fixed = giden_harici_toplam / wd;
+                const avg_daily_fct = fct_giden_toplam_adet / wd;
+                const avg_daily_internal = gelen_dahili_toplam / wd;
+
+                return {
+                    sicil_no, calisan_adi_soyadi, birim_mudurlugu_adi,
+                    gelen_dahili_sure, giden_dahili_sure, giden_harici_sure,
+                    gelen_dahili_adet_basarili, gelen_dahili_adet_basarisiz,
+                    giden_dahili_adet_basarili, giden_dahili_adet_basarisiz,
+                    giden_harici_adet_basarili, giden_harici_adet_basarisiz,
+                    genel_toplam_sure: genelToplamSure,
+                    toplam_cagri_sayisi: toplamCagriSayisi,
+                    fct_giden_cevaplanan_adet, fct_giden_cevapsiz_adet, fct_giden_mesgul_adet, 
+                    fct_giden_toplam_sure, fct_giden_toplam_adet,
+                    giden_harici_toplam,
+                    gelen_dahili_toplam,
+                    avg_fixed_call, avg_fct, avg_internal,
+                    avg_daily_fixed, avg_daily_fct, avg_daily_internal
+                };
+            }).filter(p => p.birim_mudurlugu_adi && p.calisan_adi_soyadi);
+        }
+
+        function aggregateDepartmentData(data) {
+            const wd = getWorkingDays();
+            const departments = {};
+            const numericKeys = Object.keys(columnMap).filter(k => columnMap[k][1] === 'number').map(k => columnMap[k][0]);
+            const keysToSum = numericKeys.filter(k => !['fct_yonelme_orani', 'dahili_cevapsiz_oran', 'avg_fixed_call', 'avg_fct', 'avg_internal', 'avg_daily_fixed', 'avg_daily_fct', 'avg_daily_internal'].includes(k));
+            
+            data.forEach(person => {
+                const deptName = person.birim_mudurlugu_adi;
+                if (!departments[deptName]) {
+                    departments[deptName] = { birim_mudurlugu_adi: deptName, personnelCount: 0 };
+                    keysToSum.forEach(key => departments[deptName][key] = 0);
+                }
+                keysToSum.forEach(key => { if (person[key] !== undefined) { departments[deptName][key] += person[key]; } });
+                departments[deptName].personnelCount += 1;
+            });
+
+            Object.values(departments).forEach(dept => {
+                dept.avg_fixed_call = dept.giden_harici_adet_basarili > 0 ? (dept.giden_harici_sure / dept.giden_harici_adet_basarili) : 0;
+                dept.avg_fct = dept.fct_giden_cevaplanan_adet > 0 ? (dept.fct_giden_toplam_sure / dept.fct_giden_cevaplanan_adet) : 0;
+                dept.avg_internal = dept.gelen_dahili_adet_basarili > 0 ? (dept.gelen_dahili_sure / dept.gelen_dahili_adet_basarili) : 0;
+                
+                dept.avg_daily_fixed = (dept.giden_harici_toplam / dept.personnelCount) / wd;
+                dept.avg_daily_fct = (dept.fct_giden_toplam_adet / dept.personnelCount) / wd;
+                dept.avg_daily_internal = (dept.gelen_dahili_toplam / dept.personnelCount) / wd;
+            });
+
+            return Object.values(departments);
+        }
+
+        function getSortType(key) { return (columnMap[Object.keys(columnMap).find(k => columnMap[k][0] === key)] || [])[1] || 'number'; }
+
+        // --- DASHBOARD GÜNCELLEME ---
+        function updateDashboardViews(rawData, aggregatedData) {
+            if (!rawData || rawData.length === 0) return;
+            populateDepartmentSelect(rawData);
+            
+            updateKpiCards(aggregatedData);
+            
+            if (currentCallTypeFilter === 'MUSTERI_ARAMA') sortState.department.key = 'giden_harici_sure';
+            else if (currentCallTypeFilter === 'FCT_GIDEN') sortState.department.key = 'fct_giden_toplam_sure';
+            else if (currentCallTypeFilter === 'ORTALAMA_SURE') sortState.department.key = 'avg_fixed_call';
+            else sortState.department.key = 'genel_toplam_sure';
+            sortState.department.direction = 'DESC';
+            
+            sortTable('department', sortState.department.key, true);
+            resetIndividualChart(); 
+            
+            const filterTitle = filterDefinitions[currentCallTypeFilter].title;
+            document.getElementById('department-summary-title').textContent = `Müdürlük Detay - ${filterTitle}`;
+            document.getElementById('department-chart-container-title').textContent = `Müdürlük Bazında ${filterTitle}`;
+        }
+
+        populateDepartmentSelect = (data) => { const select = document.getElementById('department-select'); select.innerHTML = '<option value="">Lütfen Müdürlük Seçiniz</option>'; [...new Set(data.map(item => item.birim_mudurlugu_adi))].sort().forEach(dept => { const option = document.createElement('option'); option.value = dept; option.textContent = dept; select.appendChild(option); }); }
+        
+        function updateKpiCards(aggregatedData) {
+            if (!aggregatedData || aggregatedData.length === 0) return;
+            const config = filterDefinitions[currentCallTypeFilter].kpi_config;
+            if (!config) return;
+
+            config.forEach((cardConfig, index) => {
+                const cardIndex = index + 1;
+                const titleEl = document.getElementById(`kpi-${cardIndex}-title`);
+                const valueEl = document.getElementById(`kpi-${cardIndex}-value`);
+                const iconEl = document.getElementById(`kpi-${cardIndex}-icon`);
+                const barEl = document.getElementById(`kpi-${cardIndex}-bar`);
+
+                titleEl.textContent = cardConfig.title;
+                let totalValue = 0;
+                
+                if (currentCallTypeFilter === 'ORTALAMA_SURE') {
+                    let totalDuration = 0;
+                    let totalCount = 0;
+                    if (cardConfig.key === 'avg_fixed_call') {
+                         totalDuration = aggregatedData.reduce((sum, d) => sum + (d.giden_harici_sure || 0), 0);
+                         totalCount = aggregatedData.reduce((sum, d) => sum + (d.giden_harici_adet_basarili || 0), 0);
+                         totalValue = totalCount > 0 ? (totalDuration / totalCount) : 0;
+                         valueEl.textContent = formatTime(totalValue);
+                    } else if (cardConfig.key === 'avg_fct') {
+                         totalDuration = aggregatedData.reduce((sum, d) => sum + (d.fct_giden_toplam_sure || 0), 0);
+                         totalCount = aggregatedData.reduce((sum, d) => sum + (d.fct_giden_cevaplanan_adet || 0), 0);
+                         totalValue = totalCount > 0 ? (totalDuration / totalCount) : 0;
+                         valueEl.textContent = formatTime(totalValue);
+                    } else if (cardConfig.key.includes('avg_daily_')) {
+                        let tCalls = 0;
+                        let tPers = aggregatedData.reduce((s, d) => s + (d.personnelCount || 0), 0);
+                        let wd = getWorkingDays();
+                        if (cardConfig.key === 'avg_daily_fixed_kpi') tCalls = aggregatedData.reduce((s, d) => s + (d.giden_harici_toplam || 0), 0);
+                        else if (cardConfig.key === 'avg_daily_fct_kpi') tCalls = aggregatedData.reduce((s, d) => s + (d.fct_giden_toplam_adet || 0), 0);
+                        totalValue = (tPers > 0 && wd > 0) ? (tCalls / tPers) / wd : 0;
+                        valueEl.textContent = formatNumber(totalValue);
+                    }
+
+                } else if (cardConfig.type === 'percentage') {
+                    const totalNum = aggregatedData.reduce((sum, d) => sum + (d[cardConfig.numKey] || 0), 0);
+                    const totalDenom = aggregatedData.reduce((sum, d) => sum + (d[cardConfig.denomKey] || 0), 0);
+                    totalValue = totalDenom > 0 ? (totalNum / totalDenom) * 100 : 0;
+                    valueEl.textContent = formatPercentage(totalValue);
+                } else {
+                    totalValue = aggregatedData.reduce((sum, d) => sum + (d[cardConfig.key] || 0), 0);
+                    if (cardConfig.type === 'time') valueEl.textContent = formatTime(totalValue);
+                    else valueEl.textContent = formatNumber(totalValue);
+                }
+
+                iconEl.className = `fa-solid ${cardConfig.icon} text-6xl ${cardConfig.color}`;
+                barEl.className = `h-full w-full ${cardConfig.bg}`;
+            });
+        }
+
+        function sortTable(tableType, key, initialSort = false) {
+            const state = sortState[tableType];
+            let data = tableType === 'department' ? window.aggregatedDepartmentData : getIndividualData(window.performanceData);
+            if (!data) return;
+            let direction;
+            if (key === state.key) { direction = initialSort ? state.direction : (state.direction === 'ASC' ? 'DESC' : 'ASC'); } else { direction = (getSortType(key) === 'string') ? 'ASC' : 'DESC'; }
+            const sortType = getSortType(key);
+
+            data.forEach(d => {
+                if (key === 'fct_yonelme_orani') {
+                    if (d.giden_harici_adet_basarisiz === 0) d[key] = 100;
+                    else d[key] = (d.fct_giden_toplam_adet / d.giden_harici_adet_basarisiz) * 100;
+                }
+                else if (key === 'dahili_cevapsiz_oran') d[key] = (d.gelen_dahili_toplam > 0) ? (d.gelen_dahili_adet_basarisiz / d.gelen_dahili_toplam) * 100 : 0;
+            });
+
+            data.sort((a, b) => {
+                const aVal = a[key] || (sortType === 'string' ? '' : 0);
+                const bVal = b[key] || (sortType === 'string' ? '' : 0);
+                if (sortType === 'string') { return direction === 'ASC' ? aVal.localeCompare(bVal, 'tr') : bVal.localeCompare(aVal, 'tr'); }
+                return direction === 'ASC' ? aVal - bVal : bVal - aVal;
+            });
+            sortState[tableType] = { key, direction };
+            if (tableType === 'department') { renderDepartmentTable(data); renderActiveDepartmentChart(data); } else { renderIndividualTable(data); renderActiveIndividualChart(data); }
+        }
+
+        function getSortArrow(tableType, key) { const state = sortState[tableType]; return state.key !== key ? '' : (state.direction === 'ASC' ? ' ↑' : ' ↓'); }
+
+        // --- TABLO RENDER (DEPARTMENT) ---
+        function renderDepartmentTable(data) {
+            const filterDef = filterDefinitions[currentCallTypeFilter]; const keys = filterDef.table_keys; if (!keys || keys.length === 0) return;
+            const header = document.getElementById('department-table-header');
+            const headerTitles = keys.map(key => { const columnDef = Object.entries(columnMap).find(([title, [dataKey, type]]) => dataKey === key); let title = columnDef ? columnDef[0] : key; return `<th class="py-3 px-4 text-left cursor-pointer hover:bg-gray-100 transition-colors" onclick="sortTable('department', '${key}')">${title}${getSortArrow('department', key)}</th>`; }).join('');
+            header.innerHTML = `<tr>${headerTitles}</tr>`;
+            const tableBody = document.getElementById('department-performance-table-body'); tableBody.innerHTML = '';
+            const footer = document.getElementById('department-table-footer'); let totals = {}; keys.forEach(k => {if(getSortType(k) !== 'string') totals[k] = 0;});
+
+            data.forEach(dept => {
+                let row = tableBody.insertRow();
+                row.className = 'hover:bg-gray-50 transition-colors cursor-pointer border-b border-gray-100 last:border-0';
+                row.onclick = () => toggleDepartmentSelection(dept.birim_mudurlugu_adi);
+                if (selectedComparisonDepartments.includes(dept.birim_mudurlugu_adi)) { row.style.backgroundColor = 'rgba(255, 184, 28, 0.1)'; }
+
+                keys.forEach(key => {
+                    const cell = row.insertCell(); let val = dept[key]; const sortType = getSortType(key);
+                    
+                    if (key === 'fct_yonelme_orani') {
+                        if (dept.giden_harici_adet_basarisiz === 0) val = 100; else val = (dept.fct_giden_toplam_adet / dept.giden_harici_adet_basarisiz) * 100;
+                        cell.style.fontWeight = 'bold';
+                        cell.style.color = val >= 100 ? '#16a34a' : '#dc2626';
+                    }
+                    else if (key === 'dahili_cevapsiz_oran') val = (dept.gelen_dahili_toplam > 0) ? (dept.gelen_dahili_adet_basarisiz / dept.gelen_dahili_toplam) * 100 : 0;
+                    
+                    if (sortType === 'number' || sortType === 'percentage') { 
+                        if (!['fct_yonelme_orani', 'dahili_cevapsiz_oran'].includes(key) && !key.startsWith('avg_')) { 
+                            totals[key] += (val || 0); 
+                        } 
+                    }
+                    const isBold = key.startsWith('genel_toplam') || key === 'toplam_cagri_sayisi' || key === 'gelen_dahili_toplam';
+                    cell.className = cell.className + ` py-2 px-4 text-left ${isBold ? 'font-bold' : ''}`;
+                    
+                    if (sortType === 'string') cell.innerHTML = val; else if (key.includes('sure') || key.startsWith('avg_') && !key.includes('daily')) cell.innerHTML = formatTime(val); else if (sortType === 'percentage') cell.innerHTML = formatPercentage(val); else cell.innerHTML = formatNumber(val);
+                });
+            });
+
+            // Footer
+            if (currentCallTypeFilter === 'ORTALAMA_SURE') {
+                footer.innerHTML = '';
+            } else {
+                let footerHTML = `<tr>`;
+                keys.forEach((key, idx) => {
+                    if(idx===0) { footerHTML += `<td class="py-3 px-4 text-left">TOPLAM</td>`; return; }
+                    let totalVal = totals[key]; let formattedVal = '';
+                    
+                    if (key === 'fct_yonelme_orani') {
+                         const totalUnanswered = data.reduce((s, d) => s + (d.giden_harici_adet_basarisiz || 0), 0);
+                         const totalFct = data.reduce((s, d) => s + (d.fct_giden_toplam_adet || 0), 0);
+                         totalVal = totalUnanswered === 0 ? 100 : (totalFct / totalUnanswered) * 100;
+                         formattedVal = formatPercentage(totalVal);
+                    }
+                    else if (key === 'dahili_cevapsiz_oran') { const totalUnanswered = data.reduce((s, d) => s + (d.gelen_dahili_adet_basarisiz || 0), 0); const totalInc = data.reduce((s, d) => s + (d.gelen_dahili_toplam || 0), 0); totalVal = (totalInc > 0) ? (totalUnanswered / totalInc) * 100 : 0; formattedVal = formatPercentage(totalVal); }
+                    else if (getSortType(key) === 'string') formattedVal = ''; else if (key.includes('sure')) formattedVal = formatTime(totalVal); else formattedVal = formatNumber(totalVal);
+                    footerHTML += `<td class="py-3 px-4 text-left">${formattedVal}</td>`;
+                });
+                footer.innerHTML = footerHTML + '</tr>';
+            }
+        }
+
+        // --- TABLO RENDER (INDIVIDUAL) ---
+        function getIndividualData(data) { const selectedDepartment = document.getElementById('department-select').value; return selectedDepartment ? data.filter(item => item.birim_mudurlugu_adi === selectedDepartment) : []; }
+        function renderIndividualTable(data) {
+            const filterDef = filterDefinitions[currentCallTypeFilter]; const keys = filterDef.individual_table_keys; if (!keys || keys.length === 0) return;
+            const header = document.getElementById('individual-table-header');
+            const headerTitles = keys.map(key => { const columnDef = Object.entries(columnMap).find(([title, [dataKey, type]]) => dataKey === key); let title = columnDef ? columnDef[0] : key; return `<th class="py-3 px-4 text-left cursor-pointer hover:bg-gray-100 transition-colors" onclick="sortTable('individual', '${key}')">${title}${getSortArrow('individual', key)}</th>`; }).join('');
+            header.innerHTML = `<tr>${headerTitles}</tr>`;
+            const tableBody = document.getElementById('individual-performance-table-body'); tableBody.innerHTML = '';
+            if (data.length === 0) { tableBody.innerHTML = `<tr><td colspan="${keys.length}" class="text-center py-4">Lütfen bir müdürlük seçin.</td></tr>`; return; }
+
+            data.forEach(person => {
+                let row = tableBody.insertRow();
+                row.className = 'hover:bg-gray-50 transition-colors cursor-pointer border-b border-gray-100 last:border-0';
+                row.onclick = () => togglePersonnelSelection(person.calisan_adi_soyadi);
+                if (selectedPersonnelNames.includes(person.calisan_adi_soyadi)) { row.style.backgroundColor = 'rgba(255, 184, 28, 0.1)'; }
+
+                keys.forEach(key => {
+                    const cell = row.insertCell(); let val = person[key]; const sortType = getSortType(key);
+                    
+                    if (key === 'fct_yonelme_orani') {
+                        if (person.giden_harici_adet_basarisiz === 0) val = 100; else val = (person.fct_giden_toplam_adet / person.giden_harici_adet_basarisiz) * 100;
+                        cell.style.fontWeight = 'bold';
+                        cell.style.color = val >= 100 ? '#16a34a' : '#dc2626'; 
+                    }
+                    else if (key === 'dahili_cevapsiz_oran') val = (person.gelen_dahili_toplam > 0) ? (person.gelen_dahili_adet_basarisiz / person.gelen_dahili_toplam) * 100 : 0;
+                    
+                    const isBold = key.startsWith('genel_toplam') || key === 'toplam_cagri_sayisi' || key === 'gelen_dahili_toplam';
+                    cell.className = cell.className + ` py-2 px-4 text-left ${isBold ? 'font-bold' : ''}`;
+                    if (sortType === 'string') cell.innerHTML = val; else if (key.includes('sure') || key.startsWith('avg_') && !key.includes('daily')) cell.innerHTML = formatTime(val); else if (sortType === 'percentage') cell.innerHTML = formatPercentage(val); else cell.innerHTML = formatNumber(val);
+                });
+            });
+        }
+
+        // --- GRAFİKLER (Charts) ---
+        function renderActiveDepartmentChart(data) {
+            const chartData = data || window.aggregatedDepartmentData; if (!chartData) return;
+            const metric = departmentChartMetric; 
+            
+            if (currentCallTypeFilter === 'ORTALAMA_SURE') {
+                renderAverageComparisonChart(chartData, 'department-chart', 'birim_mudurlugu_adi');
+                document.getElementById('department-chart-back-button').classList.add('hidden');
+                return;
+            }
+
+            if (departmentChartState === 'DRILLDOWN' && selectedComparisonDepartments.length > 0) { renderDepartmentStackedBarChart(); return; }
+            departmentChartState = 'OVERVIEW'; document.getElementById('department-chart-back-button').classList.add('hidden');
+
+            if (currentCallTypeFilter === 'FCT_GIDEN') {
+                if (metric === 'SURE') renderGenericDepartmentBarChart(chartData, 'fct_giden_toplam_sure', 'FCT Giden Süre', CHART_COLORS[0]);
+                else renderDepartmentFctGidenOverviewBarChart(chartData);
+            } else if (currentCallTypeFilter === 'MUSTERI_ARAMA') {
+                 if (metric === 'SURE') { renderGenericDepartmentBarChart(chartData, 'giden_harici_sure', 'Sabit Hattan Müşteri Arama Süresi', CHART_COLORS[0]);
+                 } else renderDepartmentAdetChart(chartData);
+            } else if (currentCallTypeFilter === 'DAHILI') {
+                 if (metric === 'SURE') {
+                    renderGenericDepartmentBarChart(chartData, 'gelen_dahili_sure', 'Şube/Birimden Gelen Arama Süresi', CHART_COLORS[0]);
+                 } else renderDepartmentAdetChart(chartData);
+            } else {
+                if (metric === 'SURE') renderDepartmentSureChart(chartData); else renderDepartmentAdetChart(chartData); 
+            }
+        }
+
+        function renderDepartmentFctGidenOverviewBarChart(data) {
+            const ctx = document.getElementById('department-chart').getContext('2d'); if (departmentChart) departmentChart.destroy();
+            const values = data.map(d => d.fct_giden_toplam_adet);
+            departmentChart = new Chart(ctx, { type: 'bar', data: { labels: data.map(d => d.birim_mudurlugu_adi), datasets: [{ label: 'FCT Giden Adet', data: values, backgroundColor: CHART_COLORS[7] }] }, 
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: {display:false}, tooltip: {callbacks: chartTooltipCallback}, datalabels: commonDataLabelStyle }, onClick: (e, els) => { if(els.length) { departmentChartState = 'DRILLDOWN'; selectedComparisonDepartments = [departmentChart.data.labels[els[0].index]]; renderActiveDepartmentChart(); renderDepartmentTable(window.aggregatedDepartmentData); } } } });
+        }
+        function renderDepartmentAdetChart(data) { const ctx = document.getElementById('department-chart').getContext('2d'); if (departmentChart) departmentChart.destroy(); const filterDef = filterDefinitions[currentCallTypeFilter]; const dataValues = data.map(d => (filterDef.adet_basarili_keys||[]).concat(filterDef.adet_basarisiz_keys||[]).concat(currentCallTypeFilter === 'FCT_GIDEN' ? ['fct_giden_toplam_adet'] : []).reduce((s,k)=>s+(d[k]||0),0)); departmentChart = new Chart(ctx, { type: 'doughnut', data: { labels: data.map(d=>d.birim_mudurlugu_adi), datasets: [{ data: dataValues, backgroundColor: CHART_COLORS }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: {position:'right', labels:{usePointStyle:true}}, datalabels: donutDataLabelConfig, tooltip: {callbacks: chartTooltipCallback} }, onClick: handleAdetPieChartClick } }); }
+        function renderDepartmentSureChart(data) { const ctx = document.getElementById('department-chart').getContext('2d'); if (departmentChart) departmentChart.destroy(); const filterDef = filterDefinitions[currentCallTypeFilter]; const dataValues = data.map(d => (filterDef.sure_keys||[]).reduce((s,k)=>s+(d[k]||0),0)); departmentChart = new Chart(ctx, { type: 'doughnut', data: { labels: data.map(d=>d.birim_mudurlugu_adi), datasets: [{ data: dataValues, backgroundColor: CHART_COLORS }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: {position:'right', labels:{usePointStyle:true}}, datalabels: donutDataLabelConfig, tooltip: {callbacks: chartTooltipCallback} }, onClick: handleSurePieChartClick } }); }
+        function handleAdetPieChartClick(e, els) { if(els.length) { departmentChartState='DRILLDOWN'; selectedComparisonDepartments=[departmentChart.data.labels[els[0].index]]; renderActiveDepartmentChart(); renderDepartmentTable(window.aggregatedDepartmentData); } }
+        function handleSurePieChartClick(e, els) { if(els.length) { departmentChartState='DRILLDOWN'; selectedComparisonDepartments=[departmentChart.data.labels[els[0].index]]; renderActiveDepartmentChart(); renderDepartmentTable(window.aggregatedDepartmentData); } }
+
+        function calculatePresidencyAverages() { const allPersonnel = window.performanceData; const count = allPersonnel.length; if (count === 0) return null; const avg = { birim_mudurlugu_adi: 'Başkanlık Ort. (P.Başı)', isAverage: true, personnelCount: count }; const keys = Object.keys(columnMap).filter(k => columnMap[k][1] === 'number').map(k => columnMap[k][0]); keys.forEach(key => { if(!key.includes('orani')) avg[key] = allPersonnel.reduce((sum, p) => sum + (p[key] || 0), 0) / count; }); return avg; }
+        function calculateDepartmentAverages(departmentName) { const personnel = window.performanceData.filter(p=>p.birim_mudurlugu_adi===departmentName); const count = personnel.length; if (count===0) return null; const avg = { calisan_adi_soyadi: 'Müdürlük Ortalaması', isAverage: true, isDepartment: true }; const keys = Object.keys(columnMap).filter(k=>columnMap[k][1]==='number').map(k=>columnMap[k][0]); keys.forEach(key => { if(!key.includes('orani')) avg[key] = personnel.reduce((sum, p) => sum + (p[key] || 0), 0) / count; }); return avg; }
+        function calculatePresidencyAveragesForIndividualChart() { const allPersonnel = window.performanceData; const count = allPersonnel.length; if (count===0) return null; const avg = { calisan_adi_soyadi: 'Başkanlık Ortalaması', isAverage: true, isPresidency: true }; const keys = Object.keys(columnMap).filter(k=>columnMap[k][1]==='number').map(k=>columnMap[k][0]); keys.forEach(key => { if(!key.includes('orani')) avg[key] = allPersonnel.reduce((sum, p) => sum + (p[key] || 0), 0) / count; }); return avg; }
+
+        function renderDepartmentStackedBarChart() {
+            document.getElementById('department-chart-back-button').classList.remove('hidden'); document.getElementById('department-chart-back-button').textContent = 'Karşılaştırmayı Temizle';
+            const presAvg = calculatePresidencyAverages();
+            const plotData = [presAvg, ...selectedComparisonDepartments.map(n => window.aggregatedDepartmentData.find(p => p.birim_mudurlugu_adi === n))].filter(Boolean);
+            const filterDef = filterDefinitions[currentCallTypeFilter];
+            const ctx = document.getElementById('department-chart').getContext('2d'); if (departmentChart) departmentChart.destroy();
+            let keysToRender = departmentChartMetric === 'SURE' ? (filterDef.drilldown_keys_sure || filterDef.sure_keys || []) : (filterDef.drilldown_keys || []);
+            const datasets = keysToRender.map((key, i) => { const colDef = Object.entries(columnMap).find(([t, [k, type]]) => k === key); return { label: colDef ? colDef[0] : key, data: plotData.map(d => (!d.isAverage && d.personnelCount > 0) ? (d[key]||0)/d.personnelCount : (d[key]||0)), backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }; });
+            departmentChart = new Chart(ctx, { type: 'bar', data: { labels: plotData.map(d=>d.birim_mudurlugu_adi), datasets }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: {position:'top'}, tooltip: {callbacks: chartTooltipCallback}, datalabels: { color:'white', formatter:(v) => departmentChartMetric === 'SURE' ? (v>0?formatTime(v):null) : (v>0?formatNumber(v):null) } }, scales: { x:{stacked:true}, y:{beginAtZero:true, stacked:true, ticks: { callback: function(value) { return departmentChartMetric === 'SURE' ? formatTime(value) : formatNumber(value); } } } } } });
+        }
+
+        function renderAverageComparisonChart(data, canvasId, labelKey) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            let chartInstance = (canvasId === 'department-chart') ? departmentChart : individualChart;
+            if (chartInstance) chartInstance.destroy();
+
+            const metric = (canvasId === 'department-chart') ? departmentChartMetric : individualChartMetric;
+            let displayData = data;
+            if (canvasId === 'individual-chart-canvas' && data.length > 20) {
+                 displayData = data.slice(0, 20); 
+            }
+
+            const labels = displayData.map(d => d[labelKey]);
+            let datasets;
+
+            if (metric === 'SURE') {
+                datasets = [
+                    { label: 'Sabit Hat Müşteri Arama (Ort. Süre)', data: displayData.map(d => d.avg_fixed_call), backgroundColor: '#F59E0B' },
+                    { label: 'FCT (Ort. Süre)', data: displayData.map(d => d.avg_fct), backgroundColor: '#10B981' },
+                    { label: 'Şube Birim Karşılama (Ort. Süre)', data: displayData.map(d => d.avg_internal), backgroundColor: '#8B5CF6' }
+                ];
+            } else {
+                datasets = [
+                    { label: 'Sabit Hat Müşteri Arama (Günlük Ort. Adet)', data: displayData.map(d => d.avg_daily_fixed), backgroundColor: '#F59E0B' },
+                    { label: 'FCT (Günlük Ort. Adet)', data: displayData.map(d => d.avg_daily_fct), backgroundColor: '#10B981' },
+                    { label: 'Şube Birim Karşılama (Günlük Ort. Adet)', data: displayData.map(d => d.avg_daily_internal), backgroundColor: '#8B5CF6' }
+                ];
+            }
+
+            const newChart = new Chart(ctx, {
+                type: 'bar',
+                data: { labels: labels, datasets: datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top' }, tooltip: { callbacks: chartTooltipCallback }, datalabels: { display: false } },
+                    scales: { y: { beginAtZero: true, ticks: { callback: function(value) { return metric === 'SURE' ? formatTime(value) : formatNumber(value); } } } }
+                }
+            });
+
+            if (canvasId === 'department-chart') departmentChart = newChart;
+            else individualChart = newChart;
+        }
+
+        // --- INDIVIDUAL CHART ---
+        function resetIndividualChart() { individualChartState = 'OVERVIEW'; selectedPersonnelNames = []; document.getElementById('individual-chart-back-button').classList.add('hidden'); if (currentCallTypeFilter === 'MUSTERI_ARAMA') sortState.individual.key = 'giden_harici_sure'; else if (currentCallTypeFilter === 'FCT_GIDEN') sortState.individual.key = 'fct_giden_toplam_sure'; else if (currentCallTypeFilter === 'ORTALAMA_SURE') sortState.individual.key = 'avg_fixed_call'; else sortState.individual.key = 'genel_toplam_sure'; sortTable('individual', sortState.individual.key, true); }
+        function renderActiveIndividualChart(data) {
+            const chartData = data || getIndividualData(window.performanceData || []); const selectedDept = document.getElementById('department-select').value;
+            const filterTitle = filterDefinitions[currentCallTypeFilter].title; document.getElementById('individual-chart-title').textContent = selectedDept ? `${selectedDept} - ${filterTitle}` : 'Personel İstatistikleri';
+            const metric = individualChartMetric;
+            
+            if (currentCallTypeFilter === 'ORTALAMA_SURE') {
+                if(chartData.length > 0) {
+                     renderAverageComparisonChart(chartData, 'individual-chart-canvas', 'calisan_adi_soyadi');
+                }
+                document.getElementById('individual-chart-back-button').classList.add('hidden');
+                return;
+            }
+
+            if (individualChartState === 'DRILLDOWN' && selectedPersonnelNames.length > 0) { renderIndividualStackedBarChart(); return; }
+            individualChartState = 'OVERVIEW'; document.getElementById('individual-chart-back-button').classList.add('hidden');
+            if (currentCallTypeFilter === 'FCT_GIDEN') { if (metric === 'SURE') renderGenericIndividualBarChart(chartData, 'fct_giden_toplam_sure', 'FCT Giden Süre', CHART_COLORS[1]); else renderIndividualFctGidenOverviewBarChart(chartData); }
+            else if (currentCallTypeFilter === 'MUSTERI_ARAMA') { if (metric === 'SURE') { renderGenericIndividualBarChart(chartData, 'giden_harici_sure', 'Sabit Hattan Müşteri Arama Süresi', CHART_COLORS[1]); } else renderIndividualOverviewDoughnutChart(chartData); }
+            else if (currentCallTypeFilter === 'DAHILI') { if (metric === 'SURE') renderGenericIndividualBarChart(chartData, 'gelen_dahili_sure', 'Şube/Birimden Gelen Arama Süresi', CHART_COLORS[1]); else renderIndividualOverviewDoughnutChart(chartData); }
+            else renderIndividualOverviewDoughnutChart(chartData);
+        }
+
+        function renderIndividualFctGidenOverviewBarChart(data) { const ctx = document.getElementById('individual-chart-canvas').getContext('2d'); if (individualChart) individualChart.destroy(); const values = data.map(p => p.fct_giden_toplam_adet); individualChart = new Chart(ctx, { type: 'bar', data: { labels: data.map(p=>p.calisan_adi_soyadi), datasets: [{ label: 'FCT Giden Adet', data: values, backgroundColor: CHART_COLORS[7] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: {legend:{display:false}, tooltip:{callbacks:chartTooltipCallback}, datalabels:commonDataLabelStyle}, onClick: handleIndividualFctClick } }); }
+        function handleIndividualFctClick(e, els) { if(els.length) { individualChartState='DRILLDOWN'; selectedPersonnelNames=[individualChart.data.labels[els[0].index]]; renderActiveIndividualChart(); renderIndividualTable(getIndividualData(window.performanceData)); } }
+        function renderIndividualOverviewDoughnutChart(data) { const ctx = document.getElementById('individual-chart-canvas').getContext('2d'); if (individualChart) individualChart.destroy(); const filterDef=filterDefinitions[currentCallTypeFilter]; const vals = data.map(p => (individualChartMetric==='ADET' ? ((filterDef.adet_basarili_keys||[]).concat(filterDef.adet_basarisiz_keys||[])).reduce((s,k)=>s+(p[k]||0),0) : (filterDef.sure_keys||[]).reduce((s,k)=>s+(p[k]||0),0))); individualChart = new Chart(ctx, { type: 'doughnut', data: { labels: data.map(p=>p.calisan_adi_soyadi), datasets: [{ data: vals, backgroundColor: CHART_COLORS }] }, options: { responsive: true, maintainAspectRatio: false, plugins: {legend:{position:'right', labels:{usePointStyle:true}}, datalabels:donutDataLabelConfig, tooltip:{callbacks:chartTooltipCallback}}, onClick: handleIndividualFctClick } }); }
+        function renderIndividualStackedBarChart() { document.getElementById('individual-chart-back-button').classList.remove('hidden'); const selectedDept = document.getElementById('department-select').value; const deptAvg = calculateDepartmentAverages(selectedDept); const presAvg = calculatePresidencyAveragesForIndividualChart(); const plotData = [presAvg, deptAvg, ...selectedPersonnelNames.map(n => window.performanceData.find(p => p.calisan_adi_soyadi === n))].filter(Boolean); const filterDef = filterDefinitions[currentCallTypeFilter]; const ctx = document.getElementById('individual-chart-canvas').getContext('2d'); if (individualChart) individualChart.destroy(); let keysToRender = individualChartMetric === 'SURE' ? (filterDef.drilldown_keys_sure || filterDef.sure_keys || []) : (filterDef.drilldown_keys || []); const datasets = keysToRender.map((key, i) => { const colDef = Object.entries(columnMap).find(([t, [k, type]]) => k === key); return { label: colDef ? colDef[0] : key, data: plotData.map(p => p[key]||0), backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }; }); individualChart = new Chart(ctx, { type: 'bar', data: { labels: plotData.map(p=>p.calisan_adi_soyadi), datasets }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: {position:'top'}, tooltip: {callbacks: chartTooltipCallback}, datalabels: { color:'white', formatter:(v) => individualChartMetric === 'SURE' ? (v>0?formatTime(v):null) : (v>0?formatNumber(v):null) } }, scales: { x:{stacked:true}, y:{beginAtZero:true, stacked:true, ticks: { callback: function(value) { return individualChartMetric === 'SURE' ? formatTime(value) : formatNumber(value); } } } } } }); }
+        function renderGenericDepartmentBarChart(data, key, label, color) { const ctx = document.getElementById('department-chart').getContext('2d'); if (departmentChart) departmentChart.destroy(); const values = data.map(d => d[key] || 0); departmentChart = new Chart(ctx, { type: 'bar', data: { labels: data.map(d => d.birim_mudurlugu_adi), datasets: [{ label: label, data: values, backgroundColor: color || CHART_COLORS[0] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: chartTooltipCallback }, datalabels: { color: '#1e293b', anchor: 'end', align: 'top', font: { weight: 'bold', size: 10 }, formatter: (value) => formatTime(value) } }, onClick: (e, els) => { if (els.length) { departmentChartState = 'DRILLDOWN'; selectedComparisonDepartments = [departmentChart.data.labels[els[0].index]]; renderActiveDepartmentChart(); renderDepartmentTable(window.aggregatedDepartmentData); } } } }); }
+        function renderGenericIndividualBarChart(data, key, label, color) { const ctx = document.getElementById('individual-chart-canvas').getContext('2d'); if (individualChart) individualChart.destroy(); const values = data.map(p => p[key] || 0); individualChart = new Chart(ctx, { type: 'bar', data: { labels: data.map(p => p.calisan_adi_soyadi), datasets: [{ label: label, data: values, backgroundColor: color || CHART_COLORS[1] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: chartTooltipCallback }, datalabels: { color: '#1e293b', anchor: 'end', align: 'top', font: { weight: 'bold', size: 10 }, formatter: (value) => formatTime(value) } }, onClick: handleIndividualFctClick } }); }
+
+        function resetDepartmentChart() { departmentChartState = 'OVERVIEW'; selectedComparisonDepartments = []; document.getElementById('department-chart-back-button').classList.add('hidden'); if (window.performanceData) updateDashboardViews(window.performanceData, window.aggregatedDepartmentData); }
+        function toggleDepartmentSelection(name) { const idx = selectedComparisonDepartments.indexOf(name); if(idx>-1) selectedComparisonDepartments.splice(idx,1); else selectedComparisonDepartments.push(name); departmentChartState = selectedComparisonDepartments.length ? 'DRILLDOWN' : 'OVERVIEW'; renderActiveDepartmentChart(); renderDepartmentTable(window.aggregatedDepartmentData); }
+        function clearIndividualChartSelection() { resetIndividualChart(); }
+        function togglePersonnelSelection(name) { const idx = selectedPersonnelNames.indexOf(name); if(idx>-1) selectedPersonnelNames.splice(idx,1); else selectedPersonnelNames.push(name); individualChartState = selectedPersonnelNames.length ? 'DRILLDOWN' : 'OVERVIEW'; renderActiveIndividualChart(); renderIndividualTable(getIndividualData(window.performanceData)); }
+
+        // --- DIŞA AKTAR VE MOD AYARLAMA ---
+        function exportReport() {
+            if (!window.performanceData || window.performanceData.length === 0) {
+                alert("Dışa aktarmadan önce lütfen veri yükleyin.");
+                return;
+            }
+
+            const month = document.getElementById('select-month').value;
+            const year = document.getElementById('select-year').value;
+            const workDays = getWorkingDays();
+            const dateObj = { month, year };
+
+            let htmlContent = document.documentElement.outerHTML;
+
+            const scriptRegex = /<script id="embedded-data-script">([\s\S]*?)<\/script>/;
+            
+            const newScriptContent = `
+    <script id="embedded-data-script">
+        window.APP_MODE = 'VIEWER'; 
+        window.EMBEDDED_DATA = ${JSON.stringify(window.performanceData)}; 
+        window.EMBEDDED_DATE = ${JSON.stringify(dateObj)};
+        window.EMBEDDED_WORK_DAYS = ${workDays};
+    <\/script>`;
+
+            htmlContent = htmlContent.replace(scriptRegex, newScriptContent);
+
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `KRTB_Cagri_Analiz_${month}_${year}.html`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function applyModeSettings() {
+            if (window.APP_MODE === 'VIEWER' && window.EMBEDDED_DATA) {
+                const adminElements = document.querySelectorAll('.admin-visible');
+                adminElements.forEach(el => { el.style.setProperty('display', 'none', 'important'); });
+                
+                const viewerElements = document.querySelectorAll('.viewer-visible');
+                viewerElements.forEach(el => { el.style.display = 'block'; });
+
+                if (window.EMBEDDED_DATE) {
+                    const dateStr = `${window.EMBEDDED_DATE.month} ${window.EMBEDDED_DATE.year}`;
+                    const viewerDateText = document.getElementById('viewer-date-text');
+                    if(viewerDateText) viewerDateText.textContent = dateStr;
+                    
+                    const badge = document.getElementById('report-date-badge');
+                    if(badge) { badge.classList.remove('hidden'); badge.style.display = 'block'; badge.textContent = `RAPOR DÖNEMİ: ${dateStr}`; }
+                }
+
+                if (window.EMBEDDED_WORK_DAYS) {
+                    const wdText = document.getElementById('viewer-work-days-text');
+                    if(wdText) wdText.textContent = window.EMBEDDED_WORK_DAYS;
+                }
+
+                window.performanceData = window.EMBEDDED_DATA;
+                window.aggregatedDepartmentData = aggregateDepartmentData(window.performanceData);
+                resetDepartmentChart();
+            } else {
+                document.querySelectorAll('.viewer-visible').forEach(el => { el.style.display = 'none'; });
+            }
+        }
+
+        // --- INIT ---
+        document.addEventListener('DOMContentLoaded', () => {
+            Chart.register(ChartDataLabels);
+            const savedTheme = localStorage.getItem('appTheme') || 'day';
+            setTheme(savedTheme);
+
+            applyModeSettings();
+
+            document.getElementById('department-select').addEventListener('change', () => { if (window.performanceData) resetIndividualChart(); });
+            document.getElementById('call-type-filter-group').addEventListener('change', (event) => { if (event.target.name === 'callTypeFilter') { currentCallTypeFilter = event.target.value; if (window.performanceData) resetDepartmentChart(); } });
+            document.getElementById('department-chart-type-group').addEventListener('change', (event) => { if (event.target.name === 'departmentChartType') { departmentChartMetric = event.target.value; if (window.aggregatedDepartmentData) renderActiveDepartmentChart(window.aggregatedDepartmentData); } });
+            document.getElementById('individual-chart-type-group').addEventListener('change', (event) => { if (event.target.name === 'individualChartType') { individualChartMetric = event.target.value; if (window.performanceData) renderActiveIndividualChart(); } });
+        });
+    </script>
+</body>
+</html>

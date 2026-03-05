@@ -1,0 +1,1080 @@
+<html lang="tr"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KRTB Çağrı Analiz | Dinamik KPI</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    
+    <script id="embedded-data-script">
+        window.APP_MODE = 'VIEWER'; 
+        window.EMBEDDED_DATA = [{"sicil_no":"1001","calisan_adi_soyadi":"Ahmet Yılmaz","birim_mudurlugu_adi":"Müşteri Hizmetleri","gelen_dahili_sure":4500,"giden_dahili_sure":1200,"giden_harici_sure":12500,"gelen_dahili_adet_basarili":35,"gelen_dahili_adet_basarisiz":5,"giden_dahili_adet_basarili":10,"giden_dahili_adet_basarisiz":2,"giden_harici_adet_basarili":85,"giden_harici_adet_basarisiz":15,"genel_toplam_sure":18200,"toplam_cagri_sayisi":152,"fct_giden_cevaplanan_adet":40,"fct_giden_cevapsiz_adet":10,"fct_giden_mesgul_adet":5,"fct_giden_toplam_sure":6500,"fct_giden_toplam_adet":55,"giden_harici_toplam":100,"gelen_dahili_toplam":40,"avg_fixed_call":147.05882352941177,"avg_fct":162.5,"avg_internal":128.57142857142858,"avg_daily_fixed":4.545454545454546,"avg_daily_fct":2.5,"avg_daily_internal":1.8181818181818181},{"sicil_no":"1001","calisan_adi_soyadi":"Ahmet Yılmaz","birim_mudurlugu_adi":"Müşteri Hizmetleri","gelen_dahili_sure":4800,"giden_dahili_sure":1350,"giden_harici_sure":13000,"gelen_dahili_adet_basarili":40,"gelen_dahili_adet_basarisiz":4,"giden_dahili_adet_basarili":12,"giden_dahili_adet_basarisiz":1,"giden_harici_adet_basarili":90,"giden_harici_adet_basarisiz":12,"genel_toplam_sure":19150,"toplam_cagri_sayisi":159,"fct_giden_cevaplanan_adet":45,"fct_giden_cevapsiz_adet":8,"fct_giden_mesgul_adet":4,"fct_giden_toplam_sure":7200,"fct_giden_toplam_adet":57,"giden_harici_toplam":102,"gelen_dahili_toplam":44,"avg_fixed_call":144.44444444444446,"avg_fct":160,"avg_internal":120,"avg_daily_fixed":4.636363636363637,"avg_daily_fct":2.590909090909091,"avg_daily_internal":2},{"sicil_no":"1001","calisan_adi_soyadi":"Ahmet Yılmaz","birim_mudurlugu_adi":"Müşteri Hizmetleri","gelen_dahili_sure":5100,"giden_dahili_sure":1100,"giden_harici_sure":14200,"gelen_dahili_adet_basarili":38,"gelen_dahili_adet_basarisiz":6,"giden_dahili_adet_basarili":15,"giden_dahili_adet_basarisiz":3,"giden_harici_adet_basarili":95,"giden_harici_adet_basarisiz":18,"genel_toplam_sure":20400,"toplam_cagri_sayisi":175,"fct_giden_cevaplanan_adet":50,"fct_giden_cevapsiz_adet":12,"fct_giden_mesgul_adet":6,"fct_giden_toplam_sure":8100,"fct_giden_toplam_adet":68,"giden_harici_toplam":113,"gelen_dahili_toplam":44,"avg_fixed_call":149.47368421052633,"avg_fct":162,"avg_internal":134.21052631578948,"avg_daily_fixed":5.136363636363637,"avg_daily_fct":3.090909090909091,"avg_daily_internal":2},{"sicil_no":"1002","calisan_adi_soyadi":"Ayşe Demir","birim_mudurlugu_adi":"Bilgi Teknolojileri","gelen_dahili_sure":8500,"giden_dahili_sure":4000,"giden_harici_sure":3000,"gelen_dahili_adet_basarili":60,"gelen_dahili_adet_basarisiz":10,"giden_dahili_adet_basarili":25,"giden_dahili_adet_basarisiz":5,"giden_harici_adet_basarili":15,"giden_harici_adet_basarisiz":5,"genel_toplam_sure":15500,"toplam_cagri_sayisi":120,"fct_giden_cevaplanan_adet":10,"fct_giden_cevapsiz_adet":2,"fct_giden_mesgul_adet":1,"fct_giden_toplam_sure":1500,"fct_giden_toplam_adet":13,"giden_harici_toplam":20,"gelen_dahili_toplam":70,"avg_fixed_call":200,"avg_fct":150,"avg_internal":141.66666666666666,"avg_daily_fixed":0.9090909090909091,"avg_daily_fct":0.5909090909090909,"avg_daily_internal":3.1818181818181817},{"sicil_no":"1002","calisan_adi_soyadi":"Ayşe Demir","birim_mudurlugu_adi":"Bilgi Teknolojileri","gelen_dahili_sure":8100,"giden_dahili_sure":3800,"giden_harici_sure":3200,"gelen_dahili_adet_basarili":55,"gelen_dahili_adet_basarisiz":8,"giden_dahili_adet_basarili":22,"giden_dahili_adet_basarisiz":4,"giden_harici_adet_basarili":18,"giden_harici_adet_basarisiz":4,"genel_toplam_sure":15100,"toplam_cagri_sayisi":111,"fct_giden_cevaplanan_adet":12,"fct_giden_cevapsiz_adet":3,"fct_giden_mesgul_adet":0,"fct_giden_toplam_sure":1800,"fct_giden_toplam_adet":15,"giden_harici_toplam":22,"gelen_dahili_toplam":63,"avg_fixed_call":177.77777777777777,"avg_fct":150,"avg_internal":147.27272727272728,"avg_daily_fixed":1,"avg_daily_fct":0.6818181818181818,"avg_daily_internal":2.8636363636363638},{"sicil_no":"1002","calisan_adi_soyadi":"Ayşe Demir","birim_mudurlugu_adi":"Bilgi Teknolojileri","gelen_dahili_sure":9000,"giden_dahili_sure":4200,"giden_harici_sure":2800,"gelen_dahili_adet_basarili":65,"gelen_dahili_adet_basarisiz":12,"giden_dahili_adet_basarili":28,"giden_dahili_adet_basarisiz":6,"giden_harici_adet_basarili":14,"giden_harici_adet_basarisiz":6,"genel_toplam_sure":16000,"toplam_cagri_sayisi":131,"fct_giden_cevaplanan_adet":8,"fct_giden_cevapsiz_adet":1,"fct_giden_mesgul_adet":2,"fct_giden_toplam_sure":1200,"fct_giden_toplam_adet":11,"giden_harici_toplam":20,"gelen_dahili_toplam":77,"avg_fixed_call":200,"avg_fct":150,"avg_internal":138.46153846153845,"avg_daily_fixed":0.9090909090909091,"avg_daily_fct":0.5,"avg_daily_internal":3.5},{"sicil_no":"1003","calisan_adi_soyadi":"Can Tekin","birim_mudurlugu_adi":"İnsan Kaynakları","gelen_dahili_sure":3200,"giden_dahili_sure":1500,"giden_harici_sure":4500,"gelen_dahili_adet_basarili":25,"gelen_dahili_adet_basarisiz":3,"giden_dahili_adet_basarili":8,"giden_dahili_adet_basarisiz":1,"giden_harici_adet_basarili":30,"giden_harici_adet_basarisiz":8,"genel_toplam_sure":9200,"toplam_cagri_sayisi":75,"fct_giden_cevaplanan_adet":20,"fct_giden_cevapsiz_adet":5,"fct_giden_mesgul_adet":3,"fct_giden_toplam_sure":3200,"fct_giden_toplam_adet":28,"giden_harici_toplam":38,"gelen_dahili_toplam":28,"avg_fixed_call":150,"avg_fct":160,"avg_internal":128,"avg_daily_fixed":1.7272727272727273,"avg_daily_fct":1.2727272727272727,"avg_daily_internal":1.2727272727272727},{"sicil_no":"1003","calisan_adi_soyadi":"Can Tekin","birim_mudurlugu_adi":"İnsan Kaynakları","gelen_dahili_sure":3400,"giden_dahili_sure":1600,"giden_harici_sure":4700,"gelen_dahili_adet_basarili":28,"gelen_dahili_adet_basarisiz":4,"giden_dahili_adet_basarili":10,"giden_dahili_adet_basarisiz":2,"giden_harici_adet_basarili":35,"giden_harici_adet_basarisiz":10,"genel_toplam_sure":9700,"toplam_cagri_sayisi":89,"fct_giden_cevaplanan_adet":25,"fct_giden_cevapsiz_adet":6,"fct_giden_mesgul_adet":2,"fct_giden_toplam_sure":3800,"fct_giden_toplam_adet":33,"giden_harici_toplam":45,"gelen_dahili_toplam":32,"avg_fixed_call":134.28571428571428,"avg_fct":152,"avg_internal":121.42857142857143,"avg_daily_fixed":2.0454545454545454,"avg_daily_fct":1.5,"avg_daily_internal":1.4545454545454546},{"sicil_no":"1003","calisan_adi_soyadi":"Can Tekin","birim_mudurlugu_adi":"İnsan Kaynakları","gelen_dahili_sure":3000,"giden_dahili_sure":1400,"giden_harici_sure":4100,"gelen_dahili_adet_basarili":22,"gelen_dahili_adet_basarisiz":2,"giden_dahili_adet_basarili":7,"giden_dahili_adet_basarisiz":1,"giden_harici_adet_basarili":25,"giden_harici_adet_basarisiz":6,"genel_toplam_sure":8500,"toplam_cagri_sayisi":63,"fct_giden_cevaplanan_adet":18,"fct_giden_cevapsiz_adet":4,"fct_giden_mesgul_adet":4,"fct_giden_toplam_sure":2900,"fct_giden_toplam_adet":26,"giden_harici_toplam":31,"gelen_dahili_toplam":24,"avg_fixed_call":164,"avg_fct":161.11111111111111,"avg_internal":136.36363636363637,"avg_daily_fixed":1.4090909090909092,"avg_daily_fct":1.1818181818181819,"avg_daily_internal":1.0909090909090908},{"sicil_no":"1004","calisan_adi_soyadi":"Derya Ak","birim_mudurlugu_adi":"Satış Pazarlama","gelen_dahili_sure":1500,"giden_dahili_sure":800,"giden_harici_sure":25000,"gelen_dahili_adet_basarili":12,"gelen_dahili_adet_basarisiz":2,"giden_dahili_adet_basarili":5,"giden_dahili_adet_basarisiz":0,"giden_harici_adet_basarili":150,"giden_harici_adet_basarisiz":40,"genel_toplam_sure":27300,"toplam_cagri_sayisi":209,"fct_giden_cevaplanan_adet":80,"fct_giden_cevapsiz_adet":20,"fct_giden_mesgul_adet":15,"fct_giden_toplam_sure":14500,"fct_giden_toplam_adet":115,"giden_harici_toplam":190,"gelen_dahili_toplam":14,"avg_fixed_call":166.66666666666666,"avg_fct":181.25,"avg_internal":125,"avg_daily_fixed":8.636363636363637,"avg_daily_fct":5.2272727272727275,"avg_daily_internal":0.6363636363636364},{"sicil_no":"1004","calisan_adi_soyadi":"Derya Ak","birim_mudurlugu_adi":"Satış Pazarlama","gelen_dahili_sure":1650,"giden_dahili_sure":900,"giden_harici_sure":26500,"gelen_dahili_adet_basarili":14,"gelen_dahili_adet_basarisiz":1,"giden_dahili_adet_basarili":6,"giden_dahili_adet_basarisiz":1,"giden_harici_adet_basarili":160,"giden_harici_adet_basarisiz":45,"genel_toplam_sure":29050,"toplam_cagri_sayisi":227,"fct_giden_cevaplanan_adet":85,"fct_giden_cevapsiz_adet":25,"fct_giden_mesgul_adet":18,"fct_giden_toplam_sure":15200,"fct_giden_toplam_adet":128,"giden_harici_toplam":205,"gelen_dahili_toplam":15,"avg_fixed_call":165.625,"avg_fct":178.8235294117647,"avg_internal":117.85714285714286,"avg_daily_fixed":9.318181818181818,"avg_daily_fct":5.818181818181818,"avg_daily_internal":0.6818181818181818},{"sicil_no":"1004","calisan_adi_soyadi":"Derya Ak","birim_mudurlugu_adi":"Satış Pazarlama","gelen_dahili_sure":1400,"giden_dahili_sure":750,"giden_harici_sure":24000,"gelen_dahili_adet_basarili":10,"gelen_dahili_adet_basarisiz":3,"giden_dahili_adet_basarili":4,"giden_dahili_adet_basarisiz":0,"giden_harici_adet_basarili":140,"giden_harici_adet_basarisiz":35,"genel_toplam_sure":26150,"toplam_cagri_sayisi":192,"fct_giden_cevaplanan_adet":70,"fct_giden_cevapsiz_adet":15,"fct_giden_mesgul_adet":10,"fct_giden_toplam_sure":13000,"fct_giden_toplam_adet":95,"giden_harici_toplam":175,"gelen_dahili_toplam":13,"avg_fixed_call":171.42857142857142,"avg_fct":185.71428571428572,"avg_internal":140,"avg_daily_fixed":7.954545454545454,"avg_daily_fct":4.318181818181818,"avg_daily_internal":0.5909090909090909},{"sicil_no":"1005","calisan_adi_soyadi":"Erol Gün","birim_mudurlugu_adi":"Operasyon","gelen_dahili_sure":6000,"giden_dahili_sure":2500,"giden_harici_sure":8000,"gelen_dahili_adet_basarili":45,"gelen_dahili_adet_basarisiz":7,"giden_dahili_adet_basarili":18,"giden_dahili_adet_basarisiz":4,"giden_harici_adet_basarili":50,"giden_harici_adet_basarisiz":12,"genel_toplam_sure":16500,"toplam_cagri_sayisi":136,"fct_giden_cevaplanan_adet":30,"fct_giden_cevapsiz_adet":8,"fct_giden_mesgul_adet":5,"fct_giden_toplam_sure":4800,"fct_giden_toplam_adet":43,"giden_harici_toplam":62,"gelen_dahili_toplam":52,"avg_fixed_call":160,"avg_fct":160,"avg_internal":133.33333333333334,"avg_daily_fixed":2.8181818181818183,"avg_daily_fct":1.9545454545454546,"avg_daily_internal":2.3636363636363638},{"sicil_no":"1005","calisan_adi_soyadi":"Erol Gün","birim_mudurlugu_adi":"Operasyon","gelen_dahili_sure":6200,"giden_dahili_sure":2600,"giden_harici_sure":8500,"gelen_dahili_adet_basarili":48,"gelen_dahili_adet_basarisiz":6,"giden_dahili_adet_basarili":20,"giden_dahili_adet_basarisiz":3,"giden_harici_adet_basarili":55,"giden_harici_adet_basarisiz":10,"genel_toplam_sure":17300,"toplam_cagri_sayisi":142,"fct_giden_cevaplanan_adet":35,"fct_giden_cevapsiz_adet":7,"fct_giden_mesgul_adet":4,"fct_giden_toplam_sure":5200,"fct_giden_toplam_adet":46,"giden_harici_toplam":65,"gelen_dahili_toplam":54,"avg_fixed_call":154.54545454545453,"avg_fct":148.57142857142858,"avg_internal":129.16666666666666,"avg_daily_fixed":2.9545454545454546,"avg_daily_fct":2.090909090909091,"avg_daily_internal":2.4545454545454546},{"sicil_no":"1005","calisan_adi_soyadi":"Erol Gün","birim_mudurlugu_adi":"Operasyon","gelen_dahili_sure":5800,"giden_dahili_sure":2400,"giden_harici_sure":7800,"gelen_dahili_adet_basarili":42,"gelen_dahili_adet_basarisiz":8,"giden_dahili_adet_basarili":16,"giden_dahili_adet_basarisiz":5,"giden_harici_adet_basarili":45,"giden_harici_adet_basarisiz":15,"genel_toplam_sure":16000,"toplam_cagri_sayisi":131,"fct_giden_cevaplanan_adet":28,"fct_giden_cevapsiz_adet":10,"fct_giden_mesgul_adet":6,"fct_giden_toplam_sure":4500,"fct_giden_toplam_adet":44,"giden_harici_toplam":60,"gelen_dahili_toplam":50,"avg_fixed_call":173.33333333333334,"avg_fct":160.71428571428572,"avg_internal":138.0952380952381,"avg_daily_fixed":2.727272727272727,"avg_daily_fct":2,"avg_daily_internal":2.272727272727273},{"sicil_no":"1006","calisan_adi_soyadi":"Fatma Nur","birim_mudurlugu_adi":"Lojistik","gelen_dahili_sure":4000,"giden_dahili_sure":1800,"giden_harici_sure":6000,"gelen_dahili_adet_basarili":30,"gelen_dahili_adet_basarisiz":5,"giden_dahili_adet_basarili":12,"giden_dahili_adet_basarisiz":2,"giden_harici_adet_basarili":40,"giden_harici_adet_basarisiz":10,"genel_toplam_sure":11800,"toplam_cagri_sayisi":99,"fct_giden_cevaplanan_adet":20,"fct_giden_cevapsiz_adet":5,"fct_giden_mesgul_adet":2,"fct_giden_toplam_sure":3500,"fct_giden_toplam_adet":27,"giden_harici_toplam":50,"gelen_dahili_toplam":35,"avg_fixed_call":150,"avg_fct":175,"avg_internal":133.33333333333334,"avg_daily_fixed":2.272727272727273,"avg_daily_fct":1.2272727272727273,"avg_daily_internal":1.5909090909090908},{"sicil_no":"1006","calisan_adi_soyadi":"Fatma Nur","birim_mudurlugu_adi":"Lojistik","gelen_dahili_sure":4200,"giden_dahili_sure":1900,"giden_harici_sure":6300,"gelen_dahili_adet_basarili":32,"gelen_dahili_adet_basarisiz":4,"giden_dahili_adet_basarili":14,"giden_dahili_adet_basarisiz":1,"giden_harici_adet_basarili":42,"giden_harici_adet_basarisiz":8,"genel_toplam_sure":12400,"toplam_cagri_sayisi":101,"fct_giden_cevaplanan_adet":22,"fct_giden_cevapsiz_adet":4,"fct_giden_mesgul_adet":1,"fct_giden_toplam_sure":3800,"fct_giden_toplam_adet":27,"giden_harici_toplam":50,"gelen_dahili_toplam":36,"avg_fixed_call":150,"avg_fct":172.72727272727272,"avg_internal":131.25,"avg_daily_fixed":2.272727272727273,"avg_daily_fct":1.2272727272727273,"avg_daily_internal":1.6363636363636365},{"sicil_no":"1006","calisan_adi_soyadi":"Fatma Nur","birim_mudurlugu_adi":"Lojistik","gelen_dahili_sure":3800,"giden_dahili_sure":1700,"giden_harici_sure":5700,"gelen_dahili_adet_basarili":28,"gelen_dahili_adet_basarisiz":6,"giden_dahili_adet_basarili":10,"giden_dahili_adet_basarisiz":3,"giden_harici_adet_basarili":38,"giden_harici_adet_basarisiz":12,"genel_toplam_sure":11200,"toplam_cagri_sayisi":97,"fct_giden_cevaplanan_adet":18,"fct_giden_cevapsiz_adet":6,"fct_giden_mesgul_adet":3,"fct_giden_toplam_sure":3100,"fct_giden_toplam_adet":27,"giden_harici_toplam":50,"gelen_dahili_toplam":34,"avg_fixed_call":150,"avg_fct":172.22222222222223,"avg_internal":135.71428571428572,"avg_daily_fixed":2.272727272727273,"avg_daily_fct":1.2272727272727273,"avg_daily_internal":1.5454545454545454},{"sicil_no":"1007","calisan_adi_soyadi":"Gökhan Sert","birim_mudurlugu_adi":"Finans","gelen_dahili_sure":2500,"giden_dahili_sure":1100,"giden_harici_sure":5000,"gelen_dahili_adet_basarili":20,"gelen_dahili_adet_basarisiz":2,"giden_dahili_adet_basarili":8,"giden_dahili_adet_basarisiz":1,"giden_harici_adet_basarili":35,"giden_harici_adet_basarisiz":5,"genel_toplam_sure":8600,"toplam_cagri_sayisi":71,"fct_giden_cevaplanan_adet":15,"fct_giden_cevapsiz_adet":3,"fct_giden_mesgul_adet":1,"fct_giden_toplam_sure":2500,"fct_giden_toplam_adet":19,"giden_harici_toplam":40,"gelen_dahili_toplam":22,"avg_fixed_call":142.85714285714286,"avg_fct":166.66666666666666,"avg_internal":125,"avg_daily_fixed":1.8181818181818181,"avg_daily_fct":0.8636363636363636,"avg_daily_internal":1},{"sicil_no":"1007","calisan_adi_soyadi":"Gökhan Sert","birim_mudurlugu_adi":"Finans","gelen_dahili_sure":2700,"giden_dahili_sure":1200,"giden_harici_sure":5200,"gelen_dahili_adet_basarili":22,"gelen_dahili_adet_basarisiz":3,"giden_dahili_adet_basarili":9,"giden_dahili_adet_basarisiz":2,"giden_harici_adet_basarili":38,"giden_harici_adet_basarisiz":6,"genel_toplam_sure":9100,"toplam_cagri_sayisi":80,"fct_giden_cevaplanan_adet":18,"fct_giden_cevapsiz_adet":4,"fct_giden_mesgul_adet":2,"fct_giden_toplam_sure":2800,"fct_giden_toplam_adet":24,"giden_harici_toplam":44,"gelen_dahili_toplam":25,"avg_fixed_call":136.8421052631579,"avg_fct":155.55555555555554,"avg_internal":122.72727272727273,"avg_daily_fixed":2,"avg_daily_fct":1.0909090909090908,"avg_daily_internal":1.1363636363636365},{"sicil_no":"1007","calisan_adi_soyadi":"Gökhan Sert","birim_mudurlugu_adi":"Finans","gelen_dahili_sure":2300,"giden_dahili_sure":1000,"giden_harici_sure":4800,"gelen_dahili_adet_basarili":18,"gelen_dahili_adet_basarisiz":1,"giden_dahili_adet_basarili":7,"giden_dahili_adet_basarisiz":0,"giden_harici_adet_basarili":32,"giden_harici_adet_basarisiz":4,"genel_toplam_sure":8100,"toplam_cagri_sayisi":62,"fct_giden_cevaplanan_adet":12,"fct_giden_cevapsiz_adet":2,"fct_giden_mesgul_adet":0,"fct_giden_toplam_sure":2200,"fct_giden_toplam_adet":14,"giden_harici_toplam":36,"gelen_dahili_toplam":19,"avg_fixed_call":150,"avg_fct":183.33333333333334,"avg_internal":127.77777777777777,"avg_daily_fixed":1.6363636363636365,"avg_daily_fct":0.6363636363636364,"avg_daily_internal":0.8636363636363636},{"sicil_no":"1008","calisan_adi_soyadi":"Hale Can","birim_mudurlugu_adi":"Hukuk Müşavirliği","gelen_dahili_sure":1800,"giden_dahili_sure":900,"giden_harici_sure":3500,"gelen_dahili_adet_basarili":15,"gelen_dahili_adet_basarisiz":1,"giden_dahili_adet_basarili":6,"giden_dahili_adet_basarisiz":0,"giden_harici_adet_basarili":25,"giden_harici_adet_basarisiz":3,"genel_toplam_sure":6200,"toplam_cagri_sayisi":50,"fct_giden_cevaplanan_adet":10,"fct_giden_cevapsiz_adet":2,"fct_giden_mesgul_adet":1,"fct_giden_toplam_sure":1800,"fct_giden_toplam_adet":13,"giden_harici_toplam":28,"gelen_dahili_toplam":16,"avg_fixed_call":140,"avg_fct":180,"avg_internal":120,"avg_daily_fixed":1.2727272727272727,"avg_daily_fct":0.5909090909090909,"avg_daily_internal":0.7272727272727273},{"sicil_no":"1008","calisan_adi_soyadi":"Hale Can","birim_mudurlugu_adi":"Hukuk Müşavirliği","gelen_dahili_sure":1950,"giden_dahili_sure":950,"giden_harici_sure":3700,"gelen_dahili_adet_basarili":16,"gelen_dahili_adet_basarisiz":2,"giden_dahili_adet_basarili":7,"giden_dahili_adet_basarisiz":1,"giden_harici_adet_basarili":28,"giden_harici_adet_basarisiz":4,"genel_toplam_sure":6600,"toplam_cagri_sayisi":58,"fct_giden_cevaplanan_adet":12,"fct_giden_cevapsiz_adet":3,"fct_giden_mesgul_adet":0,"fct_giden_toplam_sure":2100,"fct_giden_toplam_adet":15,"giden_harici_toplam":32,"gelen_dahili_toplam":18,"avg_fixed_call":132.14285714285714,"avg_fct":175,"avg_internal":121.875,"avg_daily_fixed":1.4545454545454546,"avg_daily_fct":0.6818181818181818,"avg_daily_internal":0.8181818181818182},{"sicil_no":"1008","calisan_adi_soyadi":"Hale Can","birim_mudurlugu_adi":"Hukuk Müşavirliği","gelen_dahili_sure":1700,"giden_dahili_sure":850,"giden_harici_sure":3200,"gelen_dahili_adet_basarili":14,"gelen_dahili_adet_basarisiz":0,"giden_dahili_adet_basarili":5,"giden_dahili_adet_basarisiz":0,"giden_harici_adet_basarili":22,"giden_harici_adet_basarisiz":2,"genel_toplam_sure":5750,"toplam_cagri_sayisi":43,"fct_giden_cevaplanan_adet":8,"fct_giden_cevapsiz_adet":1,"fct_giden_mesgul_adet":2,"fct_giden_toplam_sure":1500,"fct_giden_toplam_adet":11,"giden_harici_toplam":24,"gelen_dahili_toplam":14,"avg_fixed_call":145.45454545454547,"avg_fct":187.5,"avg_internal":121.42857142857143,"avg_daily_fixed":1.0909090909090908,"avg_daily_fct":0.5,"avg_daily_internal":0.6363636363636364},{"sicil_no":"1009","calisan_adi_soyadi":"Ilgaz Kaya","birim_mudurlugu_adi":"Kurumsal İletişim","gelen_dahili_sure":2200,"giden_dahili_sure":1300,"giden_harici_sure":4200,"gelen_dahili_adet_basarili":18,"gelen_dahili_adet_basarisiz":2,"giden_dahili_adet_basarili":10,"giden_dahili_adet_basarisiz":2,"giden_harici_adet_basarili":28,"giden_harici_adet_basarisiz":5,"genel_toplam_sure":7700,"toplam_cagri_sayisi":65,"fct_giden_cevaplanan_adet":14,"fct_giden_cevapsiz_adet":4,"fct_giden_mesgul_adet":2,"fct_giden_toplam_sure":2400,"fct_giden_toplam_adet":20,"giden_harici_toplam":33,"gelen_dahili_toplam":20,"avg_fixed_call":150,"avg_fct":171.42857142857142,"avg_internal":122.22222222222223,"avg_daily_fixed":1.5,"avg_daily_fct":0.9090909090909091,"avg_daily_internal":0.9090909090909091},{"sicil_no":"1009","calisan_adi_soyadi":"Ilgaz Kaya","birim_mudurlugu_adi":"Kurumsal İletişim","gelen_dahili_sure":2400,"giden_dahili_sure":1400,"giden_harici_sure":4500,"gelen_dahili_adet_basarili":20,"gelen_dahili_adet_basarisiz":3,"giden_dahili_adet_basarili":12,"giden_dahili_adet_basarisiz":1,"giden_harici_adet_basarili":30,"giden_harici_adet_basarisiz":6,"genel_toplam_sure":8300,"toplam_cagri_sayisi":72,"fct_giden_cevaplanan_adet":16,"fct_giden_cevapsiz_adet":3,"fct_giden_mesgul_adet":1,"fct_giden_toplam_sure":2700,"fct_giden_toplam_adet":20,"giden_harici_toplam":36,"gelen_dahili_toplam":23,"avg_fixed_call":150,"avg_fct":168.75,"avg_internal":120,"avg_daily_fixed":1.6363636363636365,"avg_daily_fct":0.9090909090909091,"avg_daily_internal":1.0454545454545454},{"sicil_no":"1009","calisan_adi_soyadi":"Ilgaz Kaya","birim_mudurlugu_adi":"Kurumsal İletişim","gelen_dahili_sure":2000,"giden_dahili_sure":1200,"giden_harici_sure":3900,"gelen_dahili_adet_basarili":16,"gelen_dahili_adet_basarisiz":1,"giden_dahili_adet_basarili":8,"giden_dahili_adet_basarisiz":3,"giden_harici_adet_basarili":25,"giden_harici_adet_basarisiz":4,"genel_toplam_sure":7100,"toplam_cagri_sayisi":57,"fct_giden_cevaplanan_adet":12,"fct_giden_cevapsiz_adet":5,"fct_giden_mesgul_adet":3,"fct_giden_toplam_sure":2100,"fct_giden_toplam_adet":20,"giden_harici_toplam":29,"gelen_dahili_toplam":17,"avg_fixed_call":156,"avg_fct":175,"avg_internal":125,"avg_daily_fixed":1.3181818181818181,"avg_daily_fct":0.9090909090909091,"avg_daily_internal":0.7727272727272727},{"sicil_no":"1010","calisan_adi_soyadi":"Jale Mert","birim_mudurlugu_adi":"Risk Yönetimi","gelen_dahili_sure":2800,"giden_dahili_sure":1400,"giden_harici_sure":5500,"gelen_dahili_adet_basarili":22,"gelen_dahili_adet_basarisiz":4,"giden_dahili_adet_basarili":11,"giden_dahili_adet_basarisiz":2,"giden_harici_adet_basarili":38,"giden_harici_adet_basarisiz":7,"genel_toplam_sure":9700,"toplam_cagri_sayisi":84,"fct_giden_cevaplanan_adet":18,"fct_giden_cevapsiz_adet":5,"fct_giden_mesgul_adet":3,"fct_giden_toplam_sure":3100,"fct_giden_toplam_adet":26,"giden_harici_toplam":45,"gelen_dahili_toplam":26,"avg_fixed_call":144.73684210526315,"avg_fct":172.22222222222223,"avg_internal":127.27272727272727,"avg_daily_fixed":2.0454545454545454,"avg_daily_fct":1.1818181818181819,"avg_daily_internal":1.1818181818181819},{"sicil_no":"1010","calisan_adi_soyadi":"Jale Mert","birim_mudurlugu_adi":"Risk Yönetimi","gelen_dahili_sure":2900,"giden_dahili_sure":1500,"giden_harici_sure":5800,"gelen_dahili_adet_basarili":24,"gelen_dahili_adet_basarisiz":3,"giden_dahili_adet_basarili":13,"giden_dahili_adet_basarisiz":1,"giden_harici_adet_basarili":40,"giden_harici_adet_basarisiz":6,"genel_toplam_sure":10200,"toplam_cagri_sayisi":87,"fct_giden_cevaplanan_adet":20,"fct_giden_cevapsiz_adet":4,"fct_giden_mesgul_adet":2,"fct_giden_toplam_sure":3400,"fct_giden_toplam_adet":26,"giden_harici_toplam":46,"gelen_dahili_toplam":27,"avg_fixed_call":145,"avg_fct":170,"avg_internal":120.83333333333333,"avg_daily_fixed":2.090909090909091,"avg_daily_fct":1.1818181818181819,"avg_daily_internal":1.2272727272727273},{"sicil_no":"1010","calisan_adi_soyadi":"Jale Mert","birim_mudurlugu_adi":"Risk Yönetimi","gelen_dahili_sure":2600,"giden_dahili_sure":1300,"giden_harici_sure":5100,"gelen_dahili_adet_basarili":20,"gelen_dahili_adet_basarisiz":5,"giden_dahili_adet_basarili":9,"giden_dahili_adet_basarisiz":3,"giden_harici_adet_basarili":35,"giden_harici_adet_basarisiz":8,"genel_toplam_sure":9000,"toplam_cagri_sayisi":80,"fct_giden_cevaplanan_adet":15,"fct_giden_cevapsiz_adet":6,"fct_giden_mesgul_adet":4,"fct_giden_toplam_sure":2700,"fct_giden_toplam_adet":25,"giden_harici_toplam":43,"gelen_dahili_toplam":25,"avg_fixed_call":145.71428571428572,"avg_fct":180,"avg_internal":130,"avg_daily_fixed":1.9545454545454546,"avg_daily_fct":1.1363636363636365,"avg_daily_internal":1.1363636363636365}]; 
+        window.EMBEDDED_DATE = {"month":"NİSAN","year":"2026"};
+        window.EMBEDDED_WORK_DAYS = 22;
+    </script>
+
+    <script>
+        tailwind.config = {
+            theme: { extend: { colors: { brand: { yellow: '#FFB81C', dark: '#1e293b', gray: '#64748b' } } } }
+        }
+    </script>
+
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; transition: background-color 0.3s, color 0.3s; }
+        .modern-card { border-radius: 16px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); border: 1px solid rgba(229, 231, 235, 0.5); transition: background-color 0.3s, border-color 0.3s; }
+        
+        body.theme-day { background-color: #f3f4f6; color: #1e293b; }
+        body.theme-day .modern-card, body.theme-day .sidebar-bg, body.theme-day nav { background: #ffffff; border-color: #e2e8f0; }
+        body.theme-day .text-dynamic { color: #1e293b; }
+        
+        body.theme-night { background-color: #0f172a; color: #e2e8f0; }
+        body.theme-night .modern-card, body.theme-night .sidebar-bg, body.theme-night nav { background-color: #1e293b !important; border-color: #334155 !important; }
+        body.theme-night .text-dynamic { color: #f1f5f9; }
+        body.theme-night .text-gray-500, body.theme-night .text-gray-600, body.theme-night .text-gray-700 { color: #94a3b8 !important; }
+        body.theme-night .bg-gray-50 { background-color: #0f172a !important; }
+        body.theme-night .bg-white { background-color: #1e293b !important; }
+        body.theme-night select, body.theme-night input { background-color: #1e293b; color: #e2e8f0; border-color: #334155; }
+        body.theme-night table tbody tr:hover { background-color: #334155 !important; }
+        body.theme-night .border-gray-200 { border-color: #334155 !important; }
+
+        #sidebar-nav { position: fixed; top: 0; left: 0; height: 100vh; width: 260px; z-index: 40; transition: transform 0.3s ease-in-out; padding: 1.5rem; border-right: 1px solid rgba(0,0,0,0.05); overflow-y: auto; }
+        #sidebar-nav.closed { transform: translateX(-260px); }
+        #main-content-wrapper { transition: margin-left .3s ease-in-out; margin-left: 260px; }
+        #main-content-wrapper.full-width { margin-left: 0; }
+
+        .filter-btn-sidebar { display: block; width: 100%; padding: 0.75rem 1rem; border-radius: 12px; font-weight: 500; font-size: 0.9rem; color: inherit; cursor: pointer; transition: all 0.2s; border: 1px solid transparent; margin-bottom: 0.5rem; }
+        .filter-btn-sidebar:hover { background-color: rgba(255, 184, 28, 0.1); color: #b45309; }
+        input[type="radio"]:checked + .filter-btn-sidebar { background-color: #FFB81C; color: white; font-weight: 700; box-shadow: 0 4px 10px rgba(255, 184, 28, 0.3); }
+
+        .chart-toggle-btn { padding: 6px 12px; font-size: 0.85rem; font-weight: 600; border-radius: 8px; transition: all 0.2s; }
+        input[type="radio"]:checked + .chart-toggle-btn { background-color: #FFB81C; color: white; }
+        input[type="radio"]:not(:checked) + .chart-toggle-btn { background-color: transparent; color: inherit; }
+
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        
+        .viewer-visible { display: none !important; }
+        .admin-visible { display: block; }
+    </style>
+<style>*, ::before, ::after{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/* ! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com */*,::after,::before{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}::after,::before{--tw-content:''}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;tab-size:4;font-family:ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0;padding:0}legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.absolute{position:absolute}.relative{position:relative}.sticky{position:sticky}.right-0{right:0px}.top-0{top:0px}.z-30{z-index:30}.mx-auto{margin-left:auto;margin-right:auto}.my-2{margin-top:0.5rem;margin-bottom:0.5rem}.mb-12{margin-bottom:3rem}.mb-2{margin-bottom:0.5rem}.mb-4{margin-bottom:1rem}.mb-6{margin-bottom:1.5rem}.mb-8{margin-bottom:2rem}.mr-2{margin-right:0.5rem}.mt-1{margin-top:0.25rem}.mt-2{margin-top:0.5rem}.mt-4{margin-top:1rem}.block{display:block}.flex{display:flex}.grid{display:grid}.hidden{display:none}.h-1{height:0.25rem}.h-8{height:2rem}.h-\[400px\]{height:400px}.h-full{height:100%}.min-h-screen{min-height:100vh}.w-1\/3{width:33.333333%}.w-16{width:4rem}.w-2\/3{width:66.666667%}.w-8{width:2rem}.w-full{width:100%}.min-w-full{min-width:100%}.max-w-\[1600px\]{max-width:1600px}.flex-1{flex:1 1 0%}.cursor-pointer{cursor:pointer}.grid-cols-1{grid-template-columns:repeat(1, minmax(0, 1fr))}.flex-row{flex-direction:row}.flex-col{flex-direction:column}.flex-wrap{flex-wrap:wrap}.items-start{align-items:flex-start}.items-center{align-items:center}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.gap-1{gap:0.25rem}.gap-2{gap:0.5rem}.gap-3{gap:0.75rem}.gap-4{gap:1rem}.gap-6{gap:1.5rem}.divide-y > :not([hidden]) ~ :not([hidden]){--tw-divide-y-reverse:0;border-top-width:calc(1px * calc(1 - var(--tw-divide-y-reverse)));border-bottom-width:calc(1px * var(--tw-divide-y-reverse))}.divide-gray-100 > :not([hidden]) ~ :not([hidden]){--tw-divide-opacity:1;border-color:rgb(243 244 246 / var(--tw-divide-opacity, 1))}.overflow-hidden{overflow:hidden}.overflow-x-auto{overflow-x:auto}.rounded{border-radius:0.25rem}.rounded-full{border-radius:9999px}.rounded-lg{border-radius:0.5rem}.rounded-md{border-radius:0.375rem}.border{border-width:1px}.border-b{border-bottom-width:1px}.border-t{border-top-width:1px}.border-blue-200{--tw-border-opacity:1;border-color:rgb(191 219 254 / var(--tw-border-opacity, 1))}.border-brand-yellow\/20{border-color:rgb(255 184 28 / 0.2)}.border-gray-200{--tw-border-opacity:1;border-color:rgb(229 231 235 / var(--tw-border-opacity, 1))}.border-gray-100{--tw-border-opacity:1;border-color:rgb(243 244 246 / var(--tw-border-opacity, 1))}.bg-blue-100{--tw-bg-opacity:1;background-color:rgb(219 234 254 / var(--tw-bg-opacity, 1))}.bg-blue-500{--tw-bg-opacity:1;background-color:rgb(59 130 246 / var(--tw-bg-opacity, 1))}.bg-brand-yellow{--tw-bg-opacity:1;background-color:rgb(255 184 28 / var(--tw-bg-opacity, 1))}.bg-brand-yellow\/10{background-color:rgb(255 184 28 / 0.1)}.bg-gray-100{--tw-bg-opacity:1;background-color:rgb(243 244 246 / var(--tw-bg-opacity, 1))}.bg-gray-50{--tw-bg-opacity:1;background-color:rgb(249 250 251 / var(--tw-bg-opacity, 1))}.bg-gray-500{--tw-bg-opacity:1;background-color:rgb(107 114 128 / var(--tw-bg-opacity, 1))}.bg-gray-800{--tw-bg-opacity:1;background-color:rgb(31 41 55 / var(--tw-bg-opacity, 1))}.bg-green-500{--tw-bg-opacity:1;background-color:rgb(34 197 94 / var(--tw-bg-opacity, 1))}.bg-purple-500{--tw-bg-opacity:1;background-color:rgb(168 85 247 / var(--tw-bg-opacity, 1))}.bg-white{--tw-bg-opacity:1;background-color:rgb(255 255 255 / var(--tw-bg-opacity, 1))}.bg-red-500{--tw-bg-opacity:1;background-color:rgb(239 68 68 / var(--tw-bg-opacity, 1))}.bg-opacity-50{--tw-bg-opacity:0.5}.p-1{padding:0.25rem}.p-2{padding:0.5rem}.p-3{padding:0.75rem}.p-4{padding:1rem}.p-6{padding:1.5rem}.p-8{padding:2rem}.px-2{padding-left:0.5rem;padding-right:0.5rem}.px-3{padding-left:0.75rem;padding-right:0.75rem}.px-4{padding-left:1rem;padding-right:1rem}.px-8{padding-left:2rem;padding-right:2rem}.py-1{padding-top:0.25rem;padding-bottom:0.25rem}.py-1\.5{padding-top:0.375rem;padding-bottom:0.375rem}.py-2{padding-top:0.5rem;padding-bottom:0.5rem}.py-4{padding-top:1rem;padding-bottom:1rem}.py-8{padding-top:2rem;padding-bottom:2rem}.py-3{padding-top:0.75rem;padding-bottom:0.75rem}.pb-4{padding-bottom:1rem}.text-left{text-align:left}.text-center{text-align:center}.text-2xl{font-size:1.5rem;line-height:2rem}.text-3xl{font-size:1.875rem;line-height:2.25rem}.text-6xl{font-size:3.75rem;line-height:1}.text-lg{font-size:1.125rem;line-height:1.75rem}.text-sm{font-size:0.875rem;line-height:1.25rem}.text-xl{font-size:1.25rem;line-height:1.75rem}.text-xs{font-size:0.75rem;line-height:1rem}.font-bold{font-weight:700}.font-medium{font-weight:500}.font-semibold{font-weight:600}.uppercase{text-transform:uppercase}.italic{font-style:italic}.tracking-tight{letter-spacing:-0.025em}.tracking-wide{letter-spacing:0.025em}.tracking-wider{letter-spacing:0.05em}.text-blue-500{--tw-text-opacity:1;color:rgb(59 130 246 / var(--tw-text-opacity, 1))}.text-blue-800{--tw-text-opacity:1;color:rgb(30 64 175 / var(--tw-text-opacity, 1))}.text-brand-yellow{--tw-text-opacity:1;color:rgb(255 184 28 / var(--tw-text-opacity, 1))}.text-gray-400{--tw-text-opacity:1;color:rgb(156 163 175 / var(--tw-text-opacity, 1))}.text-gray-500{--tw-text-opacity:1;color:rgb(107 114 128 / var(--tw-text-opacity, 1))}.text-gray-600{--tw-text-opacity:1;color:rgb(75 85 99 / var(--tw-text-opacity, 1))}.text-green-500{--tw-text-opacity:1;color:rgb(34 197 94 / var(--tw-text-opacity, 1))}.text-purple-500{--tw-text-opacity:1;color:rgb(168 85 247 / var(--tw-text-opacity, 1))}.text-white{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.text-red-500{--tw-text-opacity:1;color:rgb(239 68 68 / var(--tw-text-opacity, 1))}.opacity-10{opacity:0.1}.shadow-lg{--tw-shadow:0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 10px 15px -3px var(--tw-shadow-color), 0 4px 6px -4px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-md{--tw-shadow:0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-sm{--tw-shadow:0 1px 2px 0 rgb(0 0 0 / 0.05);--tw-shadow-colored:0 1px 2px 0 var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.outline-none{outline:2px solid transparent;outline-offset:2px}.transition-all{transition-property:all;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.transition-colors{transition-property:color, background-color, border-color, fill, stroke, -webkit-text-decoration-color;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, -webkit-text-decoration-color;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.transition-transform{transition-property:transform;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.last\:border-0:last-child{border-width:0px}.hover\:bg-gray-600:hover{--tw-bg-opacity:1;background-color:rgb(75 85 99 / var(--tw-bg-opacity, 1))}.hover\:bg-gray-900:hover{--tw-bg-opacity:1;background-color:rgb(17 24 39 / var(--tw-bg-opacity, 1))}.hover\:bg-slate-700:hover{--tw-bg-opacity:1;background-color:rgb(51 65 85 / var(--tw-bg-opacity, 1))}.hover\:bg-white:hover{--tw-bg-opacity:1;background-color:rgb(255 255 255 / var(--tw-bg-opacity, 1))}.hover\:bg-yellow-500:hover{--tw-bg-opacity:1;background-color:rgb(234 179 8 / var(--tw-bg-opacity, 1))}.hover\:bg-gray-100:hover{--tw-bg-opacity:1;background-color:rgb(243 244 246 / var(--tw-bg-opacity, 1))}.hover\:bg-gray-50:hover{--tw-bg-opacity:1;background-color:rgb(249 250 251 / var(--tw-bg-opacity, 1))}.hover\:text-brand-yellow:hover{--tw-text-opacity:1;color:rgb(255 184 28 / var(--tw-text-opacity, 1))}.focus\:border-brand-yellow:focus{--tw-border-opacity:1;border-color:rgb(255 184 28 / var(--tw-border-opacity, 1))}.focus\:ring-2:focus{--tw-ring-offset-shadow:var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);--tw-ring-shadow:var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);box-shadow:var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000)}.focus\:ring-brand-yellow\/20:focus{--tw-ring-color:rgb(255 184 28 / 0.2)}.group:hover .group-hover\:scale-110{--tw-scale-x:1.1;--tw-scale-y:1.1;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}@media (min-width: 768px){.md\:w-80{width:20rem}.md\:grid-cols-4{grid-template-columns:repeat(4, minmax(0, 1fr))}.md\:flex-row{flex-direction:row}.md\:items-end{align-items:flex-end}}@media (prefers-color-scheme: dark){.dark\:border-gray-700{--tw-border-opacity:1;border-color:rgb(55 65 81 / var(--tw-border-opacity, 1))}}</style></head>
+<body class="min-h-screen theme-eye">
+
+    <div id="sidebar-nav" class="sidebar-bg shadow-lg flex flex-col justify-between">
+        <div>
+            <div class="flex items-center gap-3 mb-8 px-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 48 48"><defs><clipPath id="7590b00e14"><path d="M 1 8.074219 L 47.507812 8.074219 L 47.507812 38.929688 L 1 38.929688 Z M 1 8.074219 " clip-rule="nonzero"></path></clipPath></defs><g clip-path="url(#7590b00e14)"><path fill="#fbc34e" d="M 46.933594 16.664062 C 47.515625 13.335938 44.453125 8.699219 36.109375 8.699219 L 15.382812 8.699219 C 9.703125 8.699219 6.140625 12.597656 5.507812 16.527344 L 1.304688 38.636719 C 4.996094 38.625 29.320312 38.636719 29.269531 38.636719 L 30.851562 38.636719 C 39.5625 38.585938 44.578125 36.628906 45.496094 30.304688 C 46.101562 26.050781 42.367188 23.300781 39.3125 22.71875 C 42.402344 22.15625 46.152344 21.105469 46.933594 16.664062 Z M 46.933594 16.664062 " fill-opacity="1" fill-rule="nonzero"></path></g><path fill="#ffffff" d="M 27.46875 17.960938 C 25.355469 20.640625 17.671875 29.933594 16.117188 31.695312 C 12.648438 35.644531 5.492188 35.054688 5.445312 34.957031 C 5.445312 34.953125 8.023438 22.75 8.859375 19.308594 C 11.152344 9.957031 19.0625 12.171875 19.0625 12.171875 C 19.0625 12.171875 16.953125 12.472656 15.464844 14.371094 C 13.957031 16.296875 12.246094 25.671875 11.28125 30.054688 C 15.8125 24.753906 22.023438 17.921875 23.082031 16.640625 C 27.597656 11.175781 34.667969 11.929688 34.667969 11.929688 31.914062 12.3125 27.46875 17.960938 Z M 27.46875 17.960938 " fill-opacity="1" fill-rule="nonzero"></path></svg>
+                <h1 class="text-xl font-bold tracking-tight text-dynamic"> ÇAĞRI ANALİZ</h1>
+            </div>
+
+            <div class="mb-6 px-2">
+                 <div id="date-display-viewer" class="viewer-visible bg-brand-yellow/10 p-3 rounded-lg border border-brand-yellow/20" style="display: none;">
+                    <p class="text-xs text-gray-500 uppercase font-bold">Rapor Dönemi</p>
+                    <p class="text-dynamic font-bold text-lg" id="viewer-date-text">-</p>
+                    <p class="text-xs text-gray-500 mt-1">İş Günü: <span id="viewer-work-days-text" class="font-bold">-</span></p>
+                 </div>
+
+                 <div id="date-selector-admin" class="admin-visible">
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Rapor Tarihi</h3>
+                    <div class="flex gap-2 mb-2">
+                        <select id="select-month" class="w-2/3 bg-gray-50 text-dynamic border border-gray-200 rounded-lg px-2 py-1.5 text-xs font-medium outline-none focus:border-brand-yellow">
+                            <option value="OCAK">OCAK</option>
+                            <option value="ŞUBAT">ŞUBAT</option>
+                            <option value="MART">MART</option>
+                            <option value="NİSAN">NİSAN</option>
+                            <option value="MAYIS">MAYIS</option>
+                            <option value="HAZİRAN">HAZİRAN</option>
+                            <option value="TEMMUZ">TEMMUZ</option>
+                            <option value="AĞUSTOS">AĞUSTOS</option>
+                            <option value="EYLÜL">EYLÜL</option>
+                            <option value="EKİM">EKİM</option>
+                            <option value="KASIM">KASIM</option>
+                            <option value="ARALIK">ARALIK</option>
+                        </select>
+                        <select id="select-year" class="w-1/3 bg-gray-50 text-dynamic border border-gray-200 rounded-lg px-2 py-1.5 text-xs font-medium outline-none focus:border-brand-yellow">
+                            <option value="2024">2024</option>
+                            <option value="2025" selected="">2025</option>
+                            <option value="2026">2026</option>
+                        </select>
+                    </div>
+                    <div class="flex gap-2 items-center mt-2 bg-gray-50 border border-gray-200 rounded-lg px-2 py-1">
+                        <label class="text-xs font-bold text-gray-500 flex-1 uppercase tracking-wider">İş Günü</label>
+                        <input type="number" id="work-days-input" value="22" class="w-16 bg-white text-dynamic border border-gray-200 rounded text-center py-1 text-xs font-bold outline-none focus:border-brand-yellow">
+                    </div>
+                 </div>
+            </div>
+
+            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 px-2">Rapor Filtreleri</h3>
+            
+            <div id="call-type-filter-group" class="flex flex-col gap-1">
+                <input type="radio" name="callTypeFilter" value="TOPLAM" checked="" id="filter-toplam" class="hidden">
+                <label for="filter-toplam" class="filter-btn-sidebar"><i class="fa-solid fa-chart-pie mr-2"></i> Genel Özet</label>
+
+                <input type="radio" name="callTypeFilter" value="ORTALAMA_SURE" id="filter-ortalama-sure" class="hidden">
+                <label for="filter-ortalama-sure" class="filter-btn-sidebar"><i class="fa-solid fa-chart-column mr-2"></i> Ortalama İşlem Verileri</label>
+
+                <input type="radio" name="callTypeFilter" value="MUSTERI_ARAMA" id="filter-musteri-arama" class="hidden">
+                <label for="filter-musteri-arama" class="filter-btn-sidebar"><i class="fa-solid fa-phone-volume mr-2"></i> Sabit Hat Müşteri Aramaları</label> 
+
+                <input type="radio" name="callTypeFilter" value="FCT_GIDEN" id="filter-fct-giden" class="hidden">
+                <label for="filter-fct-giden" class="filter-btn-sidebar"><i class="fa-solid fa-mobile-screen mr-2"></i> FCT Müşteri Aramaları</label>
+
+                <div class="my-2 border-t border-gray-200 dark:border-gray-700"></div>
+
+                <input type="radio" name="callTypeFilter" value="DAHILI" id="filter-dahili" class="hidden">
+                <label for="filter-dahili" class="filter-btn-sidebar"><i class="fa-solid fa-building mr-2"></i> Şube/Birimden Gelen</label>
+            </div>
+        </div>
+        
+        <div class="text-center pb-4 text-xs text-gray-400">
+          Risk Tasfiye Koordinasyon Müdürlüğü
+        </div>
+    </div>
+
+    <div id="main-content-wrapper">
+        <nav class="sticky top-0 z-30 sidebar-bg border-b border-gray-200 px-8 py-4 flex justify-between items-center shadow-sm">
+            <button onclick="toggleSidebar()" class="text-gray-500 hover:text-brand-yellow transition-colors">
+                <i class="fa-solid fa-bars text-xl"></i>
+            </button>
+            
+            <div class="flex items-center gap-4">
+                 <div class="bg-gray-100 p-1 rounded-lg flex items-center border border-gray-200">
+                    <button onclick="setTheme('day')" id="btn-theme-day" class="w-8 h-8 rounded-md flex items-center justify-center text-gray-500 hover:text-brand-yellow hover:bg-white transition-all"><i class="fa-solid fa-sun text-sm"></i></button>
+                    <button onclick="setTheme('night')" id="btn-theme-night" class="w-8 h-8 rounded-md flex items-center justify-center text-gray-500 hover:text-brand-yellow hover:bg-slate-700 transition-all"><i class="fa-solid fa-moon text-sm"></i></button>
+                </div>
+                
+                <div id="admin-tools" class="flex items-center gap-2 admin-visible">
+                    <input type="file" id="data-file-input" accept=".csv,.xlsx,.xls,.xlsb,.xlsm" class="hidden">
+                    <button onclick="document.getElementById('data-file-input').click()" class="bg-brand-yellow text-white px-4 py-2 rounded-lg font-bold text-sm shadow-md hover:bg-yellow-500 transition-all">
+                        <i class="fa-solid fa-cloud-arrow-up mr-2"></i>Veri Yükle
+                    </button>
+                    <button onclick="exportReport()" class="bg-gray-800 text-white px-4 py-2 rounded-lg font-bold text-sm shadow-md hover:bg-gray-900 transition-all">
+                        <i class="fa-solid fa-file-export mr-2"></i>Raporu Dışa Aktar (.html)
+                    </button>
+                </div>
+
+            </div>
+        </nav>
+
+        <div class="p-8 max-w-[1600px] mx-auto w-full">
+            <div class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+                <div>
+                    <h1 class="text-3xl font-bold text-dynamic tracking-tight">Çağrı Performans Raporu</h1>
+                    <p class="text-gray-500 mt-1">Kredi Risk Tasfiye Başkanlığı / Güncel Çağrı Analizleri</p>
+                </div>
+                <div id="report-date-badge" class="bg-blue-100 text-blue-800 text-sm font-bold px-4 py-2 rounded-lg border border-blue-200 shadow-sm hidden">
+                    </div>
+            </div>
+
+            <div id="kpi-cards" class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="modern-card p-6 flex flex-col justify-between relative overflow-hidden group">
+                    <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:scale-110 transition-transform"><i id="kpi-1-icon" class="fa-solid fa-clock text-6xl text-brand-yellow"></i></div>
+                    <div><p id="kpi-1-title" class="text-sm font-semibold text-gray-500 uppercase tracking-wide">Toplam Çağrı Süresi</p><p id="kpi-1-value" class="text-2xl font-bold text-dynamic mt-2">109 sa 56 dk 40 sn</p></div>
+                    <div class="mt-4 h-1 w-full bg-gray-100 rounded-full overflow-hidden"><div id="kpi-1-bar" class="h-full w-full bg-brand-yellow"></div></div>
+                </div>
+                <div class="modern-card p-6 flex flex-col justify-between relative overflow-hidden group">
+                    <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:scale-110 transition-transform"><i id="kpi-2-icon" class="fa-solid fa-list-ol text-6xl text-blue-500"></i></div>
+                    <div><p id="kpi-2-title" class="text-sm font-semibold text-gray-500 uppercase tracking-wide">Toplam Çağrı Adeti</p><p id="kpi-2-value" class="text-2xl font-bold text-dynamic mt-2">3.218</p></div>
+                    <div class="mt-4 h-1 w-full bg-gray-100 rounded-full overflow-hidden"><div id="kpi-2-bar" class="h-full w-full bg-blue-500"></div></div>
+                </div>
+                <div class="modern-card p-6 flex flex-col justify-between relative overflow-hidden group">
+                    <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:scale-110 transition-transform"><i id="kpi-3-icon" class="fa-solid fa-phone text-6xl text-green-500"></i></div>
+                    <div><p id="kpi-3-title" class="text-sm font-semibold text-gray-500 uppercase tracking-wide">Sabit Hat Müşteri Arama Süre</p><p id="kpi-3-value" class="text-2xl font-bold text-dynamic mt-2">65 sa 3 dk 20 sn</p></div>
+                    <div class="mt-4 h-1 w-full bg-gray-100 rounded-full overflow-hidden"><div id="kpi-3-bar" class="h-full w-full bg-green-500"></div></div>
+                </div>
+                <div class="modern-card p-6 flex flex-col justify-between relative overflow-hidden group">
+                    <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:scale-110 transition-transform"><i id="kpi-4-icon" class="fa-solid fa-arrow-up text-6xl text-purple-500"></i></div>
+                    <div><p id="kpi-4-title" class="text-sm font-semibold text-gray-500 uppercase tracking-wide">Şube/Birime Giden Süre</p><p id="kpi-4-value" class="text-2xl font-bold text-dynamic mt-2">13 sa 46 dk 40 sn</p></div>
+                    <div class="mt-4 h-1 w-full bg-gray-100 rounded-full overflow-hidden"><div id="kpi-4-bar" class="h-full w-full bg-purple-500"></div></div>
+                </div>
+            </div>
+
+            <div class="modern-card p-8 mb-8">
+                <div class="flex flex-row justify-between items-center mb-6 flex-wrap gap-4">
+                    <div class="flex items-center gap-4">
+                        <h3 class="text-xl font-bold text-dynamic" id="department-chart-container-title">Müdürlük Bazında Genel Toplam Çağrılar</h3>
+                        <button id="department-chart-back-button" class="px-3 py-1 bg-gray-500 text-white rounded-md text-xs hover:bg-gray-600 transition-colors hidden" onclick="resetDepartmentChart()">Geri Dön</button>
+                    </div>
+                    <div id="department-chart-type-group" class="flex bg-gray-100 p-1 rounded-lg gap-1 border border-gray-200">
+                        <input type="radio" name="departmentChartType" value="ADET" checked="" id="chart-type-adet" class="hidden">
+                        <label for="chart-type-adet" class="chart-toggle-btn cursor-pointer">Sayı Bazında</label>
+                        
+                        <input type="radio" name="departmentChartType" value="SURE" id="chart-type-sure" class="hidden">
+                        <label for="chart-type-sure" class="chart-toggle-btn cursor-pointer">Süre Bazında</label>
+                    </div>
+                </div>
+                <div class="relative w-full h-[400px]">
+                    <canvas id="department-chart" style="box-sizing: border-box; display: block; height: 400px; width: 1470px;" width="1470" height="400"></canvas>
+                </div>
+                <p id="department-chart-subtitle" class="text-xs text-gray-400 mt-2 text-center italic">*Karşılaştırma grafiklerinde veriler personel başına gösterilmektedir.</p>
+            </div>
+
+            <div class="modern-card p-8 overflow-hidden mb-12">
+                 <h3 class="text-xl font-bold text-dynamic mb-4" id="department-summary-title">Müdürlük Detay - Genel Toplam Çağrılar</h3>
+                 <div class="overflow-x-auto rounded-lg border border-gray-200">
+                    <table class="min-w-full">
+                        <thead id="department-table-header" class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider"><tr><th class="py-3 px-4 text-left cursor-pointer hover:bg-gray-100 transition-colors" onclick="sortTable('department', 'birim_mudurlugu_adi')">Müdürlük Adı</th><th class="py-3 px-4 text-left cursor-pointer hover:bg-gray-100 transition-colors" onclick="sortTable('department', 'genel_toplam_sure')">Genel Toplam Süre ↓</th><th class="py-3 px-4 text-left cursor-pointer hover:bg-gray-100 transition-colors" onclick="sortTable('department', 'toplam_cagri_sayisi')">Genel Toplam Adet</th><th class="py-3 px-4 text-left cursor-pointer hover:bg-gray-100 transition-colors" onclick="sortTable('department', 'giden_harici_toplam')">Sabit Hattan Müşteri Arama Toplam</th><th class="py-3 px-4 text-left cursor-pointer hover:bg-gray-100 transition-colors" onclick="sortTable('department', 'giden_harici_adet_basarili')">Sabit Hattan Müşteri Arama Cevaplı</th><th class="py-3 px-4 text-left cursor-pointer hover:bg-gray-100 transition-colors" onclick="sortTable('department', 'giden_dahili_adet_basarili')">Şube/Birime Giden Cevaplı</th><th class="py-3 px-4 text-left cursor-pointer hover:bg-gray-100 transition-colors" onclick="sortTable('department', 'gelen_dahili_adet_basarili')">Şube/Birimden Gelen Cevaplı</th></tr></thead>
+                        <tbody id="department-performance-table-body" class="text-sm text-dynamic divide-y divide-gray-100"><tr class="hover:bg-gray-50 transition-colors cursor-pointer border-b border-gray-100 last:border-0"><td class=" py-2 px-4 text-left ">Satış Pazarlama</td><td class=" py-2 px-4 text-left font-bold">22 sa 55 dk</td><td class=" py-2 px-4 text-left font-bold">628</td><td class=" py-2 px-4 text-left ">570</td><td class=" py-2 px-4 text-left ">450</td><td class=" py-2 px-4 text-left ">15</td><td class=" py-2 px-4 text-left ">36</td></tr><tr class="hover:bg-gray-50 transition-colors cursor-pointer border-b border-gray-100 last:border-0"><td class=" py-2 px-4 text-left ">Müşteri Hizmetleri</td><td class=" py-2 px-4 text-left font-bold">16 sa 2 dk 30 sn</td><td class=" py-2 px-4 text-left font-bold">486</td><td class=" py-2 px-4 text-left ">315</td><td class=" py-2 px-4 text-left ">270</td><td class=" py-2 px-4 text-left ">37</td><td class=" py-2 px-4 text-left ">113</td></tr><tr class="hover:bg-gray-50 transition-colors cursor-pointer border-b border-gray-100 last:border-0"><td class=" py-2 px-4 text-left ">Operasyon</td><td class=" py-2 px-4 text-left font-bold">13 sa 50 dk</td><td class=" py-2 px-4 text-left font-bold">409</td><td class=" py-2 px-4 text-left ">187</td><td class=" py-2 px-4 text-left ">150</td><td class=" py-2 px-4 text-left ">54</td><td class=" py-2 px-4 text-left ">135</td></tr><tr class="hover:bg-gray-50 transition-colors cursor-pointer border-b border-gray-100 last:border-0"><td class=" py-2 px-4 text-left ">Bilgi Teknolojileri</td><td class=" py-2 px-4 text-left font-bold">12 sa 56 dk 40 sn</td><td class=" py-2 px-4 text-left font-bold">362</td><td class=" py-2 px-4 text-left ">62</td><td class=" py-2 px-4 text-left ">47</td><td class=" py-2 px-4 text-left ">75</td><td class=" py-2 px-4 text-left ">180</td></tr><tr class="hover:bg-gray-50 transition-colors cursor-pointer border-b border-gray-100 last:border-0"><td class=" py-2 px-4 text-left ">Lojistik</td><td class=" py-2 px-4 text-left font-bold">9 sa 50 dk</td><td class=" py-2 px-4 text-left font-bold">297</td><td class=" py-2 px-4 text-left ">150</td><td class=" py-2 px-4 text-left ">120</td><td class=" py-2 px-4 text-left ">36</td><td class=" py-2 px-4 text-left ">90</td></tr><tr class="hover:bg-gray-50 transition-colors cursor-pointer border-b border-gray-100 last:border-0"><td class=" py-2 px-4 text-left ">Risk Yönetimi</td><td class=" py-2 px-4 text-left font-bold">8 sa 1 dk 40 sn</td><td class=" py-2 px-4 text-left font-bold">251</td><td class=" py-2 px-4 text-left ">134</td><td class=" py-2 px-4 text-left ">113</td><td class=" py-2 px-4 text-left ">33</td><td class=" py-2 px-4 text-left ">66</td></tr><tr class="hover:bg-gray-50 transition-colors cursor-pointer border-b border-gray-100 last:border-0"><td class=" py-2 px-4 text-left ">İnsan Kaynakları</td><td class=" py-2 px-4 text-left font-bold">7 sa 36 dk 40 sn</td><td class=" py-2 px-4 text-left font-bold">227</td><td class=" py-2 px-4 text-left ">114</td><td class=" py-2 px-4 text-left ">90</td><td class=" py-2 px-4 text-left ">25</td><td class=" py-2 px-4 text-left ">75</td></tr><tr class="hover:bg-gray-50 transition-colors cursor-pointer border-b border-gray-100 last:border-0"><td class=" py-2 px-4 text-left ">Finans</td><td class=" py-2 px-4 text-left font-bold">7 sa 10 dk</td><td class=" py-2 px-4 text-left font-bold">213</td><td class=" py-2 px-4 text-left ">120</td><td class=" py-2 px-4 text-left ">105</td><td class=" py-2 px-4 text-left ">24</td><td class=" py-2 px-4 text-left ">60</td></tr><tr class="hover:bg-gray-50 transition-colors cursor-pointer border-b border-gray-100 last:border-0"><td class=" py-2 px-4 text-left ">Kurumsal İletişim</td><td class=" py-2 px-4 text-left font-bold">6 sa 25 dk</td><td class=" py-2 px-4 text-left font-bold">194</td><td class=" py-2 px-4 text-left ">98</td><td class=" py-2 px-4 text-left ">83</td><td class=" py-2 px-4 text-left ">30</td><td class=" py-2 px-4 text-left ">54</td></tr><tr class="hover:bg-gray-50 transition-colors cursor-pointer border-b border-gray-100 last:border-0"><td class=" py-2 px-4 text-left ">Hukuk Müşavirliği</td><td class=" py-2 px-4 text-left font-bold">5 sa 9 dk 10 sn</td><td class=" py-2 px-4 text-left font-bold">151</td><td class=" py-2 px-4 text-left ">84</td><td class=" py-2 px-4 text-left ">75</td><td class=" py-2 px-4 text-left ">18</td><td class=" py-2 px-4 text-left ">45</td></tr></tbody>
+                        <tfoot id="department-table-footer" class="bg-gray-50 font-bold text-xs uppercase text-gray-600"><tr><td class="py-3 px-4 text-left">TOPLAM</td><td class="py-3 px-4 text-left">109 sa 56 dk 40 sn</td><td class="py-3 px-4 text-left">3.218</td><td class="py-3 px-4 text-left">1.834</td><td class="py-3 px-4 text-left">1.503</td><td class="py-3 px-4 text-left">347</td><td class="py-3 px-4 text-left">854</td></tr></tfoot>
+                    </table>
+                 </div>
+            </div>
+
+            <div class="modern-card p-8 bg-opacity-50">
+                <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-brand-yellow/10 p-2 rounded-lg text-brand-yellow"><i class="fa-solid fa-user-group text-xl"></i></div>
+                        <div><span class="block font-bold text-dynamic text-lg">Personel Detayları</span><span class="text-xs text-gray-500">Müdürlük Bazında Filtreleme</span></div>
+                    </div>
+                    <select id="department-select" class="bg-gray-50 text-dynamic border border-gray-200 rounded-lg px-4 py-2 text-sm font-medium focus:border-brand-yellow focus:ring-2 focus:ring-brand-yellow/20 outline-none w-full md:w-80 transition-all"><option value="">Lütfen Müdürlük Seçiniz</option><option value="Bilgi Teknolojileri">Bilgi Teknolojileri</option><option value="Finans">Finans</option><option value="Hukuk Müşavirliği">Hukuk Müşavirliği</option><option value="Kurumsal İletişim">Kurumsal İletişim</option><option value="Lojistik">Lojistik</option><option value="Müşteri Hizmetleri">Müşteri Hizmetleri</option><option value="Operasyon">Operasyon</option><option value="Risk Yönetimi">Risk Yönetimi</option><option value="Satış Pazarlama">Satış Pazarlama</option><option value="İnsan Kaynakları">İnsan Kaynakları</option></select>
+                </div>
+
+                <div class="mb-8 relative">
+                    <div class="flex justify-between items-center mb-4 flex-wrap gap-4">
+                        <div class="flex items-center gap-4">
+                            <h4 class="text-lg font-semibold text-dynamic" id="individual-chart-title">Personel İstatistikleri</h4>
+                            <button id="individual-chart-back-button" class="px-3 py-1 bg-gray-500 text-white rounded-md text-xs hover:bg-gray-600 transition-colors hidden" onclick="clearIndividualChartSelection()">Temizle</button>
+                        </div>
+                        <div id="individual-chart-type-group" class="flex bg-gray-100 p-1 rounded-lg gap-1 border border-gray-200">
+                            <input type="radio" name="individualChartType" value="ADET" checked="" id="individual-chart-type-adet" class="hidden">
+                            <label for="individual-chart-type-adet" class="chart-toggle-btn cursor-pointer">Sayı Bazında</label>
+                            
+                            <input type="radio" name="individualChartType" value="SURE" id="individual-chart-type-sure" class="hidden">
+                            <label for="individual-chart-type-sure" class="chart-toggle-btn cursor-pointer">Süre Bazında</label>
+                        </div>
+                    </div>
+                    <div class="relative w-full h-[400px]">
+                        <canvas id="individual-chart-canvas" style="box-sizing: border-box; display: block; height: 400px; width: 1470px;" width="1470" height="400"></canvas>
+                    </div>
+                </div>
+
+                <h4 class="text-lg font-semibold text-dynamic mb-4">Personel Liste Detayı</h4>
+                <div class="overflow-x-auto rounded-lg border border-gray-200">
+                    <table class="min-w-full">
+                        <thead id="individual-table-header" class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider"><tr><th class="py-3 px-4 text-left cursor-pointer hover:bg-gray-100 transition-colors" onclick="sortTable('individual', 'calisan_adi_soyadi')">Personel Adı</th><th class="py-3 px-4 text-left cursor-pointer hover:bg-gray-100 transition-colors" onclick="sortTable('individual', 'genel_toplam_sure')">Genel Toplam Süre ↓</th><th class="py-3 px-4 text-left cursor-pointer hover:bg-gray-100 transition-colors" onclick="sortTable('individual', 'toplam_cagri_sayisi')">Genel Toplam Adet</th><th class="py-3 px-4 text-left cursor-pointer hover:bg-gray-100 transition-colors" onclick="sortTable('individual', 'giden_harici_toplam')">Sabit Hattan Müşteri Arama Toplam</th><th class="py-3 px-4 text-left cursor-pointer hover:bg-gray-100 transition-colors" onclick="sortTable('individual', 'giden_harici_adet_basarili')">Sabit Hattan Müşteri Arama Cevaplı</th><th class="py-3 px-4 text-left cursor-pointer hover:bg-gray-100 transition-colors" onclick="sortTable('individual', 'giden_dahili_adet_basarili')">Şube/Birime Giden Cevaplı</th><th class="py-3 px-4 text-left cursor-pointer hover:bg-gray-100 transition-colors" onclick="sortTable('individual', 'gelen_dahili_adet_basarili')">Şube/Birimden Gelen Cevaplı</th></tr></thead>
+                        <tbody id="individual-performance-table-body" class="text-sm text-dynamic divide-y divide-gray-100"><tr><td colspan="7" class="text-center py-4">Lütfen bir müdürlük seçin.</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // --- 1. TEMA VE MOD YÖNETİMİ ---
+        function setTheme(theme) {
+            const body = document.body;
+            body.classList.remove('theme-day', 'theme-night');
+            body.classList.add('theme-' + theme);
+            
+            document.getElementById('btn-theme-day').classList.remove('bg-white', 'text-brand-yellow', 'shadow-sm');
+            document.getElementById('btn-theme-night').classList.remove('bg-slate-700', 'text-indigo-400', 'shadow-sm');
+            
+            if(theme === 'day') document.getElementById('btn-theme-day').classList.add('bg-white', 'text-brand-yellow', 'shadow-sm');
+            if(theme === 'night') document.getElementById('btn-theme-night').classList.add('bg-slate-700', 'text-indigo-400', 'shadow-sm');
+
+            updateChartsForTheme(theme);
+            localStorage.setItem('appTheme', theme);
+        }
+
+        function updateChartsForTheme(theme) {
+            let textColor = theme === 'night' ? '#cbd5e1' : '#64748b';
+            let gridColor = theme === 'night' ? '#334155' : '#e5e7eb';
+            let borderColor = theme === 'night' ? '#1e293b' : '#ffffff';
+
+            const charts = [departmentChart, individualChart];
+            charts.forEach(chart => {
+                if (chart) {
+                    if(chart.options.scales.x) {
+                        chart.options.scales.x.ticks.color = textColor;
+                        if(chart.options.scales.x.grid) chart.options.scales.x.grid.color = 'transparent';
+                    }
+                    if(chart.options.scales.y) {
+                        chart.options.scales.y.ticks.color = textColor;
+                        if(chart.options.scales.y.grid) chart.options.scales.y.grid.color = gridColor;
+                    }
+                    if(chart.options.plugins.legend) {
+                         chart.options.plugins.legend.labels.color = textColor;
+                    }
+                    if (chart.config.type === 'doughnut') {
+                        chart.data.datasets.forEach(dataset => {
+                            dataset.borderColor = borderColor;
+                        });
+                    }
+                    chart.update();
+                }
+            });
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar-nav');
+            const mainContent = document.getElementById('main-content-wrapper');
+            sidebar.classList.toggle('closed');
+            mainContent.classList.toggle('full-width');
+        }
+
+        // --- 2. UYGULAMA DEĞİŞKENLERİ ---
+        const EXCEL_EXTENSIONS = ['.xlsx', '.xls', '.xlsb', '.xlsm'];
+        let currentCallTypeFilter = 'TOPLAM'; 
+        let departmentChartMetric = 'ADET';
+        let individualChartMetric = 'ADET';
+        let sortState = {
+            department: { key: 'genel_toplam_sure', direction: 'DESC' },
+            individual: { key: 'genel_toplam_sure', direction: 'DESC' }
+        };
+        let departmentChart = null;
+        let individualChart = null;
+        let departmentChartState = 'OVERVIEW';
+        let selectedComparisonDepartments = [];
+        let individualChartState = 'OVERVIEW';
+        let selectedPersonnelNames = [];
+        const CHART_COLORS = [
+            '#FFB81C', '#3B82F6', '#10B981', '#8B5CF6', '#F97316', '#06B6D4', 
+            '#EC4899', '#6366F1', '#84CC16', '#F43F5E', '#14B8A6', '#A855F7', 
+            '#EAB308', '#64748B'
+        ];
+
+        function getWorkingDays() {
+            if (window.APP_MODE === 'VIEWER' && window.EMBEDDED_WORK_DAYS) return window.EMBEDDED_WORK_DAYS;
+            const el = document.getElementById('work-days-input');
+            return el ? (parseInt(el.value) || 22) : 22;
+        }
+
+        const commonDataLabelStyle = {
+            color: '#FFFFFF', textStrokeColor: '#000000', textStrokeWidth: 2.5, 
+            font: { weight: 'bold', size: 11 }, anchor: 'end', align: 'start', offset: 4
+        };
+
+        const donutDataLabelConfig = {
+            ...commonDataLabelStyle,
+            anchor: 'center', align: 'center', 
+            formatter: (value, context) => {
+                let isSureMetric = false;
+                if (context.chart.canvas.id === 'individual-chart-canvas') { isSureMetric = (individualChartMetric === 'SURE'); } 
+                else if (context.chart.canvas.id === 'department-chart') { isSureMetric = (departmentChartMetric === 'SURE'); }
+                const formattedValue = isSureMetric ? formatTime(value) : formatNumber(value);
+                const total = context.chart.data.datasets[0].data.reduce((acc, data) => acc + data, 0);
+                const percentage = total > 0 ? (value / total) * 100 : 0;
+                return Math.round(percentage) < 4 ? null : `${formattedValue}\n(${Math.round(percentage)}%)`;
+            }
+        }
+
+        const columnMap = {
+            'Müdürlük Adı': ['birim_mudurlugu_adi', 'string'],
+            'Personel Adı': ['calisan_adi_soyadi', 'string'],
+            'Sicil No': ['sicil_no', 'string'],
+            'FCT Giden Süre': ['fct_giden_toplam_sure', 'number'],
+            'FCT Toplam Arama': ['fct_giden_toplam_adet', 'number'],
+            'FCT Cevaplı': ['fct_giden_cevaplanan_adet', 'number'],
+            'FCT Cevapsız': ['fct_giden_cevapsiz_adet', 'number'],
+            'FCT Meşgul': ['fct_giden_mesgul_adet', 'number'],
+            'FCTye Yönelme Oranı': ['fct_yonelme_orani', 'percentage'],
+            'Sabit Hattan Müşteri Arama Süresi': ['giden_harici_sure', 'number'],
+            'Sabit Hattan Müşteri Arama Toplam': ['giden_harici_toplam', 'number'],
+            'Sabit Hattan Müşteri Arama Cevaplı': ['giden_harici_adet_basarili', 'number'],
+            'Sabit Hattan Müşteri Arama Cevapsız': ['giden_harici_adet_basarisiz', 'number'],
+            'Şube/Birimden Gelen Arama Süresi': ['gelen_dahili_sure', 'number'],
+            'Şube/Birime Giden Süre': ['giden_dahili_sure', 'number'],
+            'Şube/Birimden Gelen Cevaplı': ['gelen_dahili_adet_basarili', 'number'],
+            'Şube/Birimden Gelen Cevapsız': ['gelen_dahili_adet_basarisiz', 'number'],
+            'Şube/Birime Giden Cevaplı': ['giden_dahili_adet_basarili', 'number'],
+            'Şube/Birime Giden Cevapsız': ['giden_dahili_adet_basarisiz', 'number'],
+            'Genel Toplam Süre': ['genel_toplam_sure', 'number'],
+            'Genel Toplam Adet': ['toplam_cagri_sayisi', 'number'],
+            'Şube/Birimden Gelen Toplam': ['gelen_dahili_toplam', 'number'],
+            'Şube/Birimden Gelen Aramalara Cevap Vermeme Oranı': ['dahili_cevapsiz_oran', 'percentage'],
+            'Ort. Sabit Müşteri Arama': ['avg_fixed_call', 'number'],
+            'Ort. FCT Müşteri Arama': ['avg_fct', 'number'],
+            'Ort. Şube/Birim Karşılama': ['avg_internal', 'number'],
+            'Günlük Ort. Sabit Arama': ['avg_daily_fixed', 'number'],
+            'Günlük Ort. FCT Arama': ['avg_daily_fct', 'number'],
+            'Günlük Ort. Şube/Birim Gelen': ['avg_daily_internal', 'number']
+        };
+
+        const filterDefinitions = {
+            FCT_GIDEN: {
+                title: 'FCT Giden Aramalar',
+                drilldown_keys: ['fct_giden_cevaplanan_adet', 'fct_giden_cevapsiz_adet', 'fct_giden_mesgul_adet'],
+                drilldown_keys_sure: ['fct_giden_toplam_sure'], 
+                table_keys: ['birim_mudurlugu_adi', 'fct_giden_toplam_sure', 'fct_giden_toplam_adet', 'fct_giden_cevaplanan_adet', 'fct_giden_cevapsiz_adet', 'fct_giden_mesgul_adet'],
+                individual_table_keys: ['calisan_adi_soyadi', 'fct_giden_toplam_sure', 'fct_giden_toplam_adet', 'fct_giden_cevaplanan_adet', 'fct_giden_cevapsiz_adet', 'fct_giden_mesgul_adet'],
+                kpi_config: [
+                    { title: "FCT Giden Süre", key: "fct_giden_toplam_sure", type: "time", icon: "fa-clock", color: "text-brand-yellow", bg: "bg-brand-yellow" },
+                    { title: "FCT Toplam Arama", key: "fct_giden_toplam_adet", type: "number", icon: "fa-mobile-screen", color: "text-blue-500", bg: "bg-blue-500" },
+                    { title: "FCT Cevaplanan", key: "fct_giden_cevaplanan_adet", type: "number", icon: "fa-check", color: "text-green-500", bg: "bg-green-500" },
+                    { title: "FCT Cevapsız/Meşgul", key: "fct_giden_cevapsiz_adet", type: "number", icon: "fa-xmark", color: "text-red-500", bg: "bg-red-500" } 
+                ]
+            },
+            ORTALAMA_SURE: {
+                title: 'Ortalama İşlem Verileri (Süre / Günlük Adet)',
+                table_keys: ['birim_mudurlugu_adi', 'avg_fixed_call', 'avg_daily_fixed', 'avg_fct', 'avg_daily_fct', 'avg_internal', 'avg_daily_internal'],
+                individual_table_keys: ['calisan_adi_soyadi', 'avg_fixed_call', 'avg_daily_fixed', 'avg_fct', 'avg_daily_fct', 'avg_internal', 'avg_daily_internal'],
+                kpi_config: [
+                    { title: "Sabit Müşteri Arama (Ort. Süre)", key: "avg_fixed_call", type: "time", icon: "fa-phone-volume", color: "text-brand-yellow", bg: "bg-brand-yellow" },
+                    { title: "FCT Giden (Ort. Süre)", key: "avg_fct", type: "time", icon: "fa-mobile-screen", color: "text-green-500", bg: "bg-green-500" },
+                    { title: "Sabit Müşteri Arama (Ort. Günlük)", key: "avg_daily_fixed_kpi", type: "number", icon: "fa-phone", color: "text-blue-500", bg: "bg-blue-500" },
+                    { title: "FCT Giden (Ort. Günlük)", key: "avg_daily_fct_kpi", type: "number", icon: "fa-mobile", color: "text-purple-500", bg: "bg-purple-500" }
+                ]
+            },
+            MUSTERI_ARAMA: {
+                title: 'Sabit Hattan Müşteri Aramaları (Giden)',
+                drilldown_keys: ['giden_harici_adet_basarili', 'giden_harici_adet_basarisiz'],
+                drilldown_keys_sure: ['giden_harici_sure'],
+                adet_basarili_keys: ['giden_harici_adet_basarili'], adet_basarisiz_keys: ['giden_harici_adet_basarisiz'], sure_keys: ['giden_harici_sure'], 
+                table_keys: ['birim_mudurlugu_adi', 'giden_harici_sure', 'giden_harici_toplam', 'giden_harici_adet_basarili', 'giden_harici_adet_basarisiz', 'fct_giden_toplam_adet', 'fct_yonelme_orani'],
+                individual_table_keys: ['calisan_adi_soyadi', 'giden_harici_sure', 'giden_harici_toplam', 'giden_harici_adet_basarili', 'giden_harici_adet_basarisiz', 'fct_giden_toplam_adet', 'fct_yonelme_orani'],
+                kpi_config: [
+                    { title: "Müşteri Arama Süresi", key: "giden_harici_sure", type: "time", icon: "fa-clock", color: "text-brand-yellow", bg: "bg-brand-yellow" },
+                    { title: "Müşteri Arama Toplam", key: "giden_harici_toplam", type: "number", icon: "fa-phone-volume", color: "text-blue-500", bg: "bg-blue-500" },
+                    { title: "Ulaşılan Müşteri", key: "giden_harici_adet_basarili", type: "number", icon: "fa-user-check", color: "text-green-500", bg: "bg-green-500" },
+                    { title: "Ulaşılamayan", key: "giden_harici_adet_basarisiz", type: "number", icon: "fa-user-xmark", color: "text-red-500", bg: "bg-red-500" }
+                ]
+            },
+            DAHILI: {
+                title: 'Şube/Birimden Gelen Çağrılar',
+                drilldown_keys: ['gelen_dahili_adet_basarili', 'gelen_dahili_adet_basarisiz'],
+                drilldown_keys_sure: ['gelen_dahili_sure'],
+                adet_basarili_keys: ['gelen_dahili_adet_basarili'], adet_basarisiz_keys: ['gelen_dahili_adet_basarisiz'], sure_keys: ['gelen_dahili_sure'],
+                table_keys: ['birim_mudurlugu_adi', 'gelen_dahili_sure', 'gelen_dahili_toplam', 'gelen_dahili_adet_basarili', 'gelen_dahili_adet_basarisiz', 'dahili_cevapsiz_oran'],
+                individual_table_keys: ['calisan_adi_soyadi', 'gelen_dahili_sure', 'gelen_dahili_toplam', 'gelen_dahili_adet_basarili', 'gelen_dahili_adet_basarisiz', 'dahili_cevapsiz_oran'],
+                kpi_config: [
+                    { title: "Şube/Birimden Gelen Süre", key: "gelen_dahili_sure", type: "time", icon: "fa-building", color: "text-brand-yellow", bg: "bg-brand-yellow" },
+                    { title: "Gelen Dahili Toplam", key: "gelen_dahili_toplam", type: "number", icon: "fa-list-ol", color: "text-blue-500", bg: "bg-blue-500" },
+                    { title: "Karşılanan Dahili", key: "gelen_dahili_adet_basarili", type: "number", icon: "fa-phone", color: "text-green-500", bg: "bg-green-500" },
+                    { title: "Dahili Cevap Vermeme %", key: "dahili_cevapsiz_oran", numKey: "gelen_dahili_adet_basarisiz", denomKey: "gelen_dahili_toplam", type: "percentage", icon: "fa-percent", color: "text-red-500", bg: "bg-red-500" }
+                ]
+            },
+            TOPLAM: {
+                title: 'Genel Toplam Çağrılar',
+                drilldown_keys: ['giden_harici_adet_basarili', 'gelen_dahili_adet_basarili', 'giden_dahili_adet_basarili'],
+                drilldown_keys_sure: ['giden_harici_sure', 'gelen_dahili_sure', 'giden_dahili_sure'],
+                adet_basarili_keys: ['giden_harici_adet_basarili', 'gelen_dahili_adet_basarili', 'giden_dahili_adet_basarili'], adet_basarisiz_keys: ['giden_harici_adet_basarisiz', 'gelen_dahili_adet_basarisiz', 'giden_dahili_adet_basarisiz'], sure_keys: ['giden_harici_sure', 'gelen_dahili_sure', 'giden_dahili_sure'],
+                table_keys: ['birim_mudurlugu_adi', 'genel_toplam_sure', 'toplam_cagri_sayisi', 'giden_harici_toplam', 'giden_harici_adet_basarili', 'giden_dahili_adet_basarili', 'gelen_dahili_adet_basarili'],
+                individual_table_keys: ['calisan_adi_soyadi', 'genel_toplam_sure', 'toplam_cagri_sayisi', 'giden_harici_toplam', 'giden_harici_adet_basarili', 'giden_dahili_adet_basarili', 'gelen_dahili_adet_basarili'],
+                kpi_config: [
+                    { title: "Toplam Çağrı Süresi", key: "genel_toplam_sure", type: "time", icon: "fa-clock", color: "text-brand-yellow", bg: "bg-brand-yellow" },
+                    { title: "Toplam Çağrı Adeti", key: "toplam_cagri_sayisi", type: "number", icon: "fa-list-ol", color: "text-blue-500", bg: "bg-blue-500" },
+                    { title: "Sabit Hat Müşteri Arama Süre", key: "giden_harici_sure", type: "time", icon: "fa-phone", color: "text-green-500", bg: "bg-green-500" },
+                    { title: "Şube/Birime Giden Süre", key: "giden_dahili_sure", type: "time", icon: "fa-arrow-up", color: "text-purple-500", bg: "bg-purple-500" }
+                ]
+            }
+        };
+
+        window.performanceData = null;
+        window.aggregatedDepartmentData = null;
+        window.rawFileData = null;
+
+        // --- HELPER FONKSİYONLAR ---
+        function calculateSuccessRate(basarili, basarisiz) { const total = (basarili || 0) + (basarisiz || 0); return (total > 0) ? (basarili / total) * 100 : 0; }
+        function formatPercentage(num) { if (num === null || num === undefined || isNaN(num)) return "0%"; return Math.round(num).toLocaleString('tr-TR') + '%'; }
+        function formatTime(seconds) { if (!seconds || isNaN(seconds) || seconds <= 0) return "0 sn"; if (seconds > 0 && seconds < 1) return "<1 sn"; const h = Math.floor(seconds / 3600); const m = Math.floor((seconds % 3600) / 60); const s = Math.floor(seconds % 60); let timeStr = ""; if (h > 0) timeStr += h + " sa "; if (m > 0) timeStr += m + " dk "; if (s > 0) timeStr += s + " sn"; return timeStr.trim() || "0 sn"; }
+        function formatNumber(num) { if (num === null || num === undefined || isNaN(num)) return "0"; return Number.isInteger(num) ? num.toLocaleString('tr-TR') : num.toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }); }
+
+        const chartTooltipCallback = {
+            label: function(context) {
+                let label = context.dataset.label || context.label || '';
+                if (label) { label += ': '; }
+                const value = context.raw;
+                let metric = individualChartMetric;
+                if (context.chart.canvas.id === 'department-chart') { metric = departmentChartMetric; }
+                
+                if(currentCallTypeFilter === 'ORTALAMA_SURE') {
+                    if (metric === 'SURE') return label + formatTime(value);
+                    else return label + formatNumber(value) + ' Adet/Gün';
+                }
+
+                if (context.chart.config.type === 'doughnut') {
+                    let isSureMetric = false;
+                    if (context.chart.canvas.id === 'individual-chart-canvas') { isSureMetric = (individualChartMetric === 'SURE'); } 
+                    else if (context.chart.canvas.id === 'department-chart') { isSureMetric = (departmentChartMetric === 'SURE'); }
+                    if (isSureMetric) { label += formatTime(value); } else { label += formatNumber(value) + ' Adet'; }
+                    return label;
+                }
+                if ((currentCallTypeFilter === 'FCT_GIDEN') && (departmentChartState === 'DRILLDOWN' || individualChartState === 'DRILLDOWN')) { label += formatNumber(value) + ' Adet'; return label; }
+                if (metric === 'SURE' || (context.dataset.label && context.dataset.label.toLowerCase().includes('süre'))) { label += formatTime(value); } else if ((context.dataset.label && context.dataset.label.toLowerCase().includes('oran'))) { label += formatPercentage(value); } else { label += formatNumber(value) + ' Adet'; }
+                return label;
+            }
+        };
+
+        // --- DOSYA YÜKLEME ---
+        document.getElementById('data-file-input').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const handleFileRead = (data) => {
+                try {
+                    window.rawFileData = data;
+                    const processedData = processRawData(data);
+                    loadAndDisplayData(processedData, true); 
+                } catch (error) {
+                    alert('Veri işleme hatası! Lütfen dosya sütun başlıklarını ve formatlarını kontrol edin.');
+                    console.error("Veri İşleme Hatası:", error);
+                }
+            };
+            const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+            if (EXCEL_EXTENSIONS.includes(fileExtension)) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], {raw: true});
+                    handleFileRead(jsonData);
+                };
+                reader.readAsArrayBuffer(file);
+            } else {
+                Papa.parse(file, { header: true, dynamicTyping: true, skipEmptyLines: true, complete: (results) => handleFileRead(results.data) });
+            }
+        });
+
+        // İŞ GÜNÜ DEĞİŞİMİ
+        document.getElementById('work-days-input').addEventListener('input', () => {
+             if (window.rawFileData) {
+                 const processedData = processRawData(window.rawFileData);
+                 loadAndDisplayData(processedData, false);
+             } else if (window.performanceData) {
+                 recalculateDailyAverages();
+             }
+        });
+
+        function recalculateDailyAverages() {
+            if(!window.performanceData) return;
+            const wd = getWorkingDays();
+            window.performanceData.forEach(p => {
+                p.avg_daily_fixed = p.giden_harici_toplam / wd;
+                p.avg_daily_fct = p.fct_giden_toplam_adet / wd;
+                p.avg_daily_internal = p.gelen_dahili_toplam / wd;
+            });
+            window.aggregatedDepartmentData.forEach(dept => {
+                dept.avg_daily_fixed = (dept.giden_harici_toplam / dept.personnelCount) / wd;
+                dept.avg_daily_fct = (dept.fct_giden_toplam_adet / dept.personnelCount) / wd;
+                dept.avg_daily_internal = (dept.gelen_dahili_toplam / dept.personnelCount) / wd;
+            });
+            updateKpiCards(window.aggregatedDepartmentData);
+            if(currentCallTypeFilter === 'ORTALAMA_SURE') {
+                renderActiveDepartmentChart();
+                renderActiveIndividualChart();
+                sortTable('department', sortState.department.key, true);
+                sortTable('individual', sortState.individual.key, true);
+            }
+        }
+
+        function loadAndDisplayData(processedData, isNewUpload = false) {
+            window.performanceData = processedData;
+            window.aggregatedDepartmentData = aggregateDepartmentData(window.performanceData);
+            currentCallTypeFilter = document.querySelector('input[name="callTypeFilter"]:checked').value || 'TOPLAM';
+            resetDepartmentChart(); 
+        }
+
+        // --- VERİ İŞLEME ---
+        function processRawData(rawData) {
+             const wd = getWorkingDays();
+             return rawData.map(person => {
+                const findKey = (keys, target) => keys.find(k => k && k.trim().toUpperCase() === target.toUpperCase());
+                const personKeys = Object.keys(person);
+                const getVal = (keyName) => { const val = person[findKey(personKeys, keyName)]; return parseFloat(val) || 0; };
+                const getStr = (keyName) => person[findKey(personKeys, keyName)] || '';
+                
+                const sicil_no = String(getStr("SICIL"));
+                const calisan_adi_soyadi = String(getStr("ADSOYAD"));
+                const birim_mudurlugu_adi = String(getStr("MUDURLUK"));
+                
+                const gelen_dahili_sure = getVal("GELEN_DAHILI_SURE");
+                const giden_dahili_sure = getVal("GIDEN_DAHILI_SURE");
+                const gelen_dahili_adet_basarili = getVal("GELEN_DAHILI_ADET_BASARILI");
+                const gelen_dahili_adet_basarisiz = getVal("GELEN_DAHILI_ADET_BASARISIZ");
+                const giden_dahili_adet_basarili = getVal("GIDEN_DAHILI_ADET_BASARILI");
+                const giden_dahili_adet_basarisiz = getVal("GIDEN_DAHILI_ADET_BASARISIZ");
+
+                const giden_harici_sure = getVal("GIDEN_HARICI_SURE");
+                const giden_harici_adet_basarili = getVal("GIDEN_HARICI_ADET_BASARILI");
+                const giden_harici_adet_basarisiz = getVal("GIDEN_HARICI_ADET_BASARISIZ");
+                
+                const fct_giden_cevaplanan_adet = getVal('FCT_GIDEN_CEVAPLANAN_ADET');
+                const fct_giden_cevapsiz_adet = getVal('FCT_GIDEN_CEVAPSIZ_ADET');
+                const fct_giden_mesgul_adet = getVal('FCT_GIDEN_MESGUL_ADET');
+                const fct_giden_toplam_sure = getVal('FCT_GIDEN_TOPLAM_SURE');
+                const fct_giden_toplam_adet = fct_giden_cevaplanan_adet + fct_giden_cevapsiz_adet + fct_giden_mesgul_adet;
+                
+                const genelToplamSure = gelen_dahili_sure + giden_dahili_sure + giden_harici_sure;
+                const toplamCagriSayisi = gelen_dahili_adet_basarili + giden_dahili_adet_basarili + giden_harici_adet_basarili +
+                                          gelen_dahili_adet_basarisiz + giden_dahili_adet_basarisiz + giden_harici_adet_basarisiz;
+
+                const giden_harici_toplam = giden_harici_adet_basarili + giden_harici_adet_basarisiz;
+                const gelen_dahili_toplam = gelen_dahili_adet_basarili + gelen_dahili_adet_basarisiz;
+
+                const avg_fixed_call = giden_harici_adet_basarili > 0 ? (giden_harici_sure / giden_harici_adet_basarili) : 0;
+                const avg_fct = fct_giden_cevaplanan_adet > 0 ? (fct_giden_toplam_sure / fct_giden_cevaplanan_adet) : 0;
+                const avg_internal = gelen_dahili_adet_basarili > 0 ? (gelen_dahili_sure / gelen_dahili_adet_basarili) : 0;
+
+                const avg_daily_fixed = giden_harici_toplam / wd;
+                const avg_daily_fct = fct_giden_toplam_adet / wd;
+                const avg_daily_internal = gelen_dahili_toplam / wd;
+
+                return {
+                    sicil_no, calisan_adi_soyadi, birim_mudurlugu_adi,
+                    gelen_dahili_sure, giden_dahili_sure, giden_harici_sure,
+                    gelen_dahili_adet_basarili, gelen_dahili_adet_basarisiz,
+                    giden_dahili_adet_basarili, giden_dahili_adet_basarisiz,
+                    giden_harici_adet_basarili, giden_harici_adet_basarisiz,
+                    genel_toplam_sure: genelToplamSure,
+                    toplam_cagri_sayisi: toplamCagriSayisi,
+                    fct_giden_cevaplanan_adet, fct_giden_cevapsiz_adet, fct_giden_mesgul_adet, 
+                    fct_giden_toplam_sure, fct_giden_toplam_adet,
+                    giden_harici_toplam,
+                    gelen_dahili_toplam,
+                    avg_fixed_call, avg_fct, avg_internal,
+                    avg_daily_fixed, avg_daily_fct, avg_daily_internal
+                };
+            }).filter(p => p.birim_mudurlugu_adi && p.calisan_adi_soyadi);
+        }
+
+        function aggregateDepartmentData(data) {
+            const wd = getWorkingDays();
+            const departments = {};
+            const numericKeys = Object.keys(columnMap).filter(k => columnMap[k][1] === 'number').map(k => columnMap[k][0]);
+            const keysToSum = numericKeys.filter(k => !['fct_yonelme_orani', 'dahili_cevapsiz_oran', 'avg_fixed_call', 'avg_fct', 'avg_internal', 'avg_daily_fixed', 'avg_daily_fct', 'avg_daily_internal'].includes(k));
+            
+            data.forEach(person => {
+                const deptName = person.birim_mudurlugu_adi;
+                if (!departments[deptName]) {
+                    departments[deptName] = { birim_mudurlugu_adi: deptName, personnelCount: 0 };
+                    keysToSum.forEach(key => departments[deptName][key] = 0);
+                }
+                keysToSum.forEach(key => { if (person[key] !== undefined) { departments[deptName][key] += person[key]; } });
+                departments[deptName].personnelCount += 1;
+            });
+
+            Object.values(departments).forEach(dept => {
+                dept.avg_fixed_call = dept.giden_harici_adet_basarili > 0 ? (dept.giden_harici_sure / dept.giden_harici_adet_basarili) : 0;
+                dept.avg_fct = dept.fct_giden_cevaplanan_adet > 0 ? (dept.fct_giden_toplam_sure / dept.fct_giden_cevaplanan_adet) : 0;
+                dept.avg_internal = dept.gelen_dahili_adet_basarili > 0 ? (dept.gelen_dahili_sure / dept.gelen_dahili_adet_basarili) : 0;
+                
+                dept.avg_daily_fixed = (dept.giden_harici_toplam / dept.personnelCount) / wd;
+                dept.avg_daily_fct = (dept.fct_giden_toplam_adet / dept.personnelCount) / wd;
+                dept.avg_daily_internal = (dept.gelen_dahili_toplam / dept.personnelCount) / wd;
+            });
+
+            return Object.values(departments);
+        }
+
+        function getSortType(key) { return (columnMap[Object.keys(columnMap).find(k => columnMap[k][0] === key)] || [])[1] || 'number'; }
+
+        // --- DASHBOARD GÜNCELLEME ---
+        function updateDashboardViews(rawData, aggregatedData) {
+            if (!rawData || rawData.length === 0) return;
+            populateDepartmentSelect(rawData);
+            
+            updateKpiCards(aggregatedData);
+            
+            if (currentCallTypeFilter === 'MUSTERI_ARAMA') sortState.department.key = 'giden_harici_sure';
+            else if (currentCallTypeFilter === 'FCT_GIDEN') sortState.department.key = 'fct_giden_toplam_sure';
+            else if (currentCallTypeFilter === 'ORTALAMA_SURE') sortState.department.key = 'avg_fixed_call';
+            else sortState.department.key = 'genel_toplam_sure';
+            sortState.department.direction = 'DESC';
+            
+            sortTable('department', sortState.department.key, true);
+            resetIndividualChart(); 
+            
+            const filterTitle = filterDefinitions[currentCallTypeFilter].title;
+            document.getElementById('department-summary-title').textContent = `Müdürlük Detay - ${filterTitle}`;
+            document.getElementById('department-chart-container-title').textContent = `Müdürlük Bazında ${filterTitle}`;
+        }
+
+        populateDepartmentSelect = (data) => { const select = document.getElementById('department-select'); select.innerHTML = '<option value="">Lütfen Müdürlük Seçiniz</option>'; [...new Set(data.map(item => item.birim_mudurlugu_adi))].sort().forEach(dept => { const option = document.createElement('option'); option.value = dept; option.textContent = dept; select.appendChild(option); }); }
+        
+        function updateKpiCards(aggregatedData) {
+            if (!aggregatedData || aggregatedData.length === 0) return;
+            const config = filterDefinitions[currentCallTypeFilter].kpi_config;
+            if (!config) return;
+
+            config.forEach((cardConfig, index) => {
+                const cardIndex = index + 1;
+                const titleEl = document.getElementById(`kpi-${cardIndex}-title`);
+                const valueEl = document.getElementById(`kpi-${cardIndex}-value`);
+                const iconEl = document.getElementById(`kpi-${cardIndex}-icon`);
+                const barEl = document.getElementById(`kpi-${cardIndex}-bar`);
+
+                titleEl.textContent = cardConfig.title;
+                let totalValue = 0;
+                
+                if (currentCallTypeFilter === 'ORTALAMA_SURE') {
+                    let totalDuration = 0;
+                    let totalCount = 0;
+                    if (cardConfig.key === 'avg_fixed_call') {
+                         totalDuration = aggregatedData.reduce((sum, d) => sum + (d.giden_harici_sure || 0), 0);
+                         totalCount = aggregatedData.reduce((sum, d) => sum + (d.giden_harici_adet_basarili || 0), 0);
+                         totalValue = totalCount > 0 ? (totalDuration / totalCount) : 0;
+                         valueEl.textContent = formatTime(totalValue);
+                    } else if (cardConfig.key === 'avg_fct') {
+                         totalDuration = aggregatedData.reduce((sum, d) => sum + (d.fct_giden_toplam_sure || 0), 0);
+                         totalCount = aggregatedData.reduce((sum, d) => sum + (d.fct_giden_cevaplanan_adet || 0), 0);
+                         totalValue = totalCount > 0 ? (totalDuration / totalCount) : 0;
+                         valueEl.textContent = formatTime(totalValue);
+                    } else if (cardConfig.key.includes('avg_daily_')) {
+                        let tCalls = 0;
+                        let tPers = aggregatedData.reduce((s, d) => s + (d.personnelCount || 0), 0);
+                        let wd = getWorkingDays();
+                        if (cardConfig.key === 'avg_daily_fixed_kpi') tCalls = aggregatedData.reduce((s, d) => s + (d.giden_harici_toplam || 0), 0);
+                        else if (cardConfig.key === 'avg_daily_fct_kpi') tCalls = aggregatedData.reduce((s, d) => s + (d.fct_giden_toplam_adet || 0), 0);
+                        totalValue = (tPers > 0 && wd > 0) ? (tCalls / tPers) / wd : 0;
+                        valueEl.textContent = formatNumber(totalValue);
+                    }
+
+                } else if (cardConfig.type === 'percentage') {
+                    const totalNum = aggregatedData.reduce((sum, d) => sum + (d[cardConfig.numKey] || 0), 0);
+                    const totalDenom = aggregatedData.reduce((sum, d) => sum + (d[cardConfig.denomKey] || 0), 0);
+                    totalValue = totalDenom > 0 ? (totalNum / totalDenom) * 100 : 0;
+                    valueEl.textContent = formatPercentage(totalValue);
+                } else {
+                    totalValue = aggregatedData.reduce((sum, d) => sum + (d[cardConfig.key] || 0), 0);
+                    if (cardConfig.type === 'time') valueEl.textContent = formatTime(totalValue);
+                    else valueEl.textContent = formatNumber(totalValue);
+                }
+
+                iconEl.className = `fa-solid ${cardConfig.icon} text-6xl ${cardConfig.color}`;
+                barEl.className = `h-full w-full ${cardConfig.bg}`;
+            });
+        }
+
+        function sortTable(tableType, key, initialSort = false) {
+            const state = sortState[tableType];
+            let data = tableType === 'department' ? window.aggregatedDepartmentData : getIndividualData(window.performanceData);
+            if (!data) return;
+            let direction;
+            if (key === state.key) { direction = initialSort ? state.direction : (state.direction === 'ASC' ? 'DESC' : 'ASC'); } else { direction = (getSortType(key) === 'string') ? 'ASC' : 'DESC'; }
+            const sortType = getSortType(key);
+
+            data.forEach(d => {
+                if (key === 'fct_yonelme_orani') {
+                    if (d.giden_harici_adet_basarisiz === 0) d[key] = 100;
+                    else d[key] = (d.fct_giden_toplam_adet / d.giden_harici_adet_basarisiz) * 100;
+                }
+                else if (key === 'dahili_cevapsiz_oran') d[key] = (d.gelen_dahili_toplam > 0) ? (d.gelen_dahili_adet_basarisiz / d.gelen_dahili_toplam) * 100 : 0;
+            });
+
+            data.sort((a, b) => {
+                const aVal = a[key] || (sortType === 'string' ? '' : 0);
+                const bVal = b[key] || (sortType === 'string' ? '' : 0);
+                if (sortType === 'string') { return direction === 'ASC' ? aVal.localeCompare(bVal, 'tr') : bVal.localeCompare(aVal, 'tr'); }
+                return direction === 'ASC' ? aVal - bVal : bVal - aVal;
+            });
+            sortState[tableType] = { key, direction };
+            if (tableType === 'department') { renderDepartmentTable(data); renderActiveDepartmentChart(data); } else { renderIndividualTable(data); renderActiveIndividualChart(data); }
+        }
+
+        function getSortArrow(tableType, key) { const state = sortState[tableType]; return state.key !== key ? '' : (state.direction === 'ASC' ? ' ↑' : ' ↓'); }
+
+        // --- TABLO RENDER (DEPARTMENT) ---
+        function renderDepartmentTable(data) {
+            const filterDef = filterDefinitions[currentCallTypeFilter]; const keys = filterDef.table_keys; if (!keys || keys.length === 0) return;
+            const header = document.getElementById('department-table-header');
+            const headerTitles = keys.map(key => { const columnDef = Object.entries(columnMap).find(([title, [dataKey, type]]) => dataKey === key); let title = columnDef ? columnDef[0] : key; return `<th class="py-3 px-4 text-left cursor-pointer hover:bg-gray-100 transition-colors" onclick="sortTable('department', '${key}')">${title}${getSortArrow('department', key)}</th>`; }).join('');
+            header.innerHTML = `<tr>${headerTitles}</tr>`;
+            const tableBody = document.getElementById('department-performance-table-body'); tableBody.innerHTML = '';
+            const footer = document.getElementById('department-table-footer'); let totals = {}; keys.forEach(k => {if(getSortType(k) !== 'string') totals[k] = 0;});
+
+            data.forEach(dept => {
+                let row = tableBody.insertRow();
+                row.className = 'hover:bg-gray-50 transition-colors cursor-pointer border-b border-gray-100 last:border-0';
+                row.onclick = () => toggleDepartmentSelection(dept.birim_mudurlugu_adi);
+                if (selectedComparisonDepartments.includes(dept.birim_mudurlugu_adi)) { row.style.backgroundColor = 'rgba(255, 184, 28, 0.1)'; }
+
+                keys.forEach(key => {
+                    const cell = row.insertCell(); let val = dept[key]; const sortType = getSortType(key);
+                    
+                    if (key === 'fct_yonelme_orani') {
+                        if (dept.giden_harici_adet_basarisiz === 0) val = 100; else val = (dept.fct_giden_toplam_adet / dept.giden_harici_adet_basarisiz) * 100;
+                        cell.style.fontWeight = 'bold';
+                        cell.style.color = val >= 100 ? '#16a34a' : '#dc2626';
+                    }
+                    else if (key === 'dahili_cevapsiz_oran') val = (dept.gelen_dahili_toplam > 0) ? (dept.gelen_dahili_adet_basarisiz / dept.gelen_dahili_toplam) * 100 : 0;
+                    
+                    if (sortType === 'number' || sortType === 'percentage') { 
+                        if (!['fct_yonelme_orani', 'dahili_cevapsiz_oran'].includes(key) && !key.startsWith('avg_')) { 
+                            totals[key] += (val || 0); 
+                        } 
+                    }
+                    const isBold = key.startsWith('genel_toplam') || key === 'toplam_cagri_sayisi' || key === 'gelen_dahili_toplam';
+                    cell.className = cell.className + ` py-2 px-4 text-left ${isBold ? 'font-bold' : ''}`;
+                    
+                    if (sortType === 'string') cell.innerHTML = val; else if (key.includes('sure') || key.startsWith('avg_') && !key.includes('daily')) cell.innerHTML = formatTime(val); else if (sortType === 'percentage') cell.innerHTML = formatPercentage(val); else cell.innerHTML = formatNumber(val);
+                });
+            });
+
+            // Footer
+            if (currentCallTypeFilter === 'ORTALAMA_SURE') {
+                footer.innerHTML = '';
+            } else {
+                let footerHTML = `<tr>`;
+                keys.forEach((key, idx) => {
+                    if(idx===0) { footerHTML += `<td class="py-3 px-4 text-left">TOPLAM</td>`; return; }
+                    let totalVal = totals[key]; let formattedVal = '';
+                    
+                    if (key === 'fct_yonelme_orani') {
+                         const totalUnanswered = data.reduce((s, d) => s + (d.giden_harici_adet_basarisiz || 0), 0);
+                         const totalFct = data.reduce((s, d) => s + (d.fct_giden_toplam_adet || 0), 0);
+                         totalVal = totalUnanswered === 0 ? 100 : (totalFct / totalUnanswered) * 100;
+                         formattedVal = formatPercentage(totalVal);
+                    }
+                    else if (key === 'dahili_cevapsiz_oran') { const totalUnanswered = data.reduce((s, d) => s + (d.gelen_dahili_adet_basarisiz || 0), 0); const totalInc = data.reduce((s, d) => s + (d.gelen_dahili_toplam || 0), 0); totalVal = (totalInc > 0) ? (totalUnanswered / totalInc) * 100 : 0; formattedVal = formatPercentage(totalVal); }
+                    else if (getSortType(key) === 'string') formattedVal = ''; else if (key.includes('sure')) formattedVal = formatTime(totalVal); else formattedVal = formatNumber(totalVal);
+                    footerHTML += `<td class="py-3 px-4 text-left">${formattedVal}</td>`;
+                });
+                footer.innerHTML = footerHTML + '</tr>';
+            }
+        }
+
+        // --- TABLO RENDER (INDIVIDUAL) ---
+        function getIndividualData(data) { const selectedDepartment = document.getElementById('department-select').value; return selectedDepartment ? data.filter(item => item.birim_mudurlugu_adi === selectedDepartment) : []; }
+        function renderIndividualTable(data) {
+            const filterDef = filterDefinitions[currentCallTypeFilter]; const keys = filterDef.individual_table_keys; if (!keys || keys.length === 0) return;
+            const header = document.getElementById('individual-table-header');
+            const headerTitles = keys.map(key => { const columnDef = Object.entries(columnMap).find(([title, [dataKey, type]]) => dataKey === key); let title = columnDef ? columnDef[0] : key; return `<th class="py-3 px-4 text-left cursor-pointer hover:bg-gray-100 transition-colors" onclick="sortTable('individual', '${key}')">${title}${getSortArrow('individual', key)}</th>`; }).join('');
+            header.innerHTML = `<tr>${headerTitles}</tr>`;
+            const tableBody = document.getElementById('individual-performance-table-body'); tableBody.innerHTML = '';
+            if (data.length === 0) { tableBody.innerHTML = `<tr><td colspan="${keys.length}" class="text-center py-4">Lütfen bir müdürlük seçin.</td></tr>`; return; }
+
+            data.forEach(person => {
+                let row = tableBody.insertRow();
+                row.className = 'hover:bg-gray-50 transition-colors cursor-pointer border-b border-gray-100 last:border-0';
+                row.onclick = () => togglePersonnelSelection(person.calisan_adi_soyadi);
+                if (selectedPersonnelNames.includes(person.calisan_adi_soyadi)) { row.style.backgroundColor = 'rgba(255, 184, 28, 0.1)'; }
+
+                keys.forEach(key => {
+                    const cell = row.insertCell(); let val = person[key]; const sortType = getSortType(key);
+                    
+                    if (key === 'fct_yonelme_orani') {
+                        if (person.giden_harici_adet_basarisiz === 0) val = 100; else val = (person.fct_giden_toplam_adet / person.giden_harici_adet_basarisiz) * 100;
+                        cell.style.fontWeight = 'bold';
+                        cell.style.color = val >= 100 ? '#16a34a' : '#dc2626'; 
+                    }
+                    else if (key === 'dahili_cevapsiz_oran') val = (person.gelen_dahili_toplam > 0) ? (person.gelen_dahili_adet_basarisiz / person.gelen_dahili_toplam) * 100 : 0;
+                    
+                    const isBold = key.startsWith('genel_toplam') || key === 'toplam_cagri_sayisi' || key === 'gelen_dahili_toplam';
+                    cell.className = cell.className + ` py-2 px-4 text-left ${isBold ? 'font-bold' : ''}`;
+                    if (sortType === 'string') cell.innerHTML = val; else if (key.includes('sure') || key.startsWith('avg_') && !key.includes('daily')) cell.innerHTML = formatTime(val); else if (sortType === 'percentage') cell.innerHTML = formatPercentage(val); else cell.innerHTML = formatNumber(val);
+                });
+            });
+        }
+
+        // --- GRAFİKLER (Charts) ---
+        function renderActiveDepartmentChart(data) {
+            const chartData = data || window.aggregatedDepartmentData; if (!chartData) return;
+            const metric = departmentChartMetric; 
+            
+            if (currentCallTypeFilter === 'ORTALAMA_SURE') {
+                renderAverageComparisonChart(chartData, 'department-chart', 'birim_mudurlugu_adi');
+                document.getElementById('department-chart-back-button').classList.add('hidden');
+                return;
+            }
+
+            if (departmentChartState === 'DRILLDOWN' && selectedComparisonDepartments.length > 0) { renderDepartmentStackedBarChart(); return; }
+            departmentChartState = 'OVERVIEW'; document.getElementById('department-chart-back-button').classList.add('hidden');
+
+            if (currentCallTypeFilter === 'FCT_GIDEN') {
+                if (metric === 'SURE') renderGenericDepartmentBarChart(chartData, 'fct_giden_toplam_sure', 'FCT Giden Süre', CHART_COLORS[0]);
+                else renderDepartmentFctGidenOverviewBarChart(chartData);
+            } else if (currentCallTypeFilter === 'MUSTERI_ARAMA') {
+                 if (metric === 'SURE') { renderGenericDepartmentBarChart(chartData, 'giden_harici_sure', 'Sabit Hattan Müşteri Arama Süresi', CHART_COLORS[0]);
+                 } else renderDepartmentAdetChart(chartData);
+            } else if (currentCallTypeFilter === 'DAHILI') {
+                 if (metric === 'SURE') {
+                    renderGenericDepartmentBarChart(chartData, 'gelen_dahili_sure', 'Şube/Birimden Gelen Arama Süresi', CHART_COLORS[0]);
+                 } else renderDepartmentAdetChart(chartData);
+            } else {
+                if (metric === 'SURE') renderDepartmentSureChart(chartData); else renderDepartmentAdetChart(chartData); 
+            }
+        }
+
+        function renderDepartmentFctGidenOverviewBarChart(data) {
+            const ctx = document.getElementById('department-chart').getContext('2d'); if (departmentChart) departmentChart.destroy();
+            const values = data.map(d => d.fct_giden_toplam_adet);
+            departmentChart = new Chart(ctx, { type: 'bar', data: { labels: data.map(d => d.birim_mudurlugu_adi), datasets: [{ label: 'FCT Giden Adet', data: values, backgroundColor: CHART_COLORS[7] }] }, 
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: {display:false}, tooltip: {callbacks: chartTooltipCallback}, datalabels: commonDataLabelStyle }, onClick: (e, els) => { if(els.length) { departmentChartState = 'DRILLDOWN'; selectedComparisonDepartments = [departmentChart.data.labels[els[0].index]]; renderActiveDepartmentChart(); renderDepartmentTable(window.aggregatedDepartmentData); } } } });
+        }
+        function renderDepartmentAdetChart(data) { const ctx = document.getElementById('department-chart').getContext('2d'); if (departmentChart) departmentChart.destroy(); const filterDef = filterDefinitions[currentCallTypeFilter]; const dataValues = data.map(d => (filterDef.adet_basarili_keys||[]).concat(filterDef.adet_basarisiz_keys||[]).concat(currentCallTypeFilter === 'FCT_GIDEN' ? ['fct_giden_toplam_adet'] : []).reduce((s,k)=>s+(d[k]||0),0)); departmentChart = new Chart(ctx, { type: 'doughnut', data: { labels: data.map(d=>d.birim_mudurlugu_adi), datasets: [{ data: dataValues, backgroundColor: CHART_COLORS }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: {position:'right', labels:{usePointStyle:true}}, datalabels: donutDataLabelConfig, tooltip: {callbacks: chartTooltipCallback} }, onClick: handleAdetPieChartClick } }); }
+        function renderDepartmentSureChart(data) { const ctx = document.getElementById('department-chart').getContext('2d'); if (departmentChart) departmentChart.destroy(); const filterDef = filterDefinitions[currentCallTypeFilter]; const dataValues = data.map(d => (filterDef.sure_keys||[]).reduce((s,k)=>s+(d[k]||0),0)); departmentChart = new Chart(ctx, { type: 'doughnut', data: { labels: data.map(d=>d.birim_mudurlugu_adi), datasets: [{ data: dataValues, backgroundColor: CHART_COLORS }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: {position:'right', labels:{usePointStyle:true}}, datalabels: donutDataLabelConfig, tooltip: {callbacks: chartTooltipCallback} }, onClick: handleSurePieChartClick } }); }
+        function handleAdetPieChartClick(e, els) { if(els.length) { departmentChartState='DRILLDOWN'; selectedComparisonDepartments=[departmentChart.data.labels[els[0].index]]; renderActiveDepartmentChart(); renderDepartmentTable(window.aggregatedDepartmentData); } }
+        function handleSurePieChartClick(e, els) { if(els.length) { departmentChartState='DRILLDOWN'; selectedComparisonDepartments=[departmentChart.data.labels[els[0].index]]; renderActiveDepartmentChart(); renderDepartmentTable(window.aggregatedDepartmentData); } }
+
+        function calculatePresidencyAverages() { const allPersonnel = window.performanceData; const count = allPersonnel.length; if (count === 0) return null; const avg = { birim_mudurlugu_adi: 'Başkanlık Ort. (P.Başı)', isAverage: true, personnelCount: count }; const keys = Object.keys(columnMap).filter(k => columnMap[k][1] === 'number').map(k => columnMap[k][0]); keys.forEach(key => { if(!key.includes('orani')) avg[key] = allPersonnel.reduce((sum, p) => sum + (p[key] || 0), 0) / count; }); return avg; }
+        function calculateDepartmentAverages(departmentName) { const personnel = window.performanceData.filter(p=>p.birim_mudurlugu_adi===departmentName); const count = personnel.length; if (count===0) return null; const avg = { calisan_adi_soyadi: 'Müdürlük Ortalaması', isAverage: true, isDepartment: true }; const keys = Object.keys(columnMap).filter(k=>columnMap[k][1]==='number').map(k=>columnMap[k][0]); keys.forEach(key => { if(!key.includes('orani')) avg[key] = personnel.reduce((sum, p) => sum + (p[key] || 0), 0) / count; }); return avg; }
+        function calculatePresidencyAveragesForIndividualChart() { const allPersonnel = window.performanceData; const count = allPersonnel.length; if (count===0) return null; const avg = { calisan_adi_soyadi: 'Başkanlık Ortalaması', isAverage: true, isPresidency: true }; const keys = Object.keys(columnMap).filter(k=>columnMap[k][1]==='number').map(k=>columnMap[k][0]); keys.forEach(key => { if(!key.includes('orani')) avg[key] = allPersonnel.reduce((sum, p) => sum + (p[key] || 0), 0) / count; }); return avg; }
+
+        function renderDepartmentStackedBarChart() {
+            document.getElementById('department-chart-back-button').classList.remove('hidden'); document.getElementById('department-chart-back-button').textContent = 'Karşılaştırmayı Temizle';
+            const presAvg = calculatePresidencyAverages();
+            const plotData = [presAvg, ...selectedComparisonDepartments.map(n => window.aggregatedDepartmentData.find(p => p.birim_mudurlugu_adi === n))].filter(Boolean);
+            const filterDef = filterDefinitions[currentCallTypeFilter];
+            const ctx = document.getElementById('department-chart').getContext('2d'); if (departmentChart) departmentChart.destroy();
+            let keysToRender = departmentChartMetric === 'SURE' ? (filterDef.drilldown_keys_sure || filterDef.sure_keys || []) : (filterDef.drilldown_keys || []);
+            const datasets = keysToRender.map((key, i) => { const colDef = Object.entries(columnMap).find(([t, [k, type]]) => k === key); return { label: colDef ? colDef[0] : key, data: plotData.map(d => (!d.isAverage && d.personnelCount > 0) ? (d[key]||0)/d.personnelCount : (d[key]||0)), backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }; });
+            departmentChart = new Chart(ctx, { type: 'bar', data: { labels: plotData.map(d=>d.birim_mudurlugu_adi), datasets }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: {position:'top'}, tooltip: {callbacks: chartTooltipCallback}, datalabels: { color:'white', formatter:(v) => departmentChartMetric === 'SURE' ? (v>0?formatTime(v):null) : (v>0?formatNumber(v):null) } }, scales: { x:{stacked:true}, y:{beginAtZero:true, stacked:true, ticks: { callback: function(value) { return departmentChartMetric === 'SURE' ? formatTime(value) : formatNumber(value); } } } } } });
+        }
+
+        function renderAverageComparisonChart(data, canvasId, labelKey) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            let chartInstance = (canvasId === 'department-chart') ? departmentChart : individualChart;
+            if (chartInstance) chartInstance.destroy();
+
+            const metric = (canvasId === 'department-chart') ? departmentChartMetric : individualChartMetric;
+            let displayData = data;
+            if (canvasId === 'individual-chart-canvas' && data.length > 20) {
+                 displayData = data.slice(0, 20); 
+            }
+
+            const labels = displayData.map(d => d[labelKey]);
+            let datasets;
+
+            if (metric === 'SURE') {
+                datasets = [
+                    { label: 'Sabit Hat Müşteri Arama (Ort. Süre)', data: displayData.map(d => d.avg_fixed_call), backgroundColor: '#F59E0B' },
+                    { label: 'FCT (Ort. Süre)', data: displayData.map(d => d.avg_fct), backgroundColor: '#10B981' },
+                    { label: 'Şube Birim Karşılama (Ort. Süre)', data: displayData.map(d => d.avg_internal), backgroundColor: '#8B5CF6' }
+                ];
+            } else {
+                datasets = [
+                    { label: 'Sabit Hat Müşteri Arama (Günlük Ort. Adet)', data: displayData.map(d => d.avg_daily_fixed), backgroundColor: '#F59E0B' },
+                    { label: 'FCT (Günlük Ort. Adet)', data: displayData.map(d => d.avg_daily_fct), backgroundColor: '#10B981' },
+                    { label: 'Şube Birim Karşılama (Günlük Ort. Adet)', data: displayData.map(d => d.avg_daily_internal), backgroundColor: '#8B5CF6' }
+                ];
+            }
+
+            const newChart = new Chart(ctx, {
+                type: 'bar',
+                data: { labels: labels, datasets: datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top' }, tooltip: { callbacks: chartTooltipCallback }, datalabels: { display: false } },
+                    scales: { y: { beginAtZero: true, ticks: { callback: function(value) { return metric === 'SURE' ? formatTime(value) : formatNumber(value); } } } }
+                }
+            });
+
+            if (canvasId === 'department-chart') departmentChart = newChart;
+            else individualChart = newChart;
+        }
+
+        // --- INDIVIDUAL CHART ---
+        function resetIndividualChart() { individualChartState = 'OVERVIEW'; selectedPersonnelNames = []; document.getElementById('individual-chart-back-button').classList.add('hidden'); if (currentCallTypeFilter === 'MUSTERI_ARAMA') sortState.individual.key = 'giden_harici_sure'; else if (currentCallTypeFilter === 'FCT_GIDEN') sortState.individual.key = 'fct_giden_toplam_sure'; else if (currentCallTypeFilter === 'ORTALAMA_SURE') sortState.individual.key = 'avg_fixed_call'; else sortState.individual.key = 'genel_toplam_sure'; sortTable('individual', sortState.individual.key, true); }
+        function renderActiveIndividualChart(data) {
+            const chartData = data || getIndividualData(window.performanceData || []); const selectedDept = document.getElementById('department-select').value;
+            const filterTitle = filterDefinitions[currentCallTypeFilter].title; document.getElementById('individual-chart-title').textContent = selectedDept ? `${selectedDept} - ${filterTitle}` : 'Personel İstatistikleri';
+            const metric = individualChartMetric;
+            
+            if (currentCallTypeFilter === 'ORTALAMA_SURE') {
+                if(chartData.length > 0) {
+                     renderAverageComparisonChart(chartData, 'individual-chart-canvas', 'calisan_adi_soyadi');
+                }
+                document.getElementById('individual-chart-back-button').classList.add('hidden');
+                return;
+            }
+
+            if (individualChartState === 'DRILLDOWN' && selectedPersonnelNames.length > 0) { renderIndividualStackedBarChart(); return; }
+            individualChartState = 'OVERVIEW'; document.getElementById('individual-chart-back-button').classList.add('hidden');
+            if (currentCallTypeFilter === 'FCT_GIDEN') { if (metric === 'SURE') renderGenericIndividualBarChart(chartData, 'fct_giden_toplam_sure', 'FCT Giden Süre', CHART_COLORS[1]); else renderIndividualFctGidenOverviewBarChart(chartData); }
+            else if (currentCallTypeFilter === 'MUSTERI_ARAMA') { if (metric === 'SURE') { renderGenericIndividualBarChart(chartData, 'giden_harici_sure', 'Sabit Hattan Müşteri Arama Süresi', CHART_COLORS[1]); } else renderIndividualOverviewDoughnutChart(chartData); }
+            else if (currentCallTypeFilter === 'DAHILI') { if (metric === 'SURE') renderGenericIndividualBarChart(chartData, 'gelen_dahili_sure', 'Şube/Birimden Gelen Arama Süresi', CHART_COLORS[1]); else renderIndividualOverviewDoughnutChart(chartData); }
+            else renderIndividualOverviewDoughnutChart(chartData);
+        }
+
+        function renderIndividualFctGidenOverviewBarChart(data) { const ctx = document.getElementById('individual-chart-canvas').getContext('2d'); if (individualChart) individualChart.destroy(); const values = data.map(p => p.fct_giden_toplam_adet); individualChart = new Chart(ctx, { type: 'bar', data: { labels: data.map(p=>p.calisan_adi_soyadi), datasets: [{ label: 'FCT Giden Adet', data: values, backgroundColor: CHART_COLORS[7] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: {legend:{display:false}, tooltip:{callbacks:chartTooltipCallback}, datalabels:commonDataLabelStyle}, onClick: handleIndividualFctClick } }); }
+        function handleIndividualFctClick(e, els) { if(els.length) { individualChartState='DRILLDOWN'; selectedPersonnelNames=[individualChart.data.labels[els[0].index]]; renderActiveIndividualChart(); renderIndividualTable(getIndividualData(window.performanceData)); } }
+        function renderIndividualOverviewDoughnutChart(data) { const ctx = document.getElementById('individual-chart-canvas').getContext('2d'); if (individualChart) individualChart.destroy(); const filterDef=filterDefinitions[currentCallTypeFilter]; const vals = data.map(p => (individualChartMetric==='ADET' ? ((filterDef.adet_basarili_keys||[]).concat(filterDef.adet_basarisiz_keys||[])).reduce((s,k)=>s+(p[k]||0),0) : (filterDef.sure_keys||[]).reduce((s,k)=>s+(p[k]||0),0))); individualChart = new Chart(ctx, { type: 'doughnut', data: { labels: data.map(p=>p.calisan_adi_soyadi), datasets: [{ data: vals, backgroundColor: CHART_COLORS }] }, options: { responsive: true, maintainAspectRatio: false, plugins: {legend:{position:'right', labels:{usePointStyle:true}}, datalabels:donutDataLabelConfig, tooltip:{callbacks:chartTooltipCallback}}, onClick: handleIndividualFctClick } }); }
+        function renderIndividualStackedBarChart() { document.getElementById('individual-chart-back-button').classList.remove('hidden'); const selectedDept = document.getElementById('department-select').value; const deptAvg = calculateDepartmentAverages(selectedDept); const presAvg = calculatePresidencyAveragesForIndividualChart(); const plotData = [presAvg, deptAvg, ...selectedPersonnelNames.map(n => window.performanceData.find(p => p.calisan_adi_soyadi === n))].filter(Boolean); const filterDef = filterDefinitions[currentCallTypeFilter]; const ctx = document.getElementById('individual-chart-canvas').getContext('2d'); if (individualChart) individualChart.destroy(); let keysToRender = individualChartMetric === 'SURE' ? (filterDef.drilldown_keys_sure || filterDef.sure_keys || []) : (filterDef.drilldown_keys || []); const datasets = keysToRender.map((key, i) => { const colDef = Object.entries(columnMap).find(([t, [k, type]]) => k === key); return { label: colDef ? colDef[0] : key, data: plotData.map(p => p[key]||0), backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }; }); individualChart = new Chart(ctx, { type: 'bar', data: { labels: plotData.map(p=>p.calisan_adi_soyadi), datasets }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: {position:'top'}, tooltip: {callbacks: chartTooltipCallback}, datalabels: { color:'white', formatter:(v) => individualChartMetric === 'SURE' ? (v>0?formatTime(v):null) : (v>0?formatNumber(v):null) } }, scales: { x:{stacked:true}, y:{beginAtZero:true, stacked:true, ticks: { callback: function(value) { return individualChartMetric === 'SURE' ? formatTime(value) : formatNumber(value); } } } } } }); }
+        function renderGenericDepartmentBarChart(data, key, label, color) { const ctx = document.getElementById('department-chart').getContext('2d'); if (departmentChart) departmentChart.destroy(); const values = data.map(d => d[key] || 0); departmentChart = new Chart(ctx, { type: 'bar', data: { labels: data.map(d => d.birim_mudurlugu_adi), datasets: [{ label: label, data: values, backgroundColor: color || CHART_COLORS[0] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: chartTooltipCallback }, datalabels: { color: '#1e293b', anchor: 'end', align: 'top', font: { weight: 'bold', size: 10 }, formatter: (value) => formatTime(value) } }, onClick: (e, els) => { if (els.length) { departmentChartState = 'DRILLDOWN'; selectedComparisonDepartments = [departmentChart.data.labels[els[0].index]]; renderActiveDepartmentChart(); renderDepartmentTable(window.aggregatedDepartmentData); } } } }); }
+        function renderGenericIndividualBarChart(data, key, label, color) { const ctx = document.getElementById('individual-chart-canvas').getContext('2d'); if (individualChart) individualChart.destroy(); const values = data.map(p => p[key] || 0); individualChart = new Chart(ctx, { type: 'bar', data: { labels: data.map(p => p.calisan_adi_soyadi), datasets: [{ label: label, data: values, backgroundColor: color || CHART_COLORS[1] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: chartTooltipCallback }, datalabels: { color: '#1e293b', anchor: 'end', align: 'top', font: { weight: 'bold', size: 10 }, formatter: (value) => formatTime(value) } }, onClick: handleIndividualFctClick } }); }
+
+        function resetDepartmentChart() { departmentChartState = 'OVERVIEW'; selectedComparisonDepartments = []; document.getElementById('department-chart-back-button').classList.add('hidden'); if (window.performanceData) updateDashboardViews(window.performanceData, window.aggregatedDepartmentData); }
+        function toggleDepartmentSelection(name) { const idx = selectedComparisonDepartments.indexOf(name); if(idx>-1) selectedComparisonDepartments.splice(idx,1); else selectedComparisonDepartments.push(name); departmentChartState = selectedComparisonDepartments.length ? 'DRILLDOWN' : 'OVERVIEW'; renderActiveDepartmentChart(); renderDepartmentTable(window.aggregatedDepartmentData); }
+        function clearIndividualChartSelection() { resetIndividualChart(); }
+        function togglePersonnelSelection(name) { const idx = selectedPersonnelNames.indexOf(name); if(idx>-1) selectedPersonnelNames.splice(idx,1); else selectedPersonnelNames.push(name); individualChartState = selectedPersonnelNames.length ? 'DRILLDOWN' : 'OVERVIEW'; renderActiveIndividualChart(); renderIndividualTable(getIndividualData(window.performanceData)); }
+
+        // --- DIŞA AKTAR VE MOD AYARLAMA ---
+        function exportReport() {
+            if (!window.performanceData || window.performanceData.length === 0) {
+                alert("Dışa aktarmadan önce lütfen veri yükleyin.");
+                return;
+            }
+
+            const month = document.getElementById('select-month').value;
+            const year = document.getElementById('select-year').value;
+            const workDays = getWorkingDays();
+            const dateObj = { month, year };
+
+            let htmlContent = document.documentElement.outerHTML;
+
+            const scriptRegex = /<script id="embedded-data-script">([\s\S]*?)<\/script>/;
+            
+            const newScriptContent = `
+    <script id="embedded-data-script">
+        window.APP_MODE = 'VIEWER'; 
+        window.EMBEDDED_DATA = ${JSON.stringify(window.performanceData)}; 
+        window.EMBEDDED_DATE = ${JSON.stringify(dateObj)};
+        window.EMBEDDED_WORK_DAYS = ${workDays};
+    <\/script>`;
+
+            htmlContent = htmlContent.replace(scriptRegex, newScriptContent);
+
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `KRTB_Cagri_Analiz_${month}_${year}.html`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function applyModeSettings() {
+            if (window.APP_MODE === 'VIEWER' && window.EMBEDDED_DATA) {
+                const adminElements = document.querySelectorAll('.admin-visible');
+                adminElements.forEach(el => { el.style.setProperty('display', 'none', 'important'); });
+                
+                const viewerElements = document.querySelectorAll('.viewer-visible');
+                viewerElements.forEach(el => { el.style.display = 'block'; });
+
+                if (window.EMBEDDED_DATE) {
+                    const dateStr = `${window.EMBEDDED_DATE.month} ${window.EMBEDDED_DATE.year}`;
+                    const viewerDateText = document.getElementById('viewer-date-text');
+                    if(viewerDateText) viewerDateText.textContent = dateStr;
+                    
+                    const badge = document.getElementById('report-date-badge');
+                    if(badge) { badge.classList.remove('hidden'); badge.style.display = 'block'; badge.textContent = `RAPOR DÖNEMİ: ${dateStr}`; }
+                }
+
+                if (window.EMBEDDED_WORK_DAYS) {
+                    const wdText = document.getElementById('viewer-work-days-text');
+                    if(wdText) wdText.textContent = window.EMBEDDED_WORK_DAYS;
+                }
+
+                window.performanceData = window.EMBEDDED_DATA;
+                window.aggregatedDepartmentData = aggregateDepartmentData(window.performanceData);
+                resetDepartmentChart();
+            } else {
+                document.querySelectorAll('.viewer-visible').forEach(el => { el.style.display = 'none'; });
+            }
+        }
+
+        // --- INIT ---
+        document.addEventListener('DOMContentLoaded', () => {
+            Chart.register(ChartDataLabels);
+            const savedTheme = localStorage.getItem('appTheme') || 'day';
+            setTheme(savedTheme);
+
+            applyModeSettings();
+
+            document.getElementById('department-select').addEventListener('change', () => { if (window.performanceData) resetIndividualChart(); });
+            document.getElementById('call-type-filter-group').addEventListener('change', (event) => { if (event.target.name === 'callTypeFilter') { currentCallTypeFilter = event.target.value; if (window.performanceData) resetDepartmentChart(); } });
+            document.getElementById('department-chart-type-group').addEventListener('change', (event) => { if (event.target.name === 'departmentChartType') { departmentChartMetric = event.target.value; if (window.aggregatedDepartmentData) renderActiveDepartmentChart(window.aggregatedDepartmentData); } });
+            document.getElementById('individual-chart-type-group').addEventListener('change', (event) => { if (event.target.name === 'individualChartType') { individualChartMetric = event.target.value; if (window.performanceData) renderActiveIndividualChart(); } });
+        });
+    </script>
+
+</body></html>
