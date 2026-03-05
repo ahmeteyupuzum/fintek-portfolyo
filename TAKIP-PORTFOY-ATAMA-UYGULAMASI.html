@@ -1,0 +1,1669 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Takip Portföy ve Şube Dağıtım</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; transition: background-color 0.3s, color 0.3s; }
+        
+        /* Tema Ayarları */
+        body.theme-dark { background-color: #111827; color: #f3f4f6; }
+        body.theme-dark .bg-white { background-color: #1f2937 !important; border-color: #374151 !important; }
+        body.theme-dark .bg-gray-50 { background-color: #111827 !important; border-color: #374151 !important; }
+        body.theme-dark .bg-indigo-50 { background-color: #312e81 !important; border-color: #4338ca !important; }
+        body.theme-dark .bg-purple-50 { background-color: #4c1d95 !important; border-color: #5b21b6 !important; }
+        body.theme-dark .bg-orange-50 { background-color: #7c2d12 !important; border-color: #9a3412 !important; }
+        body.theme-dark .text-gray-800 { color: #f9fafb !important; }
+        body.theme-dark .text-gray-600 { color: #d1d5db !important; }
+        body.theme-dark .text-purple-800 { color: #e9d5ff !important; }
+        body.theme-dark .text-purple-600 { color: #d8b4fe !important; }
+        body.theme-dark .text-indigo-900 { color: #e0e7ff !important; }
+        body.theme-dark .border-gray-100, body.theme-dark .border-gray-200, body.theme-dark .border-gray-300 { border-color: #374151 !important; }
+        body.theme-dark select, body.theme-dark input[type="text"] { background-color: #374151; color: white; border-color: #4b5563; }
+        body.theme-dark .bg-yellow-50 { background-color: #422006 !important; border-color: #713f12 !important; }
+        body.theme-dark .text-yellow-800 { color: #fef08a !important; }
+        body.theme-dark .summary-row:hover { background-color: #374151 !important; }
+        
+        body.theme-grey { background-color: #e5e5e5; color: #333; }
+        
+        /* Custom UI Elements */
+        .custom-checkbox { appearance: none; width: 1.25rem; height: 1.25rem; border: 2px solid #cbd5e1; border-radius: 0.25rem; background-color: white; cursor: pointer; position: relative; flex-shrink: 0; }
+        .custom-checkbox:checked { background-color: #2563eb; border-color: #2563eb; }
+        .custom-checkbox:checked::after { content: '✓'; color: white; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-size: 0.75rem; font-weight: bold; }
+        
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
+
+        .modal-overlay { background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(2px); }
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Başarı Animasyonu */
+        .checkmark-circle { stroke-dasharray: 166; stroke-dashoffset: 166; stroke-width: 2; stroke-miterlimit: 10; stroke: #22c55e; fill: none; animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards; }
+        .checkmark { width: 80px; height: 80px; border-radius: 50%; display: block; stroke-width: 2; stroke: #fff; stroke-miterlimit: 10; margin: 10% auto; box-shadow: inset 0px 0px 0px #22c55e; animation: fill .4s ease-in-out .4s forwards, scale .3s ease-in-out .9s both; }
+        .checkmark__check { transform-origin: 50% 50%; stroke-dasharray: 48; stroke-dashoffset: 48; animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards; }
+        @keyframes stroke { 100% { stroke-dashoffset: 0; } }
+        @keyframes scale { 0%, 100% { transform: none; } 50% { transform: scale3d(1.1, 1.1, 1); } }
+        @keyframes fill { 100% { box-shadow: inset 0px 0px 0px 50px #22c55e; } }
+
+        /* Edit Mode Highlight */
+        .edit-mode-active { border: 2px solid #f59e0b !important; background-color: #fffbeb !important; }
+        .edit-mode-blur { opacity: 0.5; pointer-events: none; filter: grayscale(100%); }
+        
+        /* Pulse Animation for Auto Button */
+        @keyframes pulse-soft {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4); }
+            50% { box-shadow: 0 0 0 10px rgba(37, 99, 235, 0); }
+        }
+        .btn-pulse { animation: pulse-soft 2s infinite; }
+        
+        .needs-review-row { background-color: #fef2f2 !important; border-left: 4px solid #ef4444 !important; }
+        .needs-review-row:hover { background-color: #fee2e2 !important; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 relative h-screen flex flex-col overflow-hidden fade-in" id="app-body">
+
+    <div class="bg-white shadow-sm z-10 shrink-0 border-b border-gray-200">
+        <div class="container mx-auto px-6 py-3 max-w-[98%]">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center gap-4"> 
+                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="64" height="64" zoomAndPan="magnify" viewBox="0 0 48 48" preserveAspectRatio="xMidYMid meet" version="1.0" class="shrink-0">
+                        <defs>
+                            <clipPath id="7590b00e14"><path d="M 1 8.074219 L 47.507812 8.074219 L 47.507812 38.929688 L 1 38.929688 Z M 1 8.074219 " clip-rule="nonzero"/></clipPath>
+                        </defs>
+                        <g clip-path="url(#7590b00e14)">
+                            <path fill="#fbc34e" d="M 46.933594 16.664062 C 47.515625 13.335938 44.453125 8.699219 36.109375 8.699219 L 15.382812 8.699219 C 9.703125 8.699219 6.140625 12.597656 5.507812 16.527344 L 1.304688 38.636719 C 4.996094 38.625 29.320312 38.636719 29.269531 38.636719 L 30.851562 38.636719 C 39.5625 38.585938 44.578125 36.628906 45.496094 30.304688 C 46.101562 26.050781 42.367188 23.300781 39.3125 22.71875 C 42.402344 22.15625 46.152344 21.105469 46.933594 16.664062 Z M 46.933594 16.664062 " fill-opacity="1" fill-rule="nonzero"/>
+                        </g>
+                        <path fill="#ffffff" d="M 27.46875 17.960938 C 25.355469 20.640625 17.671875 29.933594 16.117188 31.695312 C 12.648438 35.644531 5.492188 35.054688 5.445312 34.957031 C 5.445312 34.953125 8.023438 22.75 8.859375 19.308594 C 11.152344 9.957031 19.0625 12.171875 19.0625 12.171875 C 19.0625 12.171875 16.953125 12.472656 15.464844 14.371094 C 13.957031 16.296875 12.246094 25.671875 11.28125 30.054688 C 15.8125 24.753906 22.023438 17.921875 23.082031 16.640625 C 27.597656 11.175781 34.667969 11.929688 34.667969 11.929688 C 34.667969 11.929688 31.914062 12.3125 27.46875 17.960938 Z M 27.46875 17.960938 " fill-opacity="1" fill-rule="nonzero"/>
+                    </svg>
+                    <div>   
+                        <h1 class="text-xl font-bold text-gray-800 tracking-tight">Takip Portföy Atama Sistemi</h1>
+                        <p class="text-[11px] text-gray-500 mt-0.5">Şube -> Hedef/Stok Analizi -> Asil Personel -> Yedek -> Çıktı</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <span class="text-xs font-semibold bg-gray-800 text-yellow-500 px-3 py-1.5 rounded-md border border-blue-100">
+                        Risk Tasfiye Koordinasyon Müdürlüğü
+                    </span>
+                    <div class="flex bg-gray-100 rounded-md p-0.5 border border-gray-200">
+                         <button onclick="setTheme('light')" class="p-1.5 rounded hover:bg-white hover:shadow-sm text-yellow-600 transition" title="Açık Mod">☀</button>
+                         <button onclick="setTheme('dark')" class="p-1.5 rounded hover:bg-gray-700 hover:text-white transition" title="Koyu Mod">☾</button>
+                         <button onclick="setTheme('grey')" class="p-1.5 rounded hover:bg-gray-300 transition" title="Gri Mod">○</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="edit-mode-banner" class="hidden bg-yellow-500 text-white text-center py-2 text-xs font-bold shadow-md z-20 sticky top-0 animate-pulse">
+        DÜZENLEME MODU AKTİF: <span id="editing-user-name" class="underline text-black"></span> 
+        <span class="font-normal opacity-90 ml-2">(Sol listeden şube seçerek direkt ekleyebilirsiniz)</span>
+    </div>
+
+    <div class="flex-grow overflow-hidden p-3 md:p-4 container mx-auto max-w-[98%]">
+        
+        <main id="main-content" class="flex flex-col lg:flex-row gap-4 h-full">
+
+            <div class="lg:w-[35%] w-full bg-white p-4 rounded-xl shadow-md border border-gray-100 flex flex-col h-full transition-all" id="left-panel">
+                
+                <div class="flex justify-between items-center mb-2 shrink-0">
+                    <h2 class="text-base font-bold text-gray-800">Şube Listesi</h2>
+                    <span class="text-[10px] font-bold bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full" id="total-branch-badge">0 Şube</span>
+                </div>
+                
+                <div class="space-y-2 shrink-0 mb-2">
+                    <select id="select-il" class="w-full p-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 transition-all text-gray-700">
+                        <option value="">İl Filtrele...</option>
+                    </select>
+
+                    <div id="filter-tag-area" class="flex flex-wrap gap-1 min-h-[0px]"></div>
+
+                    <div class="pt-2 border-t border-gray-100">
+                        <div class="flex items-center mb-2 justify-between">
+                            <div class="flex items-center">
+                                <input type="checkbox" id="filter-show-selected" class="custom-checkbox mr-2 w-4 h-4">
+                                <label for="filter-show-selected" class="text-xs font-medium text-gray-600 cursor-pointer hover:text-gray-900">Seçilenleri Göster</label>
+                            </div>
+                        </div>
+                        <div class="relative">
+                            <input type="text" id="branch-search-input" placeholder="Şube adı, kodu ara..." 
+                                class="w-full pl-3 p-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                        </div>
+                    </div>
+
+                    <div id="select-all-container" class="pb-1 bg-blue-50/50 p-1.5 rounded border border-blue-100/50">
+                        <label class="cursor-pointer flex items-center">
+                            <input type="checkbox" id="select-all-branches" class="custom-checkbox mr-2 w-4 h-4 text-blue-600">
+                            <span class="text-xs font-bold text-blue-800">Listelenen Tüm Şubeleri Seç</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div id="branch-list-container" class="space-y-1 overflow-y-auto flex-grow pr-1 custom-scrollbar border-t border-gray-100 pt-2"></div>
+                
+                <div id="no-unassigned-message" class="hidden flex-col items-center justify-center h-full text-gray-400">
+                    <span class="text-2xl mb-2">✓</span>
+                    <span class="text-xs">Atanacak şube kalmadı.</span>
+                </div>
+                
+                <div class="mt-2 pt-2 border-t border-gray-100 shrink-0">
+                     <button type="button" id="reset-all-btn" class="w-full bg-white border border-red-200 hover:bg-red-50 text-red-600 font-medium py-2 px-4 rounded-lg transition duration-300 text-xs flex items-center justify-center group">
+                        <span class="mr-2 group-hover:rotate-180 transition-transform">↺</span>
+                        <span>Süreci Sıfırla</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="lg:w-[65%] w-full flex flex-col gap-3 h-full overflow-y-auto pr-1 custom-scrollbar">
+                
+                <div id="asil-assignment-panel" class="bg-white p-4 rounded-xl shadow-md border border-gray-100 shrink-0 transition-all">
+                    
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center">
+                            <div class="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold mr-2 text-sm">1</div>
+                            <h2 class="text-base font-bold text-gray-800">Asil Personel & Takım Atama</h2>
+                        </div>
+                    </div>
+
+                    <div class="mb-4 bg-purple-50 border border-purple-100 p-3 rounded-lg flex justify-between items-center shadow-sm">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-purple-100 p-2 rounded-full text-purple-600">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                                </svg>
+                            </div>
+                            <div>
+                                <span class="text-xs text-purple-800 font-bold block uppercase tracking-wide">Kişi Başı İdeal Hedef</span>
+                                <span class="text-[10px] text-purple-600" id="unit-stats-detail">...</span>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-lg font-black text-purple-700 font-mono tracking-tight" id="avg-target-display">0 ₺</div>
+                            <div class="text-[10px] text-purple-500 font-bold bg-purple-100 px-2 py-0.5 rounded mt-0.5 inline-block" id="avg-ratio-display">Ort. H/S: %0</div>
+                        </div>
+                    </div>
+                    
+                    <div id="asil-panel-default-message" class="flex flex-col gap-3 text-center text-gray-500 p-6 bg-gray-50 rounded-lg border border-dashed border-gray-300 text-xs items-center justify-center">
+                        <p class="mb-2">Manuel işlem yapmak için sol listeden şube seçiniz.</p>
+                        
+                        <div class="flex items-center w-full my-2">
+                            <div class="flex-grow h-px bg-gray-200"></div>
+                            <span class="px-2 text-gray-400 font-mono text-[10px]">VEYA</span>
+                            <div class="flex-grow h-px bg-gray-200"></div>
+                        </div>
+
+                        <button type="button" id="auto-distribute-btn" class="btn-pulse bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-3 px-8 rounded-lg shadow-lg transform hover:-translate-y-1 transition duration-200 flex items-center gap-2 group">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 group-hover:rotate-12 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                            </svg>
+                            <div class="flex flex-col text-left">
+                                <span class="text-sm">OTOMATİK AKILLI DAĞITIM</span>
+                                <span class="text-[9px] opacity-80 font-normal">Tüm şubeleri eşit adette ve ideal hedeflerde dağıt</span>
+                            </div>
+                        </button>
+                    </div>
+                    
+                    <div id="asil-panel-active-form" class="hidden animate-pulse-once">
+                        <div class="bg-indigo-50 border border-indigo-100 p-3 rounded-lg flex flex-col sm:flex-row justify-between items-center mb-3">
+                            <div class="flex items-center gap-3 w-full">
+                                <div class="bg-white p-2 rounded border border-indigo-100 text-center min-w-[80px]">
+                                    <span class="block text-[10px] text-gray-500 uppercase">Seçilen</span>
+                                    <span id="selected-branch-count" class="font-bold text-xl text-indigo-700">0</span>
+                                </div>
+                                <div class="text-xs text-indigo-900 space-y-1 flex-grow">
+                                    <div class="flex justify-between border-b border-indigo-100 pb-1">
+                                        <span class="font-semibold">Toplam Anapara:</span> 
+                                        <span id="summary-anapara" class="font-mono">0 ₺</span>
+                                    </div>
+                                    <div class="flex justify-between pt-1">
+                                        <span class="font-semibold">Toplam Hedef:</span> 
+                                        <span id="summary-hedef" class="font-mono font-bold text-indigo-700">0 ₺</span>
+                                    </div>
+                                    <div class="flex justify-between pt-1 border-t border-indigo-100 mt-1">
+                                        <span class="font-semibold text-indigo-800">Seçilen Ort. H/S:</span> 
+                                        <span id="summary-avg-ratio" class="font-mono font-bold text-indigo-700">%0.00</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="target-deviation-warning" class="hidden mb-3 p-3 rounded-lg border text-xs font-bold flex flex-col gap-1 transition-all duration-300">
+                             </div>
+
+                        <div class="flex flex-col sm:flex-row gap-3 items-end">
+                            <div class="w-full sm:w-3/4">
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Asil Personel (Takım Sahibi)</label>
+                                <select id="select-asil" class="w-full p-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                                    <option value="">Personel Seçiniz...</option>
+                                </select>
+                            </div>
+                            <button type="button" id="assign-asil-btn" class="w-full sm:w-1/4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-lg shadow-sm transition transform hover:-translate-y-0.5 flex items-center justify-center text-sm">
+                                <span>Listeye Ekle</span>
+                                <span class="ml-2">→</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="yedek-assignment-panel" class="bg-white p-4 rounded-xl shadow-md border border-gray-100 flex flex-col flex-grow min-h-[400px]">
+                    <div class="flex justify-between items-center mb-3 shrink-0">
+                        <div class="flex items-center">
+                            <div class="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold mr-2 text-sm">2</div>
+                            <h2 class="text-base font-bold text-gray-800">Toplu Yedek Atama ve Onay</h2>
+                        </div>
+                        <span class="text-[10px] font-semibold text-orange-600 bg-orange-50 px-2 py-1 rounded border border-orange-200">Bekleyen İşlemler</span>
+                    </div>
+
+                    <div id="no-pending-yedek-message" class="flex-grow flex flex-col items-center justify-center text-gray-400 bg-gray-50 rounded-lg border border-dashed border-gray-300 p-8">
+                        <span class="text-4xl mb-2 opacity-30">📂</span>
+                        <p class="text-sm">Yedek ataması ve onay için önce yukarıdan asil atama yapınız.</p>
+                    </div>
+
+                    <div id="pending-yedek-list" class="hidden flex flex-col h-full">
+                        
+                        <div class="bg-yellow-50 p-3 rounded-lg mb-3 border border-yellow-200 shrink-0">
+                            <h4 class="font-bold text-yellow-800 text-xs mb-2 flex items-center">
+                                <span class="mr-1">⚠️</span> TOPLU YEDEK SEÇİMİ (Zorunlu)
+                                <span class="text-[10px] font-normal text-yellow-700 ml-2 italic">Seçilen personel, aşağıdaki tüm şubelere 1. ve 2. yedek olarak atanacaktır.</span>
+                            </h4>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-[10px] font-bold text-gray-600 mb-1">1. Yedek Personel</label>
+                                    <select id="master-select-yedek1" class="w-full p-2 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 bg-white">
+                                        <option value="">Seçiniz...</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-gray-600 mb-1">2. Yedek Personel</label>
+                                    <select id="master-select-yedek2" class="w-full p-2 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 bg-white">
+                                        <option value="">Seçiniz...</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto overflow-y-auto max-h-[350px] border border-gray-200 rounded-lg flex-grow custom-scrollbar bg-white">
+                            <table class="min-w-full divide-y divide-gray-200 table-fixed">
+                                <thead class="bg-gray-100 sticky top-0 z-10 shadow-sm">
+                                    <tr>
+                                        <th class="px-3 py-2 text-left text-xs font-bold text-gray-600 uppercase w-[25%]">Şube / İl</th>
+                                        <th class="px-3 py-2 text-left text-xs font-bold text-gray-600 uppercase w-[20%]">Asil (Takım)</th>
+                                        <th class="px-3 py-2 text-right text-xs font-bold text-gray-600 uppercase w-[20%]">Anapara</th>
+                                        <th class="px-3 py-2 text-right text-xs font-bold text-gray-600 uppercase w-[15%]">Hedef</th>
+                                        <th class="px-3 py-2 text-right text-xs font-bold text-gray-600 uppercase w-[10%]">H/S</th>
+                                        <th class="px-2 py-2 text-center text-xs font-bold text-gray-600 uppercase w-[10%]">İptal</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="yedek-table-body" class="divide-y divide-gray-200"></tbody>
+                            </table>
+                        </div>
+
+                        <div class="mt-2 bg-gray-50 border border-gray-200 rounded-lg p-2 flex justify-between items-center text-xs">
+                            <div class="font-bold text-gray-600">GRUP TOPLAMLARI:</div>
+                            <div class="flex gap-4">
+                                <div><span class="text-gray-500">Top. Anapara:</span> <span id="pending-total-anapara" class="font-mono font-bold">0 ₺</span></div>
+                                <div><span class="text-gray-500">Top. Hedef:</span> <span id="pending-total-hedef" class="font-mono font-bold text-blue-700">0 ₺</span></div>
+                                <div><span class="text-gray-500">Ort. H/S:</span> <span id="pending-avg-ratio" class="font-mono font-bold text-indigo-600">%0</span></div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4 shrink-0">
+                            <button type="button" id="confirm-batch-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transform hover:-translate-y-0.5 transition duration-200 flex items-center justify-center text-sm">
+                                <span class="mr-2">✓</span>
+                                BU GRUBU ONAYLA VE TAMAMLA
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="edit-control-panel" class="hidden bg-yellow-50 p-4 rounded-xl shadow-md border-2 border-yellow-400 shrink-0 transition-all flex-col items-center text-center">
+                    <h3 class="font-bold text-lg text-yellow-800 mb-2">DÜZENLEME MODU AKTİF</h3>
+                    <p class="text-sm text-yellow-700 mb-4">Şu an <strong id="edit-panel-user-name" class="text-black text-lg"></strong> personelini düzenliyorsunuz.</p>
+                    
+                    <div class="mb-4 w-full max-w-md bg-blue-50 p-2 rounded border border-blue-200 text-left">
+                        <label class="block text-[10px] font-bold text-blue-800 mb-1">Asil Personeli Değiştir (Yer Değiştir)</label>
+                        <div class="flex gap-2">
+                             <select id="edit-change-asil" class="flex-grow p-1.5 text-xs border border-blue-300 rounded focus:ring-1 focus:ring-blue-500 bg-white">
+                                 <option value="">Seçiniz...</option>
+                             </select>
+                             <button type="button" onclick="handleAsilSwap()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3 py-1 rounded shadow-sm">
+                                 Değiştir
+                             </button>
+                        </div>
+                        <p class="text-[9px] text-blue-600 mt-1 italic">* DEĞİŞTİR butonuna basıldığında seçilen personel ile mevcut asil personel yer değiştirir.</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 w-full max-w-md mb-3 bg-white p-2 rounded border border-yellow-200">
+                         <div class="text-left">
+                             <label class="block text-[10px] font-bold text-gray-600 mb-1">1. Yedek Personel <span class="text-red-500">*</span></label>
+                             <select id="edit-yedek1" class="w-full p-1.5 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 bg-white">
+                                 <option value="">Seçiniz...</option>
+                             </select>
+                         </div>
+                         <div class="text-left">
+                             <label class="block text-[10px] font-bold text-gray-600 mb-1">2. Yedek Personel <span class="text-red-500">*</span></label>
+                             <select id="edit-yedek2" class="w-full p-1.5 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 bg-white">
+                                 <option value="">Seçiniz...</option>
+                             </select>
+                         </div>
+                    </div>
+
+                    <div class="mt-2 mb-4 p-2 bg-white rounded border border-yellow-200 text-xs text-left w-full">
+                        <div class="font-bold text-gray-700 border-b border-gray-100 pb-1 mb-1">REFERANS DEĞERLER (Limitler)</div>
+                        <div class="flex justify-between"><span>İdeal Hedef:</span> <span class="font-mono font-bold text-blue-600" id="edit-ideal-target"></span></div>
+                        <div class="flex justify-between"><span>Genel Ort. H/S:</span> <span class="font-mono font-bold text-indigo-600" id="edit-ideal-ratio"></span></div>
+                         <div class="text-[9px] text-red-500 mt-1 italic">* Düzenleme sırasında limit aşılabilir, ancak kaydederken +-%10 kuralı uygulanır.</div>
+                    </div>
+
+                    <div class="flex gap-4 w-full max-w-md">
+                        <button onclick="endEditMode()" class="flex-1 bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition transform hover:-translate-y-0.5">
+                            Düzenlemeyi Bitir ve Kaydet
+                        </button>
+                    </div>
+                    
+                    <div class="mt-4 text-xs text-gray-500 bg-white p-2 rounded border border-gray-200 w-full text-left">
+                        <ul class="list-disc pl-4 space-y-1">
+                            <li>Sol taraftan şube seçerseniz <strong>anında</strong> bu personele eklenir.</li>
+                            <li>Aşağıdaki listeden <strong>(X)</strong> butonuna basarsanız şube havuza geri döner.</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div id="summary-panel" class="bg-white p-4 rounded-xl shadow-md border border-gray-100 shrink-0">
+                    <div class="flex justify-between items-center mb-2">
+                        <h2 class="text-base font-bold text-gray-800 flex items-center">
+                            <span>Tamamlanan Atamalar</span>
+                            <span id="total-completed-count" class="ml-2 text-[10px] font-bold text-white bg-green-500 px-2 py-0.5 rounded-full">0</span>
+                        </h2>
+                        <button type="button" id="partial-finish-btn" class="hidden text-[11px] bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded border border-orange-600 shadow-sm transition-all flex items-center">
+                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                            Kısmi Atama ile Bitir
+                        </button>
+                    </div>
+                    
+                    <div id="no-summary-message" class="text-center text-gray-400 text-xs py-4">
+                        Henüz onaylanmış atama bulunmamaktadır.
+                    </div>
+                    
+                    <div id="summary-table-container" class="hidden overflow-x-auto border border-gray-200 rounded-lg max-h-[300px] custom-scrollbar">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50 sticky top-0 z-10">
+                                <tr>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Personel</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Takım</th>
+                                    <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">Şube Adet</th>
+                                    <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Top. Anapara</th>
+                                    <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Top. Hedef</th>
+                                    <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Ort. H/S</th>
+                                    <th class="px-2 py-2 text-center text-xs font-medium text-gray-500 uppercase w-10"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="summary-table-body" class="bg-white divide-y divide-gray-200"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <div id="completion-screen" class="hidden absolute inset-0 bg-white/95 backdrop-blur-sm z-30 flex flex-col items-center justify-center fade-in">
+            <div class="max-w-xl w-full text-center p-8 bg-white rounded-2xl shadow-2xl border border-gray-100">
+                <div class="checkmark-circle mb-6">
+                    <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                        <circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none"/>
+                        <path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+                    </svg>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-800 mb-2">Atamalar Tamamlandı!</h3>
+                <p class="text-gray-600 mb-8 text-sm">Tüm şubeler dağıtıldı. Dosyalarınızı indirebilirsiniz.</p>
+                
+                <div class="flex flex-col gap-3 justify-center w-full max-w-xs mx-auto">
+                     <button id="final-export-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transform hover:-translate-y-1 transition flex items-center justify-center text-sm w-full">
+                        <span class="mr-2">⬇</span>
+                        <span>Excel Dosyalarını Oluştur</span>
+                    </button>
+                     <button onclick="location.reload()" class="bg-white border border-gray-300 text-gray-600 hover:bg-gray-50 font-medium py-3 px-6 rounded-lg transition text-sm w-full">
+                        <span>Yeni Dağıtım Başlat</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="toast-notification" class="fixed bottom-5 right-5 bg-gray-800 text-white py-3 px-6 rounded-lg shadow-xl hidden transition-opacity duration-300 opacity-0 z-50 flex items-center">
+        <div id="toast-icon" class="mr-3"></div>
+        <span id="toast-message" class="font-medium text-sm"></span>
+    </div>
+
+    <script>
+        // --- SABİTLER ve VERİ ---
+        const TAKIP_BIRIM_KODU = 'B00324';
+        let globalAverageTarget = 0; // GLOBAL: İdeal Hedef
+        let globalAverageRatio = 0;  // GLOBAL: İdeal H/S Oranı
+        let globalAverageBranchCount = 0; // GLOBAL: İdeal Şube Adedi
+        
+        const formatCurrency = (value) => new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value) + ' ₺';
+        const formatNumber = (value) => new Intl.NumberFormat('tr-TR').format(value);
+        const normalizeString = (str) => !str ? "" : str.toLocaleLowerCase('tr').replace(/ı/g, 'i').replace(/İ/g, 'i').replace(/ğ/g, 'g').replace(/ü/g, 'u').replace(/ş/g, 's').replace(/ö/g, 'o').replace(/ç/g, 'c');
+
+        // MOCK DATA
+        // --- BÖLGE PERSONEL LİSTESİ ---
+
+const originalAllStaff = [
+    { sicil: 'test001', ad: 'AHMET YILMAZ', bolge: 'B00324', takımkodu: 'B00324001' },
+    { sicil: 'test002', ad: 'AYŞE DEMİR', bolge: 'B00324', takımkodu: 'B00324002' },
+    { sicil: 'test003', ad: 'MEHMET KAYA', bolge: 'B00324', takımkodu: 'B00324003' },
+    { sicil: 'test004', ad: 'FATMA ÇELİK', bolge: 'B00324', takımkodu: 'B00324004' },
+    { sicil: 'test005', ad: 'MUSTAFA YILDIZ', bolge: 'B00324', takımkodu: 'B00324005' },
+    { sicil: 'test006', ad: 'EMİNE ÖZTÜRK', bolge: 'B00324', takımkodu: 'B00324006' },
+    { sicil: 'test007', ad: 'ALİ CAN', bolge: 'B00324', takımkodu: 'B00324007' },
+    { sicil: 'test008', ad: 'HATİCE ARSLAN', bolge: 'B00324', takımkodu: 'B00324008' },
+    { sicil: 'test009', ad: 'HASAN DOĞAN', bolge: 'B00324', takımkodu: 'B00324009' },
+    { sicil: 'test010', ad: 'ZEYNEP ŞAHİN', bolge: 'B00324', takımkodu: 'B00324010' },
+    { sicil: 'test011', ad: 'HÜSEYİN ÇETİN', bolge: 'B00324', takımkodu: 'B00324011' },
+    { sicil: 'test012', ad: 'ELİF YAVUZ', bolge: 'B00324', takımkodu: 'B00324012' },
+    { sicil: 'test013', ad: 'İBRAHİM KOÇ', bolge: 'B00324', takımkodu: 'B00324013' },
+    { sicil: 'test014', ad: 'MERVE AVCI', bolge: 'B00324', takımkodu: 'B00324014' }
+];
+
+const originalAllBranches = [
+    { bolge: 'B00324', kod: 'S001', ad: 'TEST ŞUBE 1', il: 'İSTANBUL', toplamanaparabakiyesi: '29687291.70', hedef: '3393257.44', hedef_stok: '11.43' },
+    { bolge: 'B00324', kod: 'S002', ad: 'TEST ŞUBE 2', il: 'GAZİANTEP', toplamanaparabakiyesi: '34655322.79', hedef: '3888327.22', hedef_stok: '11.22' },
+    { bolge: 'B00324', kod: 'S003', ad: 'TEST ŞUBE 3', il: 'KONYA', toplamanaparabakiyesi: '30242295.47', hedef: '3601857.39', hedef_stok: '11.91' },
+    { bolge: 'B00324', kod: 'S004', ad: 'TEST ŞUBE 4', il: 'ANTALYA', toplamanaparabakiyesi: '34271485.77', hedef: '3879532.19', hedef_stok: '11.32' },
+    { bolge: 'B00324', kod: 'S005', ad: 'TEST ŞUBE 5', il: 'GAZİANTEP', toplamanaparabakiyesi: '25119311.38', hedef: '2846017.98', hedef_stok: '11.33' },
+    { bolge: 'B00324', kod: 'S006', ad: 'TEST ŞUBE 6', il: 'MERSİN', toplamanaparabakiyesi: '27813108.14', hedef: '3323666.42', hedef_stok: '11.95' },
+    { bolge: 'B00324', kod: 'S007', ad: 'TEST ŞUBE 7', il: 'GAZİANTEP', toplamanaparabakiyesi: '28409596.11', hedef: '3295513.15', hedef_stok: '11.60' },
+    { bolge: 'B00324', kod: 'S008', ad: 'TEST ŞUBE 8', il: 'ADANA', toplamanaparabakiyesi: '36329277.78', hedef: '4355880.41', hedef_stok: '11.99' },
+    { bolge: 'B00324', kod: 'S009', ad: 'TEST ŞUBE 9', il: 'ADANA', toplamanaparabakiyesi: '42771066.24', hedef: '4730479.93', hedef_stok: '11.06' },
+    { bolge: 'B00324', kod: 'S010', ad: 'TEST ŞUBE 10', il: 'BURSA', toplamanaparabakiyesi: '39004076.62', hedef: '4294348.84', hedef_stok: '11.01' },
+    { bolge: 'B00324', kod: 'S011', ad: 'TEST ŞUBE 11', il: 'GAZİANTEP', toplamanaparabakiyesi: '41574025.59', hedef: '4639661.26', hedef_stok: '11.16' },
+    { bolge: 'B00324', kod: 'S012', ad: 'TEST ŞUBE 12', il: 'BURSA', toplamanaparabakiyesi: '36553480.39', hedef: '4225582.33', hedef_stok: '11.56' },
+    { bolge: 'B00324', kod: 'S013', ad: 'TEST ŞUBE 13', il: 'GAZİANTEP', toplamanaparabakiyesi: '40972584.72', hedef: '4842959.51', hedef_stok: '11.82' },
+    { bolge: 'B00324', kod: 'S014', ad: 'TEST ŞUBE 14', il: 'GAZİANTEP', toplamanaparabakiyesi: '35699810.05', hedef: '4034078.54', hedef_stok: '11.30' },
+    { bolge: 'B00324', kod: 'S015', ad: 'TEST ŞUBE 15', il: 'GAZİANTEP', toplamanaparabakiyesi: '27711111.30', hedef: '3186777.80', hedef_stok: '11.50' },
+    { bolge: 'B00324', kod: 'S016', ad: 'TEST ŞUBE 16', il: 'ADANA', toplamanaparabakiyesi: '36042015.03', hedef: '4126810.72', hedef_stok: '11.45' },
+    { bolge: 'B00324', kod: 'S017', ad: 'TEST ŞUBE 17', il: 'KAYSERİ', toplamanaparabakiyesi: '44518698.19', hedef: '5021709.16', hedef_stok: '11.28' },
+    { bolge: 'B00324', kod: 'S018', ad: 'TEST ŞUBE 18', il: 'MERSİN', toplamanaparabakiyesi: '30736557.64', hedef: '3620766.49', hedef_stok: '11.78' },
+    { bolge: 'B00324', kod: 'S019', ad: 'TEST ŞUBE 19', il: 'ANKARA', toplamanaparabakiyesi: '44643653.85', hedef: '5102769.64', hedef_stok: '11.43' },
+    { bolge: 'B00324', kod: 'S020', ad: 'TEST ŞUBE 20', il: 'MERSİN', toplamanaparabakiyesi: '31575308.15', hedef: '3511174.27', hedef_stok: '11.12' },
+    { bolge: 'B00324', kod: 'S021', ad: 'TEST ŞUBE 21', il: 'KAYSERİ', toplamanaparabakiyesi: '34672542.49', hedef: '3904128.28', hedef_stok: '11.26' },
+    { bolge: 'B00324', kod: 'S022', ad: 'TEST ŞUBE 22', il: 'ANKARA', toplamanaparabakiyesi: '31211750.99', hedef: '3558139.61', hedef_stok: '11.40' },
+    { bolge: 'B00324', kod: 'S023', ad: 'TEST ŞUBE 23', il: 'GAZİANTEP', toplamanaparabakiyesi: '30921662.65', hedef: '3611650.20', hedef_stok: '11.68' },
+    { bolge: 'B00324', kod: 'S024', ad: 'TEST ŞUBE 24', il: 'BURSA', toplamanaparabakiyesi: '29155581.70', hedef: '3449105.32', hedef_stok: '11.83' },
+    { bolge: 'B00324', kod: 'S025', ad: 'TEST ŞUBE 25', il: 'KONYA', toplamanaparabakiyesi: '37613844.61', hedef: '4389535.67', hedef_stok: '11.67' },
+    { bolge: 'B00324', kod: 'S026', ad: 'TEST ŞUBE 26', il: 'KAYSERİ', toplamanaparabakiyesi: '33287528.46', hedef: '3678271.89', hedef_stok: '11.05' },
+    { bolge: 'B00324', kod: 'S027', ad: 'TEST ŞUBE 27', il: 'ANTALYA', toplamanaparabakiyesi: '36571857.90', hedef: '4381308.58', hedef_stok: '11.98' },
+    { bolge: 'B00324', kod: 'S028', ad: 'TEST ŞUBE 28', il: 'ANKARA', toplamanaparabakiyesi: '38247475.52', hedef: '4268418.27', hedef_stok: '11.16' },
+    { bolge: 'B00324', kod: 'S029', ad: 'TEST ŞUBE 29', il: 'İSTANBUL', toplamanaparabakiyesi: '39934223.00', hedef: '4492600.09', hedef_stok: '11.25' },
+    { bolge: 'B00324', kod: 'S030', ad: 'TEST ŞUBE 30', il: 'ADANA', toplamanaparabakiyesi: '36420322.39', hedef: '4348586.49', hedef_stok: '11.94' },
+    { bolge: 'B00324', kod: 'S031', ad: 'TEST ŞUBE 31', il: 'GAZİANTEP', toplamanaparabakiyesi: '30618380.63', hedef: '3521113.77', hedef_stok: '11.50' },
+    { bolge: 'B00324', kod: 'S032', ad: 'TEST ŞUBE 32', il: 'KONYA', toplamanaparabakiyesi: '27836181.25', hedef: '3176108.28', hedef_stok: '11.41' },
+    { bolge: 'B00324', kod: 'S033', ad: 'TEST ŞUBE 33', il: 'İSTANBUL', toplamanaparabakiyesi: '30728213.98', hedef: '3423123.04', hedef_stok: '11.14' },
+    { bolge: 'B00324', kod: 'S034', ad: 'TEST ŞUBE 34', il: 'KONYA', toplamanaparabakiyesi: '27328655.57', hedef: '3055343.69', hedef_stok: '11.18' },
+    { bolge: 'B00324', kod: 'S035', ad: 'TEST ŞUBE 35', il: 'BURSA', toplamanaparabakiyesi: '27844513.39', hedef: '3305143.74', hedef_stok: '11.87' },
+    { bolge: 'B00324', kod: 'S036', ad: 'TEST ŞUBE 36', il: 'ADANA', toplamanaparabakiyesi: '44872156.55', hedef: '5232093.45', hedef_stok: '11.66' },
+    { bolge: 'B00324', kod: 'S037', ad: 'TEST ŞUBE 37', il: 'MERSİN', toplamanaparabakiyesi: '37015280.38', hedef: '4364101.56', hedef_stok: '11.79' },
+    { bolge: 'B00324', kod: 'S038', ad: 'TEST ŞUBE 38', il: 'BURSA', toplamanaparabakiyesi: '29599171.45', hedef: '3273668.36', hedef_stok: '11.06' },
+    { bolge: 'B00324', kod: 'S039', ad: 'TEST ŞUBE 39', il: 'İZMİR', toplamanaparabakiyesi: '43417646.85', hedef: '4962637.03', hedef_stok: '11.43' },
+    { bolge: 'B00324', kod: 'S040', ad: 'TEST ŞUBE 40', il: 'ADANA', toplamanaparabakiyesi: '26441989.15', hedef: '3048761.35', hedef_stok: '11.53' },
+    { bolge: 'B00324', kod: 'S041', ad: 'TEST ŞUBE 41', il: 'GAZİANTEP', toplamanaparabakiyesi: '33767255.86', hedef: '3971029.29', hedef_stok: '11.76' },
+    { bolge: 'B00324', kod: 'S042', ad: 'TEST ŞUBE 42', il: 'GAZİANTEP', toplamanaparabakiyesi: '42178733.79', hedef: '4989744.21', hedef_stok: '11.83' },
+    { bolge: 'B00324', kod: 'S043', ad: 'TEST ŞUBE 43', il: 'ANKARA', toplamanaparabakiyesi: '40711739.51', hedef: '4771415.87', hedef_stok: '11.72' },
+    { bolge: 'B00324', kod: 'S044', ad: 'TEST ŞUBE 44', il: 'ADANA', toplamanaparabakiyesi: '42002650.02', hedef: '4733698.66', hedef_stok: '11.27' },
+    { bolge: 'B00324', kod: 'S045', ad: 'TEST ŞUBE 45', il: 'ADANA', toplamanaparabakiyesi: '44747930.02', hedef: '5271306.16', hedef_stok: '11.78' },
+    { bolge: 'B00324', kod: 'S046', ad: 'TEST ŞUBE 46', il: 'KONYA', toplamanaparabakiyesi: '44943844.62', hedef: '4984272.37', hedef_stok: '11.09' },
+    { bolge: 'B00324', kod: 'S047', ad: 'TEST ŞUBE 47', il: 'BURSA', toplamanaparabakiyesi: '34297879.04', hedef: '3772766.69', hedef_stok: '11.00' },
+    { bolge: 'B00324', kod: 'S048', ad: 'TEST ŞUBE 48', il: 'KAYSERİ', toplamanaparabakiyesi: '42052201.60', hedef: '4802361.42', hedef_stok: '11.42' },
+    { bolge: 'B00324', kod: 'S049', ad: 'TEST ŞUBE 49', il: 'ANTALYA', toplamanaparabakiyesi: '38697231.29', hedef: '4446311.88', hedef_stok: '11.49' },
+    { bolge: 'B00324', kod: 'S050', ad: 'TEST ŞUBE 50', il: 'ADANA', toplamanaparabakiyesi: '27749441.25', hedef: '3263334.29', hedef_stok: '11.76' },
+    { bolge: 'B00324', kod: 'S051', ad: 'TEST ŞUBE 51', il: 'ANKARA', toplamanaparabakiyesi: '38417123.95', hedef: '4406444.12', hedef_stok: '11.47' },
+    { bolge: 'B00324', kod: 'S052', ad: 'TEST ŞUBE 52', il: 'KAYSERİ', toplamanaparabakiyesi: '43505530.41', hedef: '4789958.90', hedef_stok: '11.01' },
+    { bolge: 'B00324', kod: 'S053', ad: 'TEST ŞUBE 53', il: 'KAYSERİ', toplamanaparabakiyesi: '30726615.83', hedef: '3472107.59', hedef_stok: '11.30' },
+    { bolge: 'B00324', kod: 'S054', ad: 'TEST ŞUBE 54', il: 'ANTALYA', toplamanaparabakiyesi: '32020237.66', hedef: '3560650.43', hedef_stok: '11.12' },
+    { bolge: 'B00324', kod: 'S055', ad: 'TEST ŞUBE 55', il: 'ANKARA', toplamanaparabakiyesi: '33602815.11', hedef: '3753434.45', hedef_stok: '11.17' },
+    { bolge: 'B00324', kod: 'S056', ad: 'TEST ŞUBE 56', il: 'KAYSERİ', toplamanaparabakiyesi: '41413787.46', hedef: '4671475.23', hedef_stok: '11.28' },
+    { bolge: 'B00324', kod: 'S057', ad: 'TEST ŞUBE 57', il: 'ADANA', toplamanaparabakiyesi: '27560163.50', hedef: '3177686.85', hedef_stok: '11.53' },
+    { bolge: 'B00324', kod: 'S058', ad: 'TEST ŞUBE 58', il: 'GAZİANTEP', toplamanaparabakiyesi: '31053940.72', hedef: '3490462.94', hedef_stok: '11.24' },
+    { bolge: 'B00324', kod: 'S059', ad: 'TEST ŞUBE 59', il: 'BURSA', toplamanaparabakiyesi: '37710898.69', hedef: '4185909.75', hedef_stok: '11.10' },
+    { bolge: 'B00324', kod: 'S060', ad: 'TEST ŞUBE 60', il: 'KONYA', toplamanaparabakiyesi: '42062509.07', hedef: '4879251.05', hedef_stok: '11.60' },
+    { bolge: 'B00324', kod: 'S061', ad: 'TEST ŞUBE 61', il: 'BURSA', toplamanaparabakiyesi: '44136290.27', hedef: '5053605.24', hedef_stok: '11.45' },
+    { bolge: 'B00324', kod: 'S062', ad: 'TEST ŞUBE 62', il: 'BURSA', toplamanaparabakiyesi: '33991592.26', hedef: '3994012.09', hedef_stok: '11.75' },
+    { bolge: 'B00324', kod: 'S063', ad: 'TEST ŞUBE 63', il: 'GAZİANTEP', toplamanaparabakiyesi: '27908585.12', hedef: '3337866.78', hedef_stok: '11.96' },
+    { bolge: 'B00324', kod: 'S064', ad: 'TEST ŞUBE 64', il: 'İSTANBUL', toplamanaparabakiyesi: '34403669.57', hedef: '3870412.83', hedef_stok: '11.25' },
+    { bolge: 'B00324', kod: 'S065', ad: 'TEST ŞUBE 65', il: 'BURSA', toplamanaparabakiyesi: '33828141.56', hedef: '4039080.10', hedef_stok: '11.94' },
+    { bolge: 'B00324', kod: 'S066', ad: 'TEST ŞUBE 66', il: 'ADANA', toplamanaparabakiyesi: '38934999.68', hedef: '4606010.46', hedef_stok: '11.83' },
+    { bolge: 'B00324', kod: 'S067', ad: 'TEST ŞUBE 67', il: 'KAYSERİ', toplamanaparabakiyesi: '31300015.51', hedef: '3502471.74', hedef_stok: '11.19' },
+    { bolge: 'B00324', kod: 'S068', ad: 'TEST ŞUBE 68', il: 'KONYA', toplamanaparabakiyesi: '43325090.03', hedef: '5017045.43', hedef_stok: '11.58' },
+    { bolge: 'B00324', kod: 'S069', ad: 'TEST ŞUBE 69', il: 'ANKARA', toplamanaparabakiyesi: '43218491.80', hedef: '4775643.34', hedef_stok: '11.05' },
+    { bolge: 'B00324', kod: 'S070', ad: 'TEST ŞUBE 70', il: 'ANKARA', toplamanaparabakiyesi: '39626371.76', hedef: '4358900.89', hedef_stok: '11.00' },
+    { bolge: 'B00324', kod: 'S071', ad: 'TEST ŞUBE 71', il: 'MERSİN', toplamanaparabakiyesi: '40442283.13', hedef: '4735791.35', hedef_stok: '11.71' },
+    { bolge: 'B00324', kod: 'S072', ad: 'TEST ŞUBE 72', il: 'KAYSERİ', toplamanaparabakiyesi: '27172249.63', hedef: '3122091.48', hedef_stok: '11.49' },
+    { bolge: 'B00324', kod: 'S073', ad: 'TEST ŞUBE 73', il: 'MERSİN', toplamanaparabakiyesi: '33136090.57', hedef: '3813964.02', hedef_stok: '11.51' },
+    { bolge: 'B00324', kod: 'S074', ad: 'TEST ŞUBE 74', il: 'ADANA', toplamanaparabakiyesi: '34309771.99', hedef: '4069138.96', hedef_stok: '11.86' },
+    { bolge: 'B00324', kod: 'S075', ad: 'TEST ŞUBE 75', il: 'BURSA', toplamanaparabakiyesi: '30503693.79', hedef: '3581133.65', hedef_stok: '11.74' },
+    { bolge: 'B00324', kod: 'S076', ad: 'TEST ŞUBE 76', il: 'İSTANBUL', toplamanaparabakiyesi: '34268097.44', hedef: '3834600.10', hedef_stok: '11.19' },
+    { bolge: 'B00324', kod: 'S077', ad: 'TEST ŞUBE 77', il: 'ADANA', toplamanaparabakiyesi: '41049071.38', hedef: '4778111.91', hedef_stok: '11.64' },
+    { bolge: 'B00324', kod: 'S078', ad: 'TEST ŞUBE 78', il: 'KAYSERİ', toplamanaparabakiyesi: '28925063.78', hedef: '3265639.70', hedef_stok: '11.29' },
+    { bolge: 'B00324', kod: 'S079', ad: 'TEST ŞUBE 79', il: 'ANKARA', toplamanaparabakiyesi: '38208052.06', hedef: '4286943.44', hedef_stok: '11.22' },
+    { bolge: 'B00324', kod: 'S080', ad: 'TEST ŞUBE 80', il: 'BURSA', toplamanaparabakiyesi: '37492824.65', hedef: '4412905.46', hedef_stok: '11.77' },
+    { bolge: 'B00324', kod: 'S081', ad: 'TEST ŞUBE 81', il: 'GAZİANTEP', toplamanaparabakiyesi: '33264903.58', hedef: '3758934.10', hedef_stok: '11.30' },
+    { bolge: 'B00324', kod: 'S082', ad: 'TEST ŞUBE 82', il: 'ANKARA', toplamanaparabakiyesi: '41837884.20', hedef: '4823908.05', hedef_stok: '11.53' },
+    { bolge: 'B00324', kod: 'S083', ad: 'TEST ŞUBE 83', il: 'KONYA', toplamanaparabakiyesi: '33792779.48', hedef: '3828721.92', hedef_stok: '11.33' },
+    { bolge: 'B00324', kod: 'S084', ad: 'TEST ŞUBE 84', il: 'İZMİR', toplamanaparabakiyesi: '36635024.65', hedef: '4139757.79', hedef_stok: '11.30' },
+    { bolge: 'B00324', kod: 'S085', ad: 'TEST ŞUBE 85', il: 'GAZİANTEP', toplamanaparabakiyesi: '42036798.02', hedef: '4851046.49', hedef_stok: '11.54' },
+    { bolge: 'B00324', kod: 'S086', ad: 'TEST ŞUBE 86', il: 'ANTALYA', toplamanaparabakiyesi: '25279855.89', hedef: '2993134.94', hedef_stok: '11.84' },
+    { bolge: 'B00324', kod: 'S087', ad: 'TEST ŞUBE 87', il: 'MERSİN', toplamanaparabakiyesi: '44819886.23', hedef: '5320120.50', hedef_stok: '11.87' },
+    { bolge: 'B00324', kod: 'S088', ad: 'TEST ŞUBE 88', il: 'ANTALYA', toplamanaparabakiyesi: '25845976.59', hedef: '2928349.15', hedef_stok: '11.33' },
+    { bolge: 'B00324', kod: 'S089', ad: 'TEST ŞUBE 89', il: 'ANKARA', toplamanaparabakiyesi: '29028281.10', hedef: '3355669.30', hedef_stok: '11.56' },
+    { bolge: 'B00324', kod: 'S090', ad: 'TEST ŞUBE 90', il: 'ADANA', toplamanaparabakiyesi: '28404481.64', hedef: '3405697.35', hedef_stok: '11.99' },
+    { bolge: 'B00324', kod: 'S091', ad: 'TEST ŞUBE 91', il: 'ANKARA', toplamanaparabakiyesi: '26480318.41', hedef: '3010812.20', hedef_stok: '11.37' },
+    { bolge: 'B00324', kod: 'S092', ad: 'TEST ŞUBE 92', il: 'ADANA', toplamanaparabakiyesi: '44163369.88', hedef: '5268690.03', hedef_stok: '11.93' },
+    { bolge: 'B00324', kod: 'S093', ad: 'TEST ŞUBE 93', il: 'BURSA', toplamanaparabakiyesi: '25198008.18', hedef: '2824696.72', hedef_stok: '11.21' },
+    { bolge: 'B00324', kod: 'S094', ad: 'TEST ŞUBE 94', il: 'ANKARA', toplamanaparabakiyesi: '42291348.13', hedef: '4863505.03', hedef_stok: '11.50' },
+    { bolge: 'B00324', kod: 'S095', ad: 'TEST ŞUBE 95', il: 'İSTANBUL', toplamanaparabakiyesi: '29051387.37', hedef: '3419348.29', hedef_stok: '11.77' },
+    { bolge: 'B00324', kod: 'S096', ad: 'TEST ŞUBE 96', il: 'ADANA', toplamanaparabakiyesi: '35426202.25', hedef: '4017331.34', hedef_stok: '11.34' },
+    { bolge: 'B00324', kod: 'S097', ad: 'TEST ŞUBE 97', il: 'KONYA', toplamanaparabakiyesi: '39367761.54', hedef: '4507608.70', hedef_stok: '11.45' },
+    { bolge: 'B00324', kod: 'S098', ad: 'TEST ŞUBE 98', il: 'İSTANBUL', toplamanaparabakiyesi: '31271167.15', hedef: '3715014.66', hedef_stok: '11.88' },
+    { bolge: 'B00324', kod: 'S099', ad: 'TEST ŞUBE 99', il: 'KAYSERİ', toplamanaparabakiyesi: '42042162.13', hedef: '4839052.86', hedef_stok: '11.51' },
+    { bolge: 'B00324', kod: 'S100', ad: 'TEST ŞUBE 100', il: 'İZMİR', toplamanaparabakiyesi: '42343795.29', hedef: '4941520.91', hedef_stok: '11.67' },
+    { bolge: 'B00324', kod: 'S101', ad: 'TEST ŞUBE 101', il: 'BURSA', toplamanaparabakiyesi: '37402206.05', hedef: '4409720.09', hedef_stok: '11.79' },
+    { bolge: 'B00324', kod: 'S102', ad: 'TEST ŞUBE 102', il: 'KAYSERİ', toplamanaparabakiyesi: '25337178.09', hedef: '2883370.87', hedef_stok: '11.38' },
+    { bolge: 'B00324', kod: 'S103', ad: 'TEST ŞUBE 103', il: 'İSTANBUL', toplamanaparabakiyesi: '27624327.13', hedef: '3041438.42', hedef_stok: '11.01' },
+    { bolge: 'B00324', kod: 'S104', ad: 'TEST ŞUBE 104', il: 'ANTALYA', toplamanaparabakiyesi: '44733889.00', hedef: '5354646.51', hedef_stok: '11.97' },
+    { bolge: 'B00324', kod: 'S105', ad: 'TEST ŞUBE 105', il: 'GAZİANTEP', toplamanaparabakiyesi: '32239899.20', hedef: '3688244.47', hedef_stok: '11.44' },
+    { bolge: 'B00324', kod: 'S106', ad: 'TEST ŞUBE 106', il: 'ANKARA', toplamanaparabakiyesi: '28666163.10', hedef: '3210610.27', hedef_stok: '11.20' },
+    { bolge: 'B00324', kod: 'S107', ad: 'TEST ŞUBE 107', il: 'ADANA', toplamanaparabakiyesi: '44872650.08', hedef: '5205227.41', hedef_stok: '11.60' },
+    { bolge: 'B00324', kod: 'S108', ad: 'TEST ŞUBE 108', il: 'KAYSERİ', toplamanaparabakiyesi: '34753206.13', hedef: '4080026.40', hedef_stok: '11.74' },
+    { bolge: 'B00324', kod: 'S109', ad: 'TEST ŞUBE 109', il: 'ADANA', toplamanaparabakiyesi: '35573096.65', hedef: '3955728.35', hedef_stok: '11.12' },
+    { bolge: 'B00324', kod: 'S110', ad: 'TEST ŞUBE 110', il: 'ANKARA', toplamanaparabakiyesi: '28567509.26', hedef: '3373822.84', hedef_stok: '11.81' },
+    { bolge: 'B00324', kod: 'S111', ad: 'TEST ŞUBE 111', il: 'İSTANBUL', toplamanaparabakiyesi: '43301157.41', hedef: '5087886.00', hedef_stok: '11.75' },
+    { bolge: 'B00324', kod: 'S112', ad: 'TEST ŞUBE 112', il: 'İZMİR', toplamanaparabakiyesi: '25361077.63', hedef: '2898771.17', hedef_stok: '11.43' },
+    { bolge: 'B00324', kod: 'S113', ad: 'TEST ŞUBE 113', il: 'ANKARA', toplamanaparabakiyesi: '28802054.57', hedef: '3358319.56', hedef_stok: '11.66' },
+    { bolge: 'B00324', kod: 'S114', ad: 'TEST ŞUBE 114', il: 'İZMİR', toplamanaparabakiyesi: '29348512.89', hedef: '3416166.90', hedef_stok: '11.64' },
+    { bolge: 'B00324', kod: 'S115', ad: 'TEST ŞUBE 115', il: 'GAZİANTEP', toplamanaparabakiyesi: '40094189.44', hedef: '4598803.53', hedef_stok: '11.47' },
+    { bolge: 'B00324', kod: 'S116', ad: 'TEST ŞUBE 116', il: 'İZMİR', toplamanaparabakiyesi: '41778706.64', hedef: '4683393.01', hedef_stok: '11.21' },
+    { bolge: 'B00324', kod: 'S117', ad: 'TEST ŞUBE 117', il: 'İZMİR', toplamanaparabakiyesi: '30565587.37', hedef: '3453911.37', hedef_stok: '11.30' },
+    { bolge: 'B00324', kod: 'S118', ad: 'TEST ŞUBE 118', il: 'İZMİR', toplamanaparabakiyesi: '30538645.86', hedef: '3615775.67', hedef_stok: '11.84' },
+    { bolge: 'B00324', kod: 'S119', ad: 'TEST ŞUBE 119', il: 'BURSA', toplamanaparabakiyesi: '31263895.41', hedef: '3535946.57', hedef_stok: '11.31' },
+    { bolge: 'B00324', kod: 'S120', ad: 'TEST ŞUBE 120', il: 'BURSA', toplamanaparabakiyesi: '30193285.91', hedef: '3556769.08', hedef_stok: '11.78' },
+    { bolge: 'B00324', kod: 'S121', ad: 'TEST ŞUBE 121', il: 'ANKARA', toplamanaparabakiyesi: '29224672.25', hedef: '3302387.96', hedef_stok: '11.30' },
+    { bolge: 'B00324', kod: 'S122', ad: 'TEST ŞUBE 122', il: 'BURSA', toplamanaparabakiyesi: '42559424.91', hedef: '4962428.94', hedef_stok: '11.66' },
+    { bolge: 'B00324', kod: 'S123', ad: 'TEST ŞUBE 123', il: 'KONYA', toplamanaparabakiyesi: '44903631.10', hedef: '4943889.78', hedef_stok: '11.01' },
+    { bolge: 'B00324', kod: 'S124', ad: 'TEST ŞUBE 124', il: 'ADANA', toplamanaparabakiyesi: '44583144.06', hedef: '5300935.83', hedef_stok: '11.89' },
+    { bolge: 'B00324', kod: 'S125', ad: 'TEST ŞUBE 125', il: 'ADANA', toplamanaparabakiyesi: '33911289.01', hedef: '3876060.33', hedef_stok: '11.43' },
+    { bolge: 'B00324', kod: 'S126', ad: 'TEST ŞUBE 126', il: 'ANKARA', toplamanaparabakiyesi: '42753731.98', hedef: '4835447.09', hedef_stok: '11.31' },
+    { bolge: 'B00324', kod: 'S127', ad: 'TEST ŞUBE 127', il: 'KONYA', toplamanaparabakiyesi: '41264941.09', hedef: '4894022.01', hedef_stok: '11.86' },
+    { bolge: 'B00324', kod: 'S128', ad: 'TEST ŞUBE 128', il: 'KAYSERİ', toplamanaparabakiyesi: '27768489.27', hedef: '3118401.35', hedef_stok: '11.23' },
+    { bolge: 'B00324', kod: 'S129', ad: 'TEST ŞUBE 129', il: 'İSTANBUL', toplamanaparabakiyesi: '26286308.70', hedef: '3046583.18', hedef_stok: '11.59' },
+    { bolge: 'B00324', kod: 'S130', ad: 'TEST ŞUBE 130', il: 'ADANA', toplamanaparabakiyesi: '32214484.08', hedef: '3736880.15', hedef_stok: '11.60' },
+    { bolge: 'B00324', kod: 'S131', ad: 'TEST ŞUBE 131', il: 'BURSA', toplamanaparabakiyesi: '26448949.69', hedef: '3152714.80', hedef_stok: '11.92' },
+    { bolge: 'B00324', kod: 'S132', ad: 'TEST ŞUBE 132', il: 'ANKARA', toplamanaparabakiyesi: '36229184.57', hedef: '4278666.70', hedef_stok: '11.81' },
+    { bolge: 'B00324', kod: 'S133', ad: 'TEST ŞUBE 133', il: 'BURSA', toplamanaparabakiyesi: '26423696.16', hedef: '3162916.43', hedef_stok: '11.97' },
+    { bolge: 'B00324', kod: 'S134', ad: 'TEST ŞUBE 134', il: 'KAYSERİ', toplamanaparabakiyesi: '37438386.89', hedef: '4174380.14', hedef_stok: '11.15' },
+    { bolge: 'B00324', kod: 'S135', ad: 'TEST ŞUBE 135', il: 'KAYSERİ', toplamanaparabakiyesi: '26439701.04', hedef: '3109308.84', hedef_stok: '11.76' },
+    { bolge: 'B00324', kod: 'S136', ad: 'TEST ŞUBE 136', il: 'ANKARA', toplamanaparabakiyesi: '35631794.50', hedef: '3969381.91', hedef_stok: '11.14' },
+    { bolge: 'B00324', kod: 'S137', ad: 'TEST ŞUBE 137', il: 'İZMİR', toplamanaparabakiyesi: '30505867.36', hedef: '3441061.84', hedef_stok: '11.28' },
+    { bolge: 'B00324', kod: 'S138', ad: 'TEST ŞUBE 138', il: 'KONYA', toplamanaparabakiyesi: '38654017.44', hedef: '4619155.08', hedef_stok: '11.95' },
+    { bolge: 'B00324', kod: 'S139', ad: 'TEST ŞUBE 139', il: 'ANTALYA', toplamanaparabakiyesi: '42442106.71', hedef: '5084564.38', hedef_stok: '11.98' },
+    { bolge: 'B00324', kod: 'S140', ad: 'TEST ŞUBE 140', il: 'KONYA', toplamanaparabakiyesi: '26865805.14', hedef: '3164791.85', hedef_stok: '11.78' },
+    { bolge: 'B00324', kod: 'S141', ad: 'TEST ŞUBE 141', il: 'ANTALYA', toplamanaparabakiyesi: '41411004.95', hedef: '4832664.28', hedef_stok: '11.67' },
+    { bolge: 'B00324', kod: 'S142', ad: 'TEST ŞUBE 142', il: 'KONYA', toplamanaparabakiyesi: '37819450.00', hedef: '4197958.95', hedef_stok: '11.10' },
+    { bolge: 'B00324', kod: 'S143', ad: 'TEST ŞUBE 143', il: 'İSTANBUL', toplamanaparabakiyesi: '40657834.99', hedef: '4765098.26', hedef_stok: '11.72' },
+    { bolge: 'B00324', kod: 'S144', ad: 'TEST ŞUBE 144', il: 'İZMİR', toplamanaparabakiyesi: '30702539.06', hedef: '3444824.88', hedef_stok: '11.22' },
+    { bolge: 'B00324', kod: 'S145', ad: 'TEST ŞUBE 145', il: 'ANTALYA', toplamanaparabakiyesi: '26391993.76', hedef: '3048275.28', hedef_stok: '11.55' },
+    { bolge: 'B00324', kod: 'S146', ad: 'TEST ŞUBE 146', il: 'İSTANBUL', toplamanaparabakiyesi: '28083307.91', hedef: '3108822.19', hedef_stok: '11.07' },
+    { bolge: 'B00324', kod: 'S147', ad: 'TEST ŞUBE 147', il: 'ADANA', toplamanaparabakiyesi: '30064715.46', hedef: '3421364.62', hedef_stok: '11.38' },
+    { bolge: 'B00324', kod: 'S148', ad: 'TEST ŞUBE 148', il: 'KAYSERİ', toplamanaparabakiyesi: '26549929.92', hedef: '3010762.05', hedef_stok: '11.34' },
+    { bolge: 'B00324', kod: 'S149', ad: 'TEST ŞUBE 149', il: 'ANKARA', toplamanaparabakiyesi: '31592194.49', hedef: '3667853.78', hedef_stok: '11.61' },
+    { bolge: 'B00324', kod: 'S150', ad: 'TEST ŞUBE 150', il: 'ADANA', toplamanaparabakiyesi: '32693538.43', hedef: '3671484.37', hedef_stok: '11.23' },
+    { bolge: 'B00324', kod: 'S151', ad: 'TEST ŞUBE 151', il: 'KAYSERİ', toplamanaparabakiyesi: '40925810.27', hedef: '4583690.75', hedef_stok: '11.20' },
+    { bolge: 'B00324', kod: 'S152', ad: 'TEST ŞUBE 152', il: 'KAYSERİ', toplamanaparabakiyesi: '26342325.69', hedef: '3082052.11', hedef_stok: '11.70' },
+    { bolge: 'B00324', kod: 'S153', ad: 'TEST ŞUBE 153', il: 'MERSİN', toplamanaparabakiyesi: '34972458.22', hedef: '4109263.84', hedef_stok: '11.75' },
+    { bolge: 'B00324', kod: 'S154', ad: 'TEST ŞUBE 154', il: 'KONYA', toplamanaparabakiyesi: '34975213.98', hedef: '4004662.00', hedef_stok: '11.45' },
+    { bolge: 'B00324', kod: 'S155', ad: 'TEST ŞUBE 155', il: 'BURSA', toplamanaparabakiyesi: '35728867.79', hedef: '4048120.72', hedef_stok: '11.33' },
+    { bolge: 'B00324', kod: 'S156', ad: 'TEST ŞUBE 156', il: 'ADANA', toplamanaparabakiyesi: '27271383.69', hedef: '3138956.26', hedef_stok: '11.51' },
+    { bolge: 'B00324', kod: 'S157', ad: 'TEST ŞUBE 157', il: 'GAZİANTEP', toplamanaparabakiyesi: '32066891.13', hedef: '3825573.41', hedef_stok: '11.93' },
+    { bolge: 'B00324', kod: 'S158', ad: 'TEST ŞUBE 158', il: 'İSTANBUL', toplamanaparabakiyesi: '31349887.89', hedef: '3558162.28', hedef_stok: '11.35' },
+    { bolge: 'B00324', kod: 'S159', ad: 'TEST ŞUBE 159', il: 'KONYA', toplamanaparabakiyesi: '35032549.97', hedef: '4070786.31', hedef_stok: '11.62' },
+    { bolge: 'B00324', kod: 'S160', ad: 'TEST ŞUBE 160', il: 'GAZİANTEP', toplamanaparabakiyesi: '44521453.69', hedef: '5227318.66', hedef_stok: '11.74' },
+    { bolge: 'B00324', kod: 'S161', ad: 'TEST ŞUBE 161', il: 'ANKARA', toplamanaparabakiyesi: '32840618.06', hedef: '3881751.05', hedef_stok: '11.82' },
+    { bolge: 'B00324', kod: 'S162', ad: 'TEST ŞUBE 162', il: 'ADANA', toplamanaparabakiyesi: '31102927.81', hedef: '3514630.84', hedef_stok: '11.30' },
+    { bolge: 'B00324', kod: 'S163', ad: 'TEST ŞUBE 163', il: 'İZMİR', toplamanaparabakiyesi: '43372671.18', hedef: '4840490.10', hedef_stok: '11.16' },
+    { bolge: 'B00324', kod: 'S164', ad: 'TEST ŞUBE 164', il: 'ADANA', toplamanaparabakiyesi: '40078864.91', hedef: '4613061.35', hedef_stok: '11.51' },
+    { bolge: 'B00324', kod: 'S165', ad: 'TEST ŞUBE 165', il: 'ANKARA', toplamanaparabakiyesi: '27218671.16', hedef: '3135590.85', hedef_stok: '11.52' },
+    { bolge: 'B00324', kod: 'S166', ad: 'TEST ŞUBE 166', il: 'İZMİR', toplamanaparabakiyesi: '37666245.92', hedef: '4384351.03', hedef_stok: '11.64' },
+    { bolge: 'B00324', kod: 'S167', ad: 'TEST ŞUBE 167', il: 'ADANA', toplamanaparabakiyesi: '34335496.05', hedef: '3866121.81', hedef_stok: '11.26' },
+    { bolge: 'B00324', kod: 'S168', ad: 'TEST ŞUBE 168', il: 'İZMİR', toplamanaparabakiyesi: '26909893.99', hedef: '2981616.25', hedef_stok: '11.08' },
+    { bolge: 'B00324', kod: 'S169', ad: 'TEST ŞUBE 169', il: 'BURSA', toplamanaparabakiyesi: '35501861.94', hedef: '4096814.87', hedef_stok: '11.54' },
+    { bolge: 'B00324', kod: 'S170', ad: 'TEST ŞUBE 170', il: 'ADANA', toplamanaparabakiyesi: '36968051.72', hedef: '4277203.58', hedef_stok: '11.57' },
+    { bolge: 'B00324', kod: 'S171', ad: 'TEST ŞUBE 171', il: 'KAYSERİ', toplamanaparabakiyesi: '34484084.77', hedef: '4075970.82', hedef_stok: '11.82' },
+    { bolge: 'B00324', kod: 'S172', ad: 'TEST ŞUBE 172', il: 'ADANA', toplamanaparabakiyesi: '30452414.93', hedef: '3593384.96', hedef_stok: '11.80' },
+    { bolge: 'B00324', kod: 'S173', ad: 'TEST ŞUBE 173', il: 'ADANA', toplamanaparabakiyesi: '34661858.26', hedef: '4121294.95', hedef_stok: '11.89' },
+    { bolge: 'B00324', kod: 'S174', ad: 'TEST ŞUBE 174', il: 'BURSA', toplamanaparabakiyesi: '29090623.11', hedef: '3464693.21', hedef_stok: '11.91' },
+    { bolge: 'B00324', kod: 'S175', ad: 'TEST ŞUBE 175', il: 'ANKARA', toplamanaparabakiyesi: '40058561.42', hedef: '4458508.08', hedef_stok: '11.13' },
+    { bolge: 'B00324', kod: 'S176', ad: 'TEST ŞUBE 176', il: 'İZMİR', toplamanaparabakiyesi: '42171569.11', hedef: '4845493.10', hedef_stok: '11.49' },
+    { bolge: 'B00324', kod: 'S177', ad: 'TEST ŞUBE 177', il: 'KONYA', toplamanaparabakiyesi: '28637785.45', hedef: '3405032.69', hedef_stok: '11.89' },
+    { bolge: 'B00324', kod: 'S178', ad: 'TEST ŞUBE 178', il: 'ANTALYA', toplamanaparabakiyesi: '25619176.62', hedef: '2871909.70', hedef_stok: '11.21' },
+    { bolge: 'B00324', kod: 'S179', ad: 'TEST ŞUBE 179', il: 'GAZİANTEP', toplamanaparabakiyesi: '27267140.63', hedef: '3217522.59', hedef_stok: '11.80' },
+    { bolge: 'B00324', kod: 'S180', ad: 'TEST ŞUBE 180', il: 'GAZİANTEP', toplamanaparabakiyesi: '32845624.96', hedef: '3724703.87', hedef_stok: '11.34' }
+];
+
+        // STATE
+        let staffInRegion = [], allBranchesInRegion = [], ilListesi = [];
+        let unassignedBranches = [], selectedBranches = [];
+        let pendingYedekAssignments = [];
+        let completedAssignments = [];
+        let activeFilterTags = new Set(); 
+
+        // EDIT MODE STATE
+        let isEditMode = false;
+        let editingTeamCode = null;
+
+        // DOM Elements
+        const selectIl = document.getElementById('select-il');
+        const filterTagArea = document.getElementById('filter-tag-area');
+        const filterShowSelected = document.getElementById('filter-show-selected');
+        const branchSearchInput = document.getElementById('branch-search-input');
+        const selectAllCheckbox = document.getElementById('select-all-branches');
+        const branchListContainer = document.getElementById('branch-list-container');
+        const noUnassignedMessage = document.getElementById('no-unassigned-message');
+        const selectedBranchCount = document.getElementById('selected-branch-count');
+        const summaryAnapara = document.getElementById('summary-anapara');
+        const summaryHedef = document.getElementById('summary-hedef');
+        const summaryAvgRatio = document.getElementById('summary-avg-ratio'); 
+        const selectAsil = document.getElementById('select-asil');
+        const assignAsilBtn = document.getElementById('assign-asil-btn');
+        const asilPanelDefaultMessage = document.getElementById('asil-panel-default-message');
+        const asilPanelActiveForm = document.getElementById('asil-panel-active-form');
+
+        const avgTargetDisplay = document.getElementById('avg-target-display');
+        const unitStatsDetail = document.getElementById('unit-stats-detail');
+        const avgRatioDisplay = document.getElementById('avg-ratio-display'); 
+
+        const noPendingYedekMessage = document.getElementById('no-pending-yedek-message');
+        const pendingYedekList = document.getElementById('pending-yedek-list');
+        const yedekTableBody = document.getElementById('yedek-table-body');
+        const masterSelectYedek1 = document.getElementById('master-select-yedek1');
+        const masterSelectYedek2 = document.getElementById('master-select-yedek2');
+        const confirmBatchBtn = document.getElementById('confirm-batch-btn');
+        const autoDistributeBtn = document.getElementById('auto-distribute-btn'); 
+        
+        const pendingTotalAnapara = document.getElementById('pending-total-anapara');
+        const pendingTotalHedef = document.getElementById('pending-total-hedef');
+        const pendingAvgRatio = document.getElementById('pending-avg-ratio');
+
+        const summaryTableContainer = document.getElementById('summary-table-container');
+        const summaryTableBody = document.getElementById('summary-table-body');
+        const noSummaryMessage = document.getElementById('no-summary-message');
+        const totalCompletedCount = document.getElementById('total-completed-count');
+        const completionScreen = document.getElementById('completion-screen');
+        const partialFinishBtn = document.getElementById('partial-finish-btn');
+        
+        // Panels for Toggling
+        const asilAssignmentPanel = document.getElementById('asil-assignment-panel');
+        const yedekAssignmentPanel = document.getElementById('yedek-assignment-panel');
+        const editControlPanel = document.getElementById('edit-control-panel');
+        const editModeBanner = document.getElementById('edit-mode-banner');
+        const editingUserNameDisplay = document.getElementById('editing-user-name');
+        const editPanelUserName = document.getElementById('edit-panel-user-name');
+        const editIdealTarget = document.getElementById('edit-ideal-target');
+        const editIdealRatio = document.getElementById('edit-ideal-ratio');
+        
+        // NEW Edit Dropdowns
+        const editYedek1 = document.getElementById('edit-yedek1');
+        const editYedek2 = document.getElementById('edit-yedek2');
+        const editChangeAsil = document.getElementById('edit-change-asil');
+
+        // --- INIT ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeApp();
+            setupEventListeners();
+        });
+
+        function initializeApp() {
+            staffInRegion = originalAllStaff.filter(s => s.bolge === TAKIP_BIRIM_KODU);
+            allBranchesInRegion = originalAllBranches.filter(b => b.bolge === TAKIP_BIRIM_KODU);
+            unassignedBranches = [...allBranchesInRegion];
+            
+            const ilSet = new Set(allBranchesInRegion.map(b => b.il));
+            ilListesi = Array.from(ilSet).sort();
+
+            selectedBranches = []; pendingYedekAssignments = []; completedAssignments = []; activeFilterTags.clear();
+            isEditMode = false;
+            
+            calculateAndRenderAverages();
+
+            populateSelects();
+            renderBranchList();
+            renderYedekTable();
+            renderSummaryPanel();
+        }
+
+        // --- İSTATİSTİK HESAPLAMA ---
+        function calculateAndRenderAverages() {
+            const totalUnitTarget = allBranchesInRegion.reduce((acc, curr) => acc + parseFloat(curr.hedef || 0), 0);
+            const totalUnitPrincipal = allBranchesInRegion.reduce((acc, curr) => acc + parseFloat(curr.toplamanaparabakiyesi || 0), 0);
+            
+            const totalStaffCount = staffInRegion.length;
+            
+            globalAverageTarget = totalStaffCount > 0 ? (totalUnitTarget / totalStaffCount) : 0;
+            globalAverageBranchCount = totalStaffCount > 0 ? (allBranchesInRegion.length / totalStaffCount) : 0;
+            
+            const averageRatio = totalUnitPrincipal > 0 ? (totalUnitTarget / totalUnitPrincipal) * 100 : 0;
+            globalAverageRatio = averageRatio;
+            
+            avgTargetDisplay.textContent = formatCurrency(globalAverageTarget);
+            unitStatsDetail.textContent = `Toplam Hedef: ${formatNumber(totalUnitTarget)} ₺ / ${totalStaffCount} Personel`;
+            avgRatioDisplay.textContent = `Genel Ort. H/S: %${averageRatio.toFixed(2)}`;
+        }
+
+        function setupEventListeners() {
+            selectIl.addEventListener('change', handleIlSelect);
+            branchSearchInput.addEventListener('input', renderBranchList);
+            filterShowSelected.addEventListener('change', renderBranchList);
+            selectAllCheckbox.addEventListener('change', handleSelectAll);
+            branchListContainer.addEventListener('change', handleBranchCheckboxChange); // Critical change here
+            
+            assignAsilBtn.addEventListener('click', handleAssignAsil);
+            confirmBatchBtn.addEventListener('click', handleConfirmBatch);
+            
+            document.getElementById('reset-all-btn').addEventListener('click', () => {
+                if(confirm("Tüm işlemleri sıfırlamak istediğinize emin misiniz?")) initializeApp();
+            });
+            
+            document.getElementById('final-export-btn').addEventListener('click', handleExport);
+            partialFinishBtn.addEventListener('click', () => {
+                if(confirm(`${unassignedBranches.length} adet şube atanmadı. Mevcut durum ile işlemi bitirmek istiyor musunuz?`)) {
+                    completionScreen.classList.remove('hidden');
+                }
+            });
+            
+            if(autoDistributeBtn) {
+                autoDistributeBtn.addEventListener('click', handleAutoDistribute);
+            }
+        }
+        
+        // --- YENİ OTOMATİK DAĞITIM FONKSİYONU ---
+        function handleAutoDistribute() {
+            if(unassignedBranches.length === 0) {
+                showToast("Dağıtılacak şube yok.", true);
+                return;
+            }
+            if(staffInRegion.length === 0) {
+                showToast("Personel listesi boş.", true);
+                return;
+            }
+            
+            if(!confirm("Tüm şubeler, personel arasında otomatik olarak eşit hedef ve adet gözetilerek dağıtılacak. Yedekler boş bırakılacak. Devam edilsin mi?")) return;
+
+            // 1. Şubeleri hedefe göre büyükten küçüğe sırala (Big Rocks First)
+            const sortedBranches = [...unassignedBranches].sort((a, b) => parseFloat(b.hedef) - parseFloat(a.hedef));
+            
+            // 2. Personel sepetlerini hazırla
+            let staffBuckets = staffInRegion.map(s => ({
+                ...s,
+                currentTotalTarget: 0,
+                currentBranchCount: 0,
+                assignedBranches: []
+            }));
+
+            // 3. Dağıtım Algoritması (Adet ve Hedef Dengeli)
+            sortedBranches.forEach(branch => {
+                const branchTarget = parseFloat(branch.hedef || 0);
+                
+                // Her turda en "muhtaç" personeli bul
+                // Skor ne kadar düşükse o kadar ihtiyaç sahibi
+                staffBuckets.sort((a, b) => {
+                    // Normalize edilmiş skorlar
+                    const scoreA = (a.currentTotalTarget / (globalAverageTarget || 1)) + (a.currentBranchCount / (globalAverageBranchCount || 1));
+                    const scoreB = (b.currentTotalTarget / (globalAverageTarget || 1)) + (b.currentBranchCount / (globalAverageBranchCount || 1));
+                    return scoreA - scoreB;
+                });
+                
+                // En uygun personele ata
+                const bestStaff = staffBuckets[0];
+                bestStaff.assignedBranches.push(branch);
+                bestStaff.currentTotalTarget += branchTarget;
+                bestStaff.currentBranchCount += 1;
+            });
+
+            // 4. State'i Güncelle
+            staffBuckets.forEach(bucket => {
+                bucket.assignedBranches.forEach(b => {
+                    completedAssignments.push({
+                        branch: b,
+                        asil: { sicil: bucket.sicil, ad: bucket.ad, takımkodu: bucket.takımkodu },
+                        yedek1: null, // Otomatikte yedek boş
+                        yedek2: null,
+                        batchId: 'AUTO-' + Date.now(),
+                        needsReview: true // YENİ: Yedek seçimi gerekli
+                    });
+                });
+            });
+
+            // 5. Temizlik ve UI
+            unassignedBranches = [];
+            selectedBranches = [];
+            activeFilterTags.clear();
+            
+            renderBranchList();
+            renderSummaryPanel();
+            updateAsilPanel();
+            renderYedekTable(); // Yedek masası temizlenmeli
+            populateSelects(); // Dropdownu güncelle
+            
+            showToast("Dağıtım yapıldı! Lütfen listeden personellere tıklayarak YEDEKLERİ atayınız.", false);
+            checkFinalCompletion();
+        }
+
+        // --- YARDIMCI KONTROL FONKSİYONU ---
+        function validateTeamMetrics(branchList) {
+            let totalAna = 0, totalHedef = 0;
+            branchList.forEach(b => {
+                totalAna += parseFloat(b.toplamanaparabakiyesi || 0);
+                totalHedef += parseFloat(b.hedef || 0);
+            });
+
+            const lowerBoundT = globalAverageTarget * 0.90;
+            const upperBoundT = globalAverageTarget * 1.10;
+            const lowerBoundR = globalAverageRatio * 0.90;
+            const upperBoundR = globalAverageRatio * 1.10;
+            
+            const currentRatio = totalAna > 0 ? (totalHedef / totalAna) * 100 : 0;
+
+            if (totalHedef > 0 && (totalHedef > upperBoundT || totalHedef < lowerBoundT)) {
+                return { valid: false, msg: `Hedef limiti dışı! (Mevcut: ${formatCurrency(totalHedef)})` };
+            }
+            if (totalAna > 0 && (currentRatio > upperBoundR || currentRatio < lowerBoundR)) {
+                return { valid: false, msg: `H/S oranı limiti dışı! (Mevcut: %${currentRatio.toFixed(2)})` };
+            }
+            return { valid: true };
+        }
+
+        // --- SOL PANEL İŞLEMLERİ ---
+        function populateSelects() {
+            // Find people who are already assigned
+            const assignedSicils = new Set(completedAssignments.map(x => x.asil.sicil));
+            
+            // Filter staff list to only show unassigned people
+            const availableStaff = staffInRegion.filter(s => !assignedSicils.has(s.sicil));
+
+            const defaultOpt = `<option value="">Seçiniz...</option>`;
+            const allStaffOpts = staffInRegion.map(s => `<option value="${s.sicil}">${s.ad}</option>`).join('');
+            const availableStaffOpts = availableStaff.map(s => `<option value="${s.sicil}">${s.ad}</option>`).join('');
+
+            // Manuel atama kutusu: Sadece atanmamışlar
+            selectAsil.innerHTML = defaultOpt + availableStaffOpts;
+            
+            // Yedek kutuları: Herkes olabilir (kendisi hariç, o kontrol atamada yapılıyor)
+            masterSelectYedek1.innerHTML = defaultOpt + allStaffOpts;
+            masterSelectYedek2.innerHTML = defaultOpt + allStaffOpts;
+            editYedek1.innerHTML = defaultOpt + allStaffOpts;
+            editYedek2.innerHTML = defaultOpt + allStaffOpts;
+            
+            // Swap kutusu: Herkes
+            editChangeAsil.innerHTML = defaultOpt + allStaffOpts;
+            
+            populateIlDropdown();
+        }
+
+        function populateIlDropdown() {
+            const activeIls = new Set(unassignedBranches.map(b => b.il));
+            let html = '<option value="">İl Filtrele...</option>';
+            ilListesi.forEach(il => {
+                if (activeIls.has(il)) {
+                    html += `<option value="${il}">${il}</option>`;
+                }
+            });
+            selectIl.innerHTML = html;
+        }
+
+        function handleIlSelect(e) {
+            const il = e.target.value;
+            if(!il) return;
+            if(!activeFilterTags.has(il)) {
+                activeFilterTags.add(il);
+                if(!isEditMode) {
+                    unassignedBranches.forEach(b => {
+                        if(b.il === il && !selectedBranches.includes(b.kod)) {
+                            selectedBranches.push(b.kod);
+                        }
+                    });
+                }
+                renderFilterTags();
+                renderBranchList();
+                if(!isEditMode) updateAsilPanel();
+                filterShowSelected.checked = !isEditMode;
+            }
+            e.target.value = "";
+        }
+
+        function removeFilterTag(tag) {
+            activeFilterTags.delete(tag);
+            renderFilterTags();
+            renderBranchList();
+        }
+
+        function renderFilterTags() {
+            filterTagArea.innerHTML = Array.from(activeFilterTags).map(tag => {
+                return `<div class="inline-flex items-center bg-blue-50 text-blue-700 text-[10px] font-bold px-2 py-1 rounded border border-blue-100">
+                    ${tag} <button onclick="removeFilterTag('${tag}')" class="ml-2 text-blue-400 hover:text-red-500">×</button>
+                </div>`;
+            }).join('');
+        }
+
+        function renderBranchList() {
+            const term = normalizeString(branchSearchInput.value);
+            const showSelected = filterShowSelected.checked;
+            
+            const filtered = unassignedBranches.filter(b => {
+                const matchesTerm = normalizeString(b.ad).includes(term) || normalizeString(b.kod).includes(term);
+                const matchesTag = activeFilterTags.size === 0 || activeFilterTags.has(b.il);
+                const matchesSelected = !showSelected || selectedBranches.includes(b.kod);
+                return matchesTerm && matchesTag && matchesSelected;
+            });
+            
+            branchListContainer.innerHTML = filtered.length ? filtered.map(b => {
+                const isChecked = selectedBranches.includes(b.kod);
+                const displayHs = parseFloat(b.hedef_stok).toFixed(2);
+                const visualClass = isEditMode 
+                    ? 'hover:bg-yellow-50 border-transparent border-l-4 border-l-yellow-400' 
+                    : (isChecked ? 'bg-blue-50 border-blue-200' : 'hover:bg-gray-50 border-transparent');
+
+                return `<div class="p-2 rounded-lg transition-colors border ${visualClass}">
+                    <label class="cursor-pointer flex items-start w-full">
+                        <div class="flex items-center h-5 mt-0.5">
+                            <input type="checkbox" value="${b.kod}" class="custom-checkbox branch-checkbox" ${isChecked ? 'checked' : ''}>
+                        </div>
+                        <div class="ml-2 w-full">
+                            <div class="flex justify-between items-baseline">
+                                <span class="text-xs font-bold text-gray-800">${b.ad}</span>
+                                <span class="text-[10px] font-mono text-blue-600 bg-blue-50 px-1 rounded border border-blue-100">H/S: %${displayHs}</span>
+                            </div>
+                            <div class="text-[10px] text-gray-500 mt-0.5 flex justify-between">
+                                <span>${b.il}</span>
+                                <span class="text-gray-600 font-semibold">${formatCurrency(b.hedef)} Hedef</span>
+                            </div>
+                        </div>
+                    </label>
+                </div>`;
+            }).join('') : '<div class="text-center p-4 text-xs text-gray-400">Şube bulunamadı.</div>';
+
+            document.getElementById('total-branch-badge').textContent = `${filtered.length} Şube`;
+            document.getElementById('select-all-container').style.display = (filtered.length && !isEditMode) ? 'block' : 'none'; 
+            
+            if(!isEditMode) {
+                 selectAllCheckbox.checked = filtered.length > 0 && filtered.every(b => selectedBranches.includes(b.kod));
+            }
+
+            if(unassignedBranches.length === 0) {
+                noUnassignedMessage.classList.remove('hidden');
+                noUnassignedMessage.classList.add('flex');
+            } else {
+                noUnassignedMessage.classList.add('hidden');
+                noUnassignedMessage.classList.remove('flex');
+            }
+            
+            if(!isEditMode) updateAsilPanel();
+        }
+
+        function handleSelectAll(e) {
+            if(isEditMode) return;
+            const visibleCheckboxes = document.querySelectorAll('.branch-checkbox');
+            visibleCheckboxes.forEach(cb => {
+                cb.checked = e.target.checked;
+                const val = cb.value;
+                if(e.target.checked) {
+                    if(!selectedBranches.includes(val)) selectedBranches.push(val);
+                } else {
+                    selectedBranches = selectedBranches.filter(k => k !== val);
+                }
+            });
+            updateAsilPanel();
+            renderBranchList();
+        }
+
+        // --- CRITICAL: MODIFIED CHECKBOX HANDLER ---
+        function handleBranchCheckboxChange(e) {
+            if(!e.target.classList.contains('branch-checkbox')) return;
+            const val = e.target.value;
+
+            if(isEditMode) {
+                // IMMEDIATE ACTION: ADD TO TEAM (Validation removed here to allow flexible selection)
+                const branchIndex = unassignedBranches.findIndex(b => b.kod === val);
+                if(branchIndex === -1) return;
+                const branchToAdd = unassignedBranches[branchIndex];
+                
+                const existingAssignments = completedAssignments.filter(x => x.asil.takımkodu === editingTeamCode);
+                const refItem = existingAssignments[0]; 
+                
+                if(!refItem) { alert("Takım hatası!"); return; }
+
+                unassignedBranches.splice(branchIndex, 1);
+                
+                const newAssignment = {
+                    branch: branchToAdd,
+                    asil: refItem.asil,
+                    yedek1: refItem.yedek1, // Keep existing backup
+                    yedek2: refItem.yedek2, // Keep existing backup
+                    batchId: refItem.batchId,
+                    needsReview: refItem.needsReview // Keep existing flag
+                };
+                
+                completedAssignments.push(newAssignment);
+                renderBranchList();
+                renderSummaryPanel();
+                showToast(`${branchToAdd.ad} eklendi (Limit kontrolü kayıtta yapılacak).`);
+                
+                e.target.checked = false; 
+
+            } else {
+                // NORMAL BEHAVIOR
+                if(e.target.checked) {
+                    if(!selectedBranches.includes(val)) selectedBranches.push(val);
+                } else {
+                    selectedBranches = selectedBranches.filter(k => k !== val);
+                }
+                updateAsilPanel();
+                e.target.closest('div.rounded-lg').className = `p-2 rounded-lg transition-colors border ${e.target.checked ? 'bg-blue-50 border-blue-200' : 'hover:bg-gray-50 border-transparent'}`;
+            }
+        }
+
+        function updateAsilPanel() {
+            if(isEditMode) return;
+
+            selectedBranchCount.textContent = selectedBranches.length;
+            
+            let totalAna = 0, totalHedef = 0;
+            selectedBranches.forEach(kod => {
+                const b = allBranchesInRegion.find(x => x.kod === kod);
+                if(b) {
+                    totalAna += parseFloat(b.toplamanaparabakiyesi || 0);
+                    totalHedef += parseFloat(b.hedef || 0); 
+                }
+            });
+            summaryAnapara.textContent = formatCurrency(totalAna);
+            summaryHedef.textContent = formatCurrency(totalHedef);
+
+            const weightedAvg = totalAna > 0 ? (totalHedef / totalAna) * 100 : 0;
+            summaryAvgRatio.textContent = `%${weightedAvg.toFixed(2)}`;
+
+            const warningBox = document.getElementById('target-deviation-warning');
+            let messages = [];
+            let severity = 'none'; 
+
+            const lowerBoundT = globalAverageTarget * 0.90;
+            const upperBoundT = globalAverageTarget * 1.10;
+
+            if (totalHedef > 0 && globalAverageTarget > 0) {
+                if (totalHedef > upperBoundT) {
+                    messages.push("<div>⚠️ Hedef Kotası Aşıldı! (+%10)</div>");
+                    severity = 'high';
+                } else if (totalHedef < lowerBoundT) {
+                    messages.push("<div>⚠️ Hedef Kotası Altında. (-%10)</div>");
+                    if(severity !== 'high') severity = 'low';
+                }
+            }
+
+            const lowerBoundR = globalAverageRatio * 0.90;
+            const upperBoundR = globalAverageRatio * 1.10;
+
+            if (selectedBranches.length > 0 && globalAverageRatio > 0 && totalHedef > 0) {
+                 if (weightedAvg > upperBoundR) {
+                    messages.push("<div>📈 H/S Ortalaması Yüksek! (+%10)</div>");
+                    severity = 'high';
+                 } else if (weightedAvg < lowerBoundR) {
+                    messages.push("<div>📉 H/S Ortalaması Düşük. (-%10)</div>");
+                    if(severity !== 'high') severity = 'low';
+                 }
+            }
+
+            if (messages.length > 0) {
+                warningBox.innerHTML = messages.join('');
+                warningBox.classList.remove('hidden', 'bg-yellow-50', 'border-yellow-200', 'text-yellow-700', 'bg-red-50', 'border-red-200', 'text-red-700');
+                if (severity === 'high') {
+                     warningBox.classList.add('bg-red-50', 'border-red-200', 'text-red-700');
+                } else {
+                     warningBox.classList.add('bg-yellow-50', 'border-yellow-200', 'text-yellow-700');
+                }
+            } else {
+                warningBox.classList.add('hidden');
+            }
+
+            if(selectedBranches.length > 0) {
+                asilPanelDefaultMessage.classList.add('hidden');
+                asilPanelActiveForm.classList.remove('hidden');
+            } else {
+                asilPanelDefaultMessage.classList.remove('hidden');
+                asilPanelActiveForm.classList.add('hidden');
+            }
+        }
+
+        // --- ORTA PANEL İŞLEMLERİ (ASİL ATAMA) ---
+        function handleAssignAsil() {
+            const asilSicil = selectAsil.value;
+            if(!asilSicil || selectedBranches.length === 0) {
+                showToast('Lütfen personel ve şube seçiniz.', true);
+                return;
+            }
+
+            // --- NORMAL MOD KONTROLÜ (Değişmedi) ---
+            const branchesToAssign = selectedBranches.map(kod => allBranchesInRegion.find(b => b.kod === kod));
+            const check = validateTeamMetrics(branchesToAssign);
+
+            if(!check.valid) {
+                // Burada da onay sorabiliriz, ama manuel eklemede katı kuralı esnetmiyorum
+                if(!confirm(check.msg + " Yine de eklemek istiyor musunuz?")) {
+                    return;
+                }
+            }
+
+            const asilUser = staffInRegion.find(s => s.sicil === asilSicil);
+            
+            selectedBranches.forEach(kod => {
+                const branch = allBranchesInRegion.find(b => b.kod === kod);
+                pendingYedekAssignments.push({
+                    branch: branch,
+                    asil: asilUser
+                });
+                unassignedBranches = unassignedBranches.filter(b => b.kod !== kod);
+            });
+
+            selectedBranches = [];
+            selectAsil.value = "";
+            activeFilterTags.clear();
+            branchSearchInput.value = "";
+            filterShowSelected.checked = false;
+            
+            renderBranchList();
+            updateAsilPanel();
+            renderYedekTable();
+            populateSelects(); // Update dropdown (remove assigned)
+            showToast(`${pendingYedekAssignments.length} şube yedek atama havuzuna eklendi.`);
+        }
+
+        // --- SAĞ PANEL İŞLEMLERİ (YEDEK ATAMA) ---
+        window.removeFromPending = function(branchCode) {
+            const idx = pendingYedekAssignments.findIndex(p => p.branch.kod === branchCode);
+            if(idx > -1) {
+                const item = pendingYedekAssignments[idx];
+                unassignedBranches.push(item.branch);
+                pendingYedekAssignments.splice(idx, 1);
+                renderYedekTable();
+                renderBranchList();
+                populateSelects();
+            }
+        }
+
+        function renderYedekTable() {
+            let tAna = 0, tHedef = 0;
+            
+            if(pendingYedekAssignments.length === 0) {
+                noPendingYedekMessage.classList.remove('hidden');
+                pendingYedekList.classList.add('hidden');
+            } else {
+                noPendingYedekMessage.classList.add('hidden');
+                pendingYedekList.classList.remove('hidden');
+                
+                yedekTableBody.innerHTML = pendingYedekAssignments.map((item, i) => {
+                    tAna += parseFloat(item.branch.toplamanaparabakiyesi || 0);
+                    tHedef += parseFloat(item.branch.hedef || 0);
+                    const displayHs = parseFloat(item.branch.hedef_stok).toFixed(2);
+
+                    return `
+                    <tr class="${i % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-yellow-50">
+                        <td class="px-3 py-2">
+                            <div class="text-xs font-bold text-gray-800">${item.branch.ad}</div>
+                            <div class="text-[10px] text-gray-500">${item.branch.il}</div>
+                        </td>
+                        <td class="px-3 py-2">
+                            <div class="text-xs font-semibold text-indigo-700">${item.asil.ad}</div>
+                            <div class="text-[9px] text-indigo-400 font-mono">${item.asil.takımkodu}</div>
+                        </td>
+                        <td class="px-3 py-2 text-right text-xs font-mono text-gray-700">${formatCurrency(item.branch.toplamanaparabakiyesi)}</td>
+                        <td class="px-3 py-2 text-right text-xs font-mono text-gray-700">${formatCurrency(item.branch.hedef)}</td>
+                        <td class="px-3 py-2 text-right text-xs font-mono text-blue-600 font-bold">%${displayHs}</td>
+                        <td class="px-2 py-2 text-center">
+                            <button onclick="removeFromPending('${item.branch.kod}')" class="text-red-400 hover:text-red-600 font-bold px-2">×</button>
+                        </td>
+                    </tr>
+                `}).join('');
+            }
+            
+            pendingTotalAnapara.textContent = formatCurrency(tAna);
+            pendingTotalHedef.textContent = formatCurrency(tHedef);
+            const avgRat = tAna > 0 ? (tHedef / tAna) * 100 : 0;
+            pendingAvgRatio.textContent = `%${avgRat.toFixed(2)}`;
+
+            checkFinalCompletion();
+        }
+
+        function handleConfirmBatch() {
+            const y1 = masterSelectYedek1.value;
+            const y2 = masterSelectYedek2.value;
+
+            if(!y1 || !y2) {
+                if(!confirm("Yedek personelleri seçmediniz. Bu şekilde devam etmek istiyor musunuz?")) return;
+            }
+            if(y1 === y2 && y1 !== "") {
+                showToast("1. ve 2. yedek aynı kişi olamaz.", true);
+                return;
+            }
+
+            const yedek1User = staffInRegion.find(s => s.sicil === y1);
+            const yedek2User = staffInRegion.find(s => s.sicil === y2);
+
+            pendingYedekAssignments.forEach(item => {
+                completedAssignments.push({
+                    branch: item.branch,
+                    asil: item.asil,
+                    yedek1: yedek1User || null,
+                    yedek2: yedek2User || null,
+                    batchId: Date.now(),
+                    needsReview: false // Manuel işlemde inceleme gerekmez
+                });
+            });
+
+            pendingYedekAssignments = [];
+            masterSelectYedek1.value = "";
+            masterSelectYedek2.value = "";
+            
+            renderYedekTable();
+            renderSummaryPanel();
+            populateSelects(); // Dropdown update
+            showToast("Grup başarıyla onaylandı.");
+            checkFinalCompletion();
+        }
+
+        // --- YENİ SUMMARY PANEL VE EDİT MODE MANTIĞI ---
+        
+        function renderSummaryPanel() {
+            summaryTableBody.innerHTML = '';
+            
+            if(completedAssignments.length === 0) {
+                noSummaryMessage.classList.remove('hidden');
+                summaryTableContainer.classList.add('hidden');
+                partialFinishBtn.classList.add('hidden'); 
+                totalCompletedCount.textContent = '0';
+                return;
+            } 
+            
+            partialFinishBtn.classList.remove('hidden');
+            
+            // Group by TeamCode
+            const summaryMap = completedAssignments.reduce((acc, item) => {
+                const key = item.asil.takımkodu;
+                if(!acc.has(key)) {
+                    acc.set(key, {
+                         asil: item.asil,
+                         teamCode: item.asil.takımkodu,
+                         yedek1: item.yedek1,
+                         yedek2: item.yedek2,
+                         branches: [], // We store branches here for details
+                         needsReview: false
+                    });
+                }
+                const current = acc.get(key);
+                current.branches.push(item);
+                if(item.needsReview) current.needsReview = true;
+                return acc;
+            }, new Map());
+
+            Array.from(summaryMap.values()).forEach(data => {
+                const totalAna = data.branches.reduce((sum, b) => sum + parseFloat(b.branch.toplamanaparabakiyesi || 0), 0);
+                const totalHedef = data.branches.reduce((sum, b) => sum + parseFloat(b.branch.hedef || 0), 0);
+                
+                const weightedAvg = totalAna > 0 ? (totalHedef / totalAna) * 100 : 0;
+
+                const isEditingThis = isEditMode && editingTeamCode === data.teamCode;
+                // Add conditional class for highlighting
+                const needsReviewClass = data.needsReview ? 'needs-review-row' : '';
+                const rowClass = isEditingThis ? 'bg-yellow-100 border-l-4 border-l-yellow-500' : `hover:bg-blue-50 cursor-pointer border-b border-gray-100 ${needsReviewClass}`;
+
+                const tr = document.createElement('tr');
+                tr.className = rowClass + ' transition-colors';
+                
+                if(!isEditMode) {
+                    tr.onclick = () => startEditMode(data.teamCode, data.asil.ad);
+                }
+
+                // Create alert badge if needed
+                const alertBadge = data.needsReview ? `<span class="ml-2 text-[10px] bg-red-600 text-white px-2 py-0.5 rounded animate-pulse"> YEDEK SEÇİNİZ </span>` : '';
+
+                tr.innerHTML = `
+                    <td class="px-4 py-2 text-xs font-bold text-gray-800 flex items-center gap-2">
+                        ${isEditingThis ? '<span class="text-yellow-600 animate-pulse">✎ DÜZENLENİYOR...</span>' : '<span class="text-gray-400">▶</span>'}
+                        ${data.asil.ad}
+                        ${alertBadge}
+                    </td>
+                    <td class="px-4 py-2 text-xs text-gray-500 font-mono">${data.teamCode}</td>
+                    <td class="px-4 py-2 text-center text-xs font-bold text-blue-600">${data.branches.length}</td>
+                    <td class="px-4 py-2 text-right text-xs font-mono text-gray-600">${formatCurrency(totalAna)}</td>
+                    <td class="px-4 py-2 text-right text-xs font-mono text-gray-600 font-medium">${formatCurrency(totalHedef)}</td>
+                    <td class="px-4 py-2 text-right text-xs font-mono text-indigo-600 font-bold">%${weightedAvg.toFixed(2)}</td>
+                    <td class="px-2 py-2 text-center">
+                         ${!isEditMode ? `<button class="text-blue-500 hover:text-blue-700 text-[10px] font-bold border border-blue-200 px-2 py-1 rounded">DÜZENLE</button>` : ''}
+                    </td>
+                `;
+                summaryTableBody.appendChild(tr);
+
+                if(isEditingThis) {
+                    const detailRow = document.createElement('tr');
+                    detailRow.className = "bg-yellow-50 border-b-2 border-yellow-200";
+                    
+                    let branchRows = data.branches.map(b => {
+                        const bHs = parseFloat(b.branch.hedef_stok).toFixed(2);
+                        return `
+                        <tr class="border-b border-yellow-100 last:border-0 hover:bg-yellow-100">
+                            <td class="pl-12 py-1 text-[11px] text-gray-700 font-semibold">${b.branch.ad}</td>
+                            <td class="py-1 text-[10px] text-gray-500">${b.branch.il}</td>
+                            <td class="text-right py-1 px-4 text-[11px] font-mono">${formatCurrency(b.branch.toplamanaparabakiyesi)}</td>
+                            <td class="text-right py-1 px-4 text-[11px] font-mono text-gray-600">${formatCurrency(b.branch.hedef)}</td>
+                            <td class="text-right py-1 px-4 text-[11px] font-mono text-indigo-600 font-bold">%${bHs}</td>
+                             <td class="text-center py-1">
+                                <button onclick="removeBranchImmediate('${b.branch.kod}')" class="text-red-500 hover:text-red-700 font-bold px-2 py-0.5 rounded border border-red-200 bg-white hover:bg-red-50 text-[10px]">
+                                    ✖ ÇIKAR
+                                </button>
+                            </td>
+                        </tr>
+                    `}).join('');
+
+                    detailRow.innerHTML = `
+                        <td colspan="7" class="p-0">
+                            <div class="overflow-hidden">
+                                <table class="w-full">
+                                    ${branchRows}
+                                </table>
+                            </div>
+                        </td>
+                    `;
+                    summaryTableBody.appendChild(detailRow);
+                }
+            });
+
+            noSummaryMessage.classList.add('hidden');
+            summaryTableContainer.classList.remove('hidden');
+            totalCompletedCount.textContent = completedAssignments.length;
+        }
+
+        // --- YENİ EDIT MODE FONKSİYONLARI ---
+
+        function startEditMode(teamCode, userName) {
+            if(isEditMode) return; 
+            
+            isEditMode = true;
+            editingTeamCode = teamCode;
+            
+            // UI Updates
+            asilAssignmentPanel.classList.add('hidden');
+            yedekAssignmentPanel.classList.add('hidden');
+            editControlPanel.classList.remove('hidden');
+            editControlPanel.classList.add('flex');
+            editModeBanner.classList.remove('hidden');
+            
+            editingUserNameDisplay.textContent = userName;
+            editPanelUserName.textContent = userName;
+            
+            // Populate Info Panel & Dropdowns
+            editIdealTarget.textContent = formatCurrency(globalAverageTarget);
+            editIdealRatio.textContent = `%${globalAverageRatio.toFixed(2)}`;
+
+            // Popule Asil Change Dropdown (Filter out current user)
+            const otherStaff = staffInRegion.filter(s => s.takımkodu !== teamCode);
+            editChangeAsil.innerHTML = `<option value="">Seçiniz...</option>` + otherStaff.map(s => `<option value="${s.sicil}">${s.ad}</option>`).join('');
+
+            // Find existing yedek settings for this team
+            const existingAssignments = completedAssignments.filter(x => x.asil.takımkodu === teamCode);
+            if(existingAssignments.length > 0) {
+                const first = existingAssignments[0];
+                editYedek1.value = first.yedek1 ? first.yedek1.sicil : "";
+                editYedek2.value = first.yedek2 ? first.yedek2.sicil : "";
+            }
+
+            document.getElementById('left-panel').classList.add('edit-mode-active');
+            
+            renderSummaryPanel();
+            renderBranchList();
+            
+            showToast("Düzenleme modu başladı. Soldan şube seçerek ekleme yapabilirsiniz.");
+        }
+
+        function handleAsilSwap() {
+            const targetSicil = editChangeAsil.value;
+            if(!targetSicil) {
+                showToast("Lütfen değiştirilecek personeli seçiniz.", true);
+                return;
+            }
+            if(!confirm("Mevcut personel ile seçilen personel yer değiştirecek. Yedekler sıfırlanacak. Onaylıyor musunuz?")) return;
+
+            // Get Current User Info
+            const currentAssignments = completedAssignments.filter(x => x.asil.takımkodu === editingTeamCode);
+            const currentUser = staffInRegion.find(s => s.takımkodu === editingTeamCode);
+            const currentSicil = currentUser.sicil;
+
+            // Get Target User Info
+            const targetUser = staffInRegion.find(s => s.sicil === targetSicil);
+            const targetTeamCode = targetUser.takımkodu;
+
+            if(!targetUser || !currentUser) return;
+
+            // SWAP LOGIC: Iterate over ALL assignments and swap ownership
+            completedAssignments.forEach(item => {
+                if (item.asil.sicil === currentSicil) {
+                    // This item belongs to Current, give to Target
+                    item.asil = targetUser;
+                    item.yedek1 = null; // Clear backups
+                    item.yedek2 = null;
+                    item.needsReview = true;
+                } else if (item.asil.sicil === targetSicil) {
+                    // This item belongs to Target, give to Current
+                    item.asil = currentUser;
+                    item.yedek1 = null; // Clear backups
+                    item.yedek2 = null;
+                    item.needsReview = true;
+                }
+            });
+
+            // Update UI to follow the new owner of the bucket we were editing
+            // We were editing 'editingTeamCode' which belonged to CurrentUser.
+            // Now that bucket belongs to TargetUser (TargetTeamCode).
+            // Actually, we swapped the *contents*. The team code usually follows the person.
+            // So we switch edit mode to the NEW person (TargetUser) to continue editing.
+            
+            editingTeamCode = targetTeamCode;
+            editingUserNameDisplay.textContent = targetUser.ad;
+            editPanelUserName.textContent = targetUser.ad;
+            
+            // Refresh
+            editChangeAsil.value = "";
+            renderSummaryPanel();
+            renderBranchList();
+            
+            showToast("Personeller ve şubeler başarıyla yer değiştirdi.");
+        }
+
+        function endEditMode() {
+            // YEDEK VALIDATION (ZORUNLU - Asla geçilemez)
+            if(editYedek1.value === "" || editYedek2.value === "") {
+                showToast("Lütfen 1. ve 2. Yedek atamalarını tamamlayınız!", true);
+                return; // Stop saving
+            }
+            
+            // 1. ve 2. yedek aynı kişi olamaz
+            const y1 = editYedek1.value;
+            const y2 = editYedek2.value;
+            if(y1 === y2 && y1 !== "") {
+                showToast("1. ve 2. yedek aynı kişi olamaz.", true);
+                return;
+            }
+
+            // YENİ KAYDETME KONTROLÜ (Uyarı var ama izin ver)
+            const currentTeamAssignments = completedAssignments.filter(x => x.asil.takımkodu === editingTeamCode);
+            const currentBranches = currentTeamAssignments.map(x => x.branch);
+
+            // Mevcut durumu validate et
+            const check = validateTeamMetrics(currentBranches);
+            if (!check.valid) {
+                // SIKI KONTROL YERİNE ONAYLI GEÇİŞ
+                if(!confirm(check.msg + " Yine de bu haliyle kaydetmek istiyor musunuz?")) {
+                    return; // Kullanıcı hayır derse çıkma
+                }
+            }
+            
+            const yedek1User = staffInRegion.find(s => s.sicil === y1);
+            const yedek2User = staffInRegion.find(s => s.sicil === y2);
+
+            // Update assignments with new backups and CLEAR needsReview
+            currentTeamAssignments.forEach(item => {
+                item.yedek1 = yedek1User || null;
+                item.yedek2 = yedek2User || null;
+                item.needsReview = false; // Mark as reviewed
+            });
+
+            // Validasyon başarılıysa çık
+            isEditMode = false;
+            editingTeamCode = null;
+            
+            asilAssignmentPanel.classList.remove('hidden');
+            yedekAssignmentPanel.classList.remove('hidden');
+            editControlPanel.classList.add('hidden');
+            editControlPanel.classList.remove('flex');
+            editModeBanner.classList.add('hidden');
+            
+            document.getElementById('left-panel').classList.remove('edit-mode-active');
+            
+            renderSummaryPanel();
+            renderBranchList();
+            populateSelects(); // Update manual list logic
+            checkFinalCompletion();
+        }
+
+        window.removeBranchImmediate = function(branchCode) {
+            // Edit modunda silme serbest
+            const idx = completedAssignments.findIndex(x => x.branch.kod === branchCode);
+            if(idx > -1) {
+                const item = completedAssignments[idx];
+                unassignedBranches.push(item.branch);
+                completedAssignments.splice(idx, 1);
+                renderBranchList();
+                renderSummaryPanel();
+                showToast("Şube listeden çıkarıldı ve havuza döndü.");
+            }
+        }
+
+        function checkFinalCompletion() {
+            // Check if any items still need review
+            const hasPendingReviews = completedAssignments.some(x => x.needsReview);
+
+            if(!isEditMode && unassignedBranches.length === 0 && pendingYedekAssignments.length === 0 && completedAssignments.length > 0 && !hasPendingReviews) {
+                completionScreen.classList.remove('hidden');
+            } else {
+                completionScreen.classList.add('hidden');
+            }
+        }
+
+        // --- EXPORT İŞLEMLERİ (GÜNCELLENDİ: TEK DOSYA, 3 SAYFA) ---
+        function handleExport() {
+            const dataFile1 = completedAssignments.map(item => ({
+                'Takım Kodu': item.asil.takımkodu,
+                'Şube Kodu': item.branch.kod,
+                'Portföy İlişki Durumu': 'Evet'
+            }));
+
+            const dataFile2 = [];
+            const uniqueTeamKeys = [...new Set(completedAssignments.map(c => c.asil.takımkodu))];
+
+            uniqueTeamKeys.forEach(teamCode => {
+                const refItem = completedAssignments.filter(c => c.asil.takımkodu === teamCode).pop();
+                
+                dataFile2.push({
+                    'Takip Birim Kodu': TAKIP_BIRIM_KODU,
+                    'Takım Kodu': teamCode,
+                    'Kullanıcı Sicili': refItem.asil.sicil,
+                    'Durumu': 'Aktif',
+                    'Kullanıcı Tipi': 'Asli',
+                    'İletişime Geçilecek': 'Evet',
+                });
+
+                if(refItem.yedek1) {
+                    dataFile2.push({
+                        'Takip Birim Kodu': TAKIP_BIRIM_KODU,
+                        'Takım Kodu': teamCode,
+                        'Kullanıcı Sicili': refItem.yedek1.sicil,
+                        'Durumu': 'Aktif',
+                        'Kullanıcı Tipi': 'Normal',
+                        'İletişime Geçilecek': 'Hayır',
+                    });
+                }
+
+                if(refItem.yedek2) {
+                    dataFile2.push({
+                        'Takip Birim Kodu': TAKIP_BIRIM_KODU,
+                        'Takım Kodu': teamCode,
+                        'Kullanıcı Sicili': refItem.yedek2.sicil,
+                        'Durumu': 'Aktif',
+                        'Kullanıcı Tipi': 'Normal',
+                        'İletişime Geçilecek': 'Hayır',
+                    });
+                }
+            });
+
+            const dataFile3 = completedAssignments.map(item => ({
+                'Şube Adı': item.branch.ad,
+                'Asil Personel': item.asil.ad,
+                '1. Yedek': item.yedek1 ? item.yedek1.ad : '',
+                '2. Yedek': item.yedek2 ? item.yedek2.ad : '',
+                'Anapara': parseFloat(item.branch.toplamanaparabakiyesi),
+                'Hedef': parseFloat(item.branch.hedef),
+                'H/S Oranı': parseFloat(item.branch.hedef_stok)
+            }));
+
+            const wb = XLSX.utils.book_new();
+            const ws1 = XLSX.utils.json_to_sheet(dataFile1);
+            XLSX.utils.book_append_sheet(wb, ws1, "Portföy İşlemleri");
+            const ws2 = XLSX.utils.json_to_sheet(dataFile2);
+            XLSX.utils.book_append_sheet(wb, ws2, "Takıma Kullanıcı Ata");
+            const ws3 = XLSX.utils.json_to_sheet(dataFile3);
+            XLSX.utils.book_append_sheet(wb, ws3, "Detaylı Rapor");
+            XLSX.writeFile(wb, "Takip_Dagitim_Tam_Liste.xlsx");
+            
+            showToast("Tekil Excel dosyası (3 sayfa) oluşturuldu.");
+        }
+
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('toast-notification');
+            const icon = document.getElementById('toast-icon');
+            const txt = document.getElementById('toast-message');
+            
+            txt.textContent = msg;
+            icon.innerHTML = isError ? 
+                '<span class="text-red-400 text-xl font-bold">✕</span>' : 
+                '<span class="text-green-400 text-xl font-bold">✓</span>';
+            
+            toast.classList.remove('hidden', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('opacity-0');
+                setTimeout(() => toast.classList.add('hidden'), 300);
+            }, 3000);
+        }
+
+        function setTheme(theme) {
+            const body = document.getElementById('app-body');
+            body.className = body.className.replace(/theme-\w+/g, '').trim();
+            if (theme === 'dark') body.classList.add('theme-dark');
+            else if (theme === 'grey') body.classList.add('theme-grey');
+        }
+    </script>
+</body>
+</html>
