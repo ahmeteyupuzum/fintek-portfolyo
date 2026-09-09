@@ -42,6 +42,6 @@ KATIP gibi iki girişli uygulamalarda `admin.html` ve `viewer.html` kullanılabi
 
 ## Mevcut GitHub durumu
 
-İlk incelemede [fintek-portfolyo](https://github.com/ahmeteyupuzum/fintek-portfolyo) herkese açıktı; `main` dalında 13 HTML dosyası vardı. Bu yayın paketi yerel 18 HTML uygulamasını, ana README'yi ve 12 proje grubunun kullanım sayfalarını içerir. Eski kısa dosya adresleri güncel uygulamalara yönlendirilir; ana README güncel portföy girişlerini listeler. Önceki kaynak sürümleri Git geçmişinde korunur.
+İlk incelemede [fintek-portfolyo](https://github.com/ahmeteyupuzum/fintek-portfolyo) herkese açıktı; `main` dalında 13 HTML dosyası vardı. Bu yayın paketi yerel 18 HTML uygulamasını, ana README'yi ve 12 proje grubunun kullanım sayfalarını içerir. Önceden yüklenen 10 eski dosya ve yönlendirme kaldırılmıştır; ana README yalnızca güncel 18 uygulama girişini listeler. Önceki kaynak sürümleri Git geçmişinde korunur.
 
 Bu çalışma kaynak kod değişikliği veya yeni bir deployment yapılandırması içermez. Mevcut GitHub Pages ayarları yayından sonra otomatik çalışabilir. `.gitignore`, GitHub'da zaten izlenen dosyaları veya geçmiş commit'leri kaldırmaz.
