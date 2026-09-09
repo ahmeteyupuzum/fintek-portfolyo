@@ -1,6 +1,6 @@
 # Finansal Operasyon ve Veri Araçları
 
-Excel tabanlı operasyonları, raporlamayı ve belge hazırlamayı tarayıcı üzerinden destekleyen 18 HTML uygulamasından oluşan portföy.
+Excel tabanlı operasyonları, raporlamayı ve belge hazırlamayı tarayıcı üzerinden destekleyen 19 HTML uygulamasından oluşan portföy.
 
 ## Genel bakış
 
@@ -30,6 +30,7 @@ Her grubun özellikleri, giriş dosyaları ve kullanım adımları için [proje 
 | [KATIP izleme](KATIP_IZLEME_MOD.html) | Taşınabilir şablon paketini görüntüleme ve kullanma |
 | [Müşteri föyü](Takipli-musteri-foyu.HTML) | Kurumsal müşteri bilgilerini yapılandırılmış formda hazırlama |
 | [Özgeçmiş hazırlama](ÖZGEÇMİŞ%20OLUŞTURMA%20ARACI.html) | Form üzerinden özgeçmiş oluşturma ve PDF çıktısı alma |
+| [Tahsilat projeksiyonu](tahsilat%20projeksiyonu.html) | Aylık tahsilatlardan yıl sonu projeksiyonu ve hedef simülasyonu; [README ve örnek veri](docs/projects/collection-projection/README.md) |
 
 ## Teknolojiler
 

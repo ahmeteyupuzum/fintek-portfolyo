@@ -28,6 +28,7 @@ private-data/
 # Demo verileri bilinçli olarak ayrıca eklenebilir
 !examples/**/*.csv
 !examples/**/*.tsv
+!examples/collection-projection/tahsilat-demo.xlsx
 
 # Henüz portföy görseli olarak seçilmeyen yerel dosyalar
 Gemini_Generated_Image_*.png

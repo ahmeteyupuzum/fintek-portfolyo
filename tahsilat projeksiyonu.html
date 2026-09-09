@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>V-RADAR | Tahsilat Projeksiyonu 2026</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] },
+                    colors: { brand: { yellow: '#FFB81C', black: '#0F172A', gray: '#b3b573' } }
+                }
+            }
+        }
+    </script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body { background-color: #ffffff; color: #0F172A; }
+        .card { background: #ffffff; border-radius: 0.75rem; border: 1px solid #e2e8f0; transition: all 0.3s ease; }
+        .chart-container { position: relative; height: 500px; width: 100%; }
+        
+        .stat-card {
+            background: linear-gradient(135deg, rgba(255, 184, 28, 0.08) 0%, rgba(255, 184, 28, 0) 100%);
+            border-left: 4px solid #FFB81C;
+        }
+        .sim-card {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.03) 0%, rgba(15, 23, 42, 0) 100%);
+            border-left: 4px solid #0F172A;
+        }
+        .screenshot-zone {
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+        }
+    </style>
+</head>
+<body class="antialiased p-4 md:p-8">
+
+    <div class="max-w-[1200px] mx-auto mb-6 flex flex-wrap justify-between items-center gap-4 bg-white p-4 rounded-xl border border-gray-200 card">
+        <div class="flex items-center gap-3">
+            <div class="bg-[#FFB81C] text-[#0F172A] w-10 h-10 flex items-center justify-center rounded-lg font-bold text-xl shadow-md">
+                <i class="fa-solid fa-money-bill-trend-up"></i>
+            </div>
+            <h1 class="text-xl font-extrabold text-[#0F172A] tracking-tight">TAHSİLAT PROJEKSİYONU & SİMÜLASYONU</h1>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <a href="examples/collection-projection/tahsilat-demo.xlsx" download class="text-sm font-semibold text-gray-600 underline" title="Tamamen sentetik Ocak–Haziran 2026 verileri">Örnek Excel İndir</a>
+            <label for="file-upload" class="cursor-pointer bg-[#0F172A] text-white px-4 py-2 rounded-lg hover:bg-[#FFB81C] hover:text-black transition flex items-center gap-2 font-medium text-sm shadow-md">
+                <i class="fa-solid fa-file-excel"></i> Excel Yükle
+            </label>
+            <input id="file-upload" type="file" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleFileUpload(this)">
+        </div>
+    </div>
+
+    <div id="master-kpi-panel" class="max-w-[1200px] mx-auto mb-6 bg-white rounded-xl screenshot-zone p-6 hidden">
+        
+        <div class="flex justify-between items-center border-b border-gray-100 pb-4 mb-5">
+            <h4 class="text-lg font-bold text-[#0F172A] uppercase tracking-wide flex items-center gap-2">
+                <i class="fa-solid fa-gauge-high text-[#FFB81C]"></i> Yönetim Özeti & Hedef Simülatörü
+            </h4>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div class="bg-white p-5 rounded-xl stat-card border border-gray-100 flex flex-col justify-between h-full">
+                <div>
+                    <p class="text-sm text-gray-500 font-bold mb-1">Gerçekleşen Toplam Tahsilat</p>
+                    <h3 class="text-3xl font-black text-[#0F172A] mt-1" id="stat-realized">₺0</h3>
+                </div>
+                <p class="text-xs text-gray-400 mt-4" id="stat-realized-days">0 İş Günü</p>
+            </div>
+            
+            <div class="bg-white p-5 rounded-xl stat-card border border-gray-100 flex flex-col justify-between h-full">
+                <div>
+                    <p class="text-[15px] text-gray-500 font-bold mb-1 leading-tight">Günlük Ortalama Tahsilat</p>
+                    <h3 class="text-3xl font-black text-[#FFB81C] mt-1 tracking-tight" id="stat-daily-avg">₺0</h3>
+                </div>
+                <div class="mt-4 pt-3 border-t border-gray-200/60 flex flex-row justify-between items-center text-[13px] whitespace-nowrap">
+                    <span class="text-gray-500 font-medium"><i class="fa-solid fa-briefcase text-gray-400 mr-1"></i>Ticari: <span class="font-bold text-[#0F172A]" id="stat-daily-ticari">₺0</span></span>
+                    <span class="text-gray-500 font-medium"><i class="fa-solid fa-user text-gray-400 mr-1"></i>Bireysel: <span class="font-bold text-[#0F172A]" id="stat-daily-bireysel">₺0</span></span>
+                </div>
+            </div>
+            
+            <div class="bg-white p-5 rounded-xl stat-card border border-gray-100 flex flex-col justify-between h-full">
+                <div>
+                    <p class="text-sm text-gray-500 font-bold mb-1">Dönem Sonu Projeksiyonu</p>
+                    <h3 class="text-3xl font-black text-[#0F172A] mt-1" id="stat-projected">₺0</h3>
+                </div>
+                <p class="text-xs text-gray-400 mt-4" id="stat-projected-days">Mevcut Hız + 9.4Mlr Kesin Giriş</p>
+            </div>
+        </div>
+
+        <div class="flex flex-col md:flex-row gap-4 items-end mb-2 bg-gray-50 p-4 rounded-lg border border-gray-100">
+            <div class="flex-1 w-full">
+                <label class="text-sm font-semibold text-[#0F172A] mb-1 block">Ulaşmak İstediğiniz Dönem Sonu/Yıl Sonu Hedefini Girin (TL)</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">₺</span>
+                    <input type="text" id="target-input" oninput="formatNumberInput(event)" class="w-full pl-8 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-[#0F172A] font-bold text-lg focus:outline-none focus:border-[#FFB81C] transition" placeholder="Örn: 40.000.000.000">
+                </div>
+            </div>
+            <button onclick="calculateSimulation()" class="w-full md:w-auto bg-[#0F172A] text-white px-8 py-2.5 rounded-lg font-bold hover:opacity-90 transition shadow-md whitespace-nowrap">
+                <i class="fa-solid fa-calculator mr-2"></i> Hedefi Analiz Et
+            </button>
+        </div>
+
+        <div id="sim-results" class="grid grid-cols-1 md:grid-cols-4 gap-4 hidden mt-6">
+            <div class="bg-white p-5 rounded-xl stat-card border border-gray-100 flex flex-col justify-between h-full">
+                <div>
+                    <p class="text-[13px] text-green-700 font-bold mb-1"><i class="fa-solid fa-building-circle-check mr-1"></i> İlk 500 Kesin Giriş</p>
+                    <h3 class="text-2xl font-black text-green-600 mt-1">₺9.400.000.000</h3>
+                </div>
+                <p class="text-[11px] text-green-600/80 mt-4">Ticari hedef içerisinden düşüldü</p>
+            </div>
+            
+            <div class="bg-white p-5 rounded-xl stat-card border border-gray-100 flex flex-col justify-between h-full">
+                <div>
+                    <p class="text-[13px] text-gray-500 font-bold mb-1">Mevcut Hıza Göre Fark</p>
+                    <h3 class="text-2xl font-black text-[#0F172A] mt-1" id="sim-gap">₺0</h3>
+                </div>
+                <p class="text-[11px] text-gray-400 mt-4" id="sim-gap-desc">Projeksiyon ve Hedef Arasındaki Fark</p>
+            </div>
+
+            <div class="bg-white p-5 rounded-xl stat-card border border-gray-100 flex flex-col justify-between h-full">
+                <div>
+                    <p class="text-[15px] text-gray-500 font-bold mb-1 leading-tight">Yeni Günlük Ortalama Tahsilat<br><span class="font-normal text-[13px]">(İlk 500 Firma Hariç)</span></p>
+                    <h3 class="text-3xl font-black text-[#0F172A] mt-1 tracking-tight" id="sim-new-daily">₺0</h3>
+                </div>
+                <div class="mt-4 pt-3 border-t border-gray-100 grid grid-cols-2 text-[14px]">
+                    <div class="text-left flex flex-col justify-start">
+                        <span class="text-gray-500 font-medium mb-1"><i class="fa-solid fa-briefcase text-gray-400 mr-1"></i>Ticari</span>
+                        <span class="font-bold text-[#0F172A] text-[17px] leading-none" id="sim-daily-req-ticari">₺0</span>
+                        <span class="text-[11px] text-gray-400 mt-1">İlk 500 hariç</span>
+                    </div>
+                    <div class="text-right flex flex-col justify-start">
+                        <span class="text-gray-500 font-medium mb-1"><i class="fa-solid fa-user text-gray-400 mr-1"></i>Bireysel</span>
+                        <span class="font-bold text-[#0F172A] text-[17px] leading-none" id="sim-daily-req-bireysel">₺0</span>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+        
+        <div id="sim-breakdown" class="mt-4 hidden"></div>
+    </div>
+
+    <div id="empty-state" class="max-w-[1200px] mx-auto mb-6 bg-white rounded-xl p-10 text-center border border-dashed border-gray-300">
+        <i class="fa-solid fa-file-excel text-4xl text-gray-300 mb-3"></i>
+        <p class="text-gray-500 font-medium">Lütfen verileri analiz etmek için Excel dosyasını yükleyin.</p>
+    </div>
+
+    <main class="max-w-[1200px] mx-auto">
+        <div class="card p-5 lg:p-8 screenshot-zone">
+            <div class="flex justify-between items-center border-b border-gray-100 pb-4 mb-6">
+                <h4 class="text-md font-bold text-[#0F172A] uppercase flex items-center gap-2">
+                    <i class="fa-solid fa-chart-column text-[#FFB81C]"></i> Segment Bazlı Hedef Grafiği (Oran Sabit)
+                </h4>
+                <span id="data-status" class="text-xs font-bold text-gray-400 bg-gray-100 px-3 py-1 rounded-full">
+                    Veri Bekleniyor...
+                </span>
+            </div>
+            
+            <div class="chart-container">
+                <canvas id="chart-projeksiyon"></canvas>
+            </div>
+            
+            <p class="text-center text-xs text-gray-500 mt-6 bg-gray-50 p-3 rounded-lg border border-gray-100">
+                <i class="fa-solid fa-circle-info mr-1 text-[#FFB81C]"></i> 
+                <b>Bilgi:</b> Mevcut projeksiyon sütunu tamamen organik hızınızı yansıtır. Hedef hesaplandığında ise, 9.4 Milyar TL'lik kesin giriş ticari hedefin içerisinden düşülür ve "Hedeflenen" sütununda ticarinin üzerinde ayrı bir blok (yeşil) olarak gösterilir.
+            </p>
+        </div>
+    </main>
+
+    <script>
+        let myChart = null;
+        Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
+
+        const workDays2026 = [21, 20, 20, 19, 18, 22, 22, 21, 22, 21, 21, 23];
+        const monthNames = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+
+        // Global State
+        let globalChartLabels = [];
+        let globalTicariData = [];
+        let globalBireyselData = [];
+        let globalIlk500Data = [];
+        let globalIsProj = [];
+        let globalIsTarget = [];
+        let globalTooltipsExtra = [];
+        
+        let simGlobalRealized = 0;
+        let simGlobalRealizedTicari = 0;
+        let simGlobalRealizedBireysel = 0;
+        let simGlobalRemainingDays = 0;
+        let simGlobalDailyAvg = 0;
+        let simGlobalExpectedTotal = 0;
+        let simGlobalTicariRatio = 0;
+        let simGlobalBireyselRatio = 0;
+        let simGlobalLastMonthIndex = -1;
+        let simGlobalRemainingMonthsCount = 0;
+        
+        // Ticari ilk 500'den gelecek garanti tutar (Ticarinin içinde)
+        const guaranteedTop500 = 9400000000;
+
+        function formatCurrency(val) {
+            let numStr = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(val);
+            return "₺" + numStr;
+        }
+
+        function formatShort(val) {
+            if (val === 0 || !val) return "";
+            let absVal = Math.abs(val);
+            if (absVal >= 1000000000) return (val / 1000000000).toFixed(2) + ' Mlr';
+            if (absVal >= 1000000) return (val / 1000000).toFixed(2) + ' Mn';
+            if (absVal >= 1000) return (val / 1000).toFixed(0) + ' B'; 
+            return val.toLocaleString('tr-TR', { maximumFractionDigits: 0 });
+        }
+
+        function parseTurkishNumber(val) {
+            if (typeof val === 'number') return val;
+            if (!val) return 0;
+            let str = String(val).trim();
+            if (str.includes('.') && str.includes(',')) {
+                str = str.replace(/\./g, '').replace(',', '.');
+            } else if (str.includes(',')) {
+                str = str.replace(',', '.');
+            }
+            return parseFloat(str) || 0;
+        }
+
+        function formatNumberInput(e) {
+            let val = e.target.value.replace(/\D/g, ''); 
+            e.target.value = val ? new Intl.NumberFormat('tr-TR').format(val) : '';
+        }
+
+        function handleFileUpload(input) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            document.getElementById('data-status').innerHTML = '<span class="text-blue-500 animate-pulse">Hesaplanıyor...</span>';
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet, { defval: 0 });
+                    processData(jsonData);
+                } catch (error) {
+                    console.error(error);
+                    document.getElementById('data-status').innerHTML = '<span class="text-red-500">Hata</span>';
+                }
+            };
+            reader.readAsArrayBuffer(file);
+            input.value = ""; 
+        }
+
+        function findColumnKey(row, keywords) {
+            for (let key of Object.keys(row)) {
+                const cleanKey = String(key).replace(/[\s_]/g, '').toLocaleUpperCase('tr-TR');
+                if (keywords.some(kw => cleanKey.includes(kw.toLocaleUpperCase('tr-TR')))) return key;
+            }
+            return null;
+        }
+
+        function processData(json) {
+            globalChartLabels = []; globalTicariData = []; globalBireyselData = []; globalIlk500Data = [];
+            globalIsProj = []; globalIsTarget = []; globalTooltipsExtra = [];
+
+            let monthlyData = Array(12).fill(null).map(() => ({ ticari: 0, bireysel: 0, hasData: false }));
+            
+            json.forEach(row => {
+                const ayKey = findColumnKey(row, ['AY', 'AYLAR']);
+                const segmentKey = findColumnKey(row, ['SEGMENT']);
+                const anaparaKey = findColumnKey(row, ['ANAPARA']);
+                const faizKey = findColumnKey(row, ['FAIZ', 'FAİZ']);
+
+                if (!ayKey) return;
+
+                let ayVal = String(row[ayKey]).trim().toLocaleLowerCase('tr-TR');
+                let monthIndex = monthNames.findIndex(m => m.toLocaleLowerCase('tr-TR') === ayVal);
+                
+                if (monthIndex !== -1) {
+                    let ana = parseTurkishNumber(row[anaparaKey]);
+                    let fai = parseTurkishNumber(row[faizKey]);
+                    let totalVal = ana + fai;
+                    let segmentVal = segmentKey ? String(row[segmentKey]).toLocaleLowerCase('tr-TR') : '';
+
+                    if (segmentVal.includes('bireysel')) monthlyData[monthIndex].bireysel += totalVal;
+                    else monthlyData[monthIndex].ticari += totalVal;
+                    
+                    monthlyData[monthIndex].hasData = true;
+                }
+            });
+
+            simGlobalLastMonthIndex = -1;
+            for (let i = 11; i >= 0; i--) {
+                if (monthlyData[i].hasData && (monthlyData[i].ticari > 0 || monthlyData[i].bireysel > 0)) {
+                    simGlobalLastMonthIndex = i; break;
+                }
+            }
+
+            if (simGlobalLastMonthIndex === -1) {
+                alert("Uygun veri bulunamadı."); return;
+            }
+
+            let totalRealizedTicari = 0;
+            let totalRealizedBireysel = 0;
+            let realizedWorkDays = 0;
+
+            for (let i = 0; i <= simGlobalLastMonthIndex; i++) {
+                totalRealizedTicari += monthlyData[i].ticari;
+                totalRealizedBireysel += monthlyData[i].bireysel;
+                realizedWorkDays += workDays2026[i];
+            }
+
+            simGlobalRealizedTicari = totalRealizedTicari;
+            simGlobalRealizedBireysel = totalRealizedBireysel;
+            simGlobalRealized = totalRealizedTicari + totalRealizedBireysel;
+            
+            simGlobalDailyAvg = simGlobalRealized / realizedWorkDays;
+            
+            simGlobalTicariRatio = totalRealizedTicari / simGlobalRealized;
+            simGlobalBireyselRatio = totalRealizedBireysel / simGlobalRealized;
+            
+            let dailyAvgTicari = totalRealizedTicari / realizedWorkDays;
+            let dailyAvgBireysel = totalRealizedBireysel / realizedWorkDays;
+
+            simGlobalRemainingMonthsCount = 11 - simGlobalLastMonthIndex;
+            simGlobalRemainingDays = 0;
+            let totalProjected = 0;
+
+            for (let i = 0; i <= simGlobalLastMonthIndex; i++) {
+                globalTicariData.push(monthlyData[i].ticari);
+                globalBireyselData.push(monthlyData[i].bireysel);
+                globalIlk500Data.push(0); 
+                globalChartLabels.push(monthNames[i]);
+                globalIsProj.push(false);
+                globalIsTarget.push(false);
+                globalTooltipsExtra.push(null);
+            }
+
+            if (simGlobalRemainingMonthsCount > 0) {
+                for (let i = simGlobalLastMonthIndex + 1; i < 12; i++) {
+                    simGlobalRemainingDays += workDays2026[i];
+                }
+
+                totalProjected = simGlobalDailyAvg * simGlobalRemainingDays;
+                
+                let avgTicariTotal = (totalProjected * simGlobalTicariRatio) / simGlobalRemainingMonthsCount;
+                let avgBireysel = (totalProjected * simGlobalBireyselRatio) / simGlobalRemainingMonthsCount;
+
+                globalTicariData.push(avgTicariTotal);
+                globalBireyselData.push(avgBireysel);
+                globalIlk500Data.push(0); 
+                
+                globalChartLabels.push("Mevcut Ort. Tahsilat");
+                globalIsProj.push(true);
+                globalIsTarget.push(false);
+                globalTooltipsExtra.push({ text: `\nOrganik Beklenti: ${formatCurrency(totalProjected)} (İlk 500 hariç)` });
+            }
+
+            simGlobalExpectedTotal = simGlobalRealized + totalProjected + guaranteedTop500;
+
+            document.getElementById('empty-state').classList.add('hidden');
+            document.getElementById('master-kpi-panel').classList.remove('hidden');
+            
+            document.getElementById('stat-realized').innerText = formatCurrency(simGlobalRealized);
+            document.getElementById('stat-realized-days').innerText = `İlk ${simGlobalLastMonthIndex + 1} Ay (${realizedWorkDays} İş Günü)`;
+            document.getElementById('stat-daily-avg').innerText = formatCurrency(simGlobalDailyAvg);
+            
+            document.getElementById('stat-daily-ticari').innerText = formatCurrency(dailyAvgTicari);
+            document.getElementById('stat-daily-bireysel').innerText = formatCurrency(dailyAvgBireysel);
+
+            document.getElementById('stat-projected').innerText = formatCurrency(simGlobalExpectedTotal);
+            document.getElementById('data-status').innerHTML = '<i class="fa-solid fa-check text-green-500"></i> Yüklendi';
+
+            document.getElementById('sim-results').classList.add('hidden');
+            document.getElementById('sim-breakdown').classList.add('hidden');
+
+            renderChart(globalChartLabels, globalTicariData, globalBireyselData, globalIlk500Data, globalIsProj, globalIsTarget, globalTooltipsExtra);
+        }
+
+        function calculateSimulation() {
+            let inputRaw = document.getElementById('target-input').value;
+            let targetVal = parseFloat(inputRaw.replace(/\./g, '')) || 0;
+
+            if (!targetVal || targetVal <= 0) {
+                alert("Lütfen geçerli bir hedef tutarı giriniz."); return;
+            }
+
+            let targetTicariTotal = targetVal * simGlobalTicariRatio;
+            let targetBireyselTotal = targetVal * simGlobalBireyselRatio;
+
+            let remainingTicariTotal = targetTicariTotal - simGlobalRealizedTicari;
+            let remainingBireyselTotal = targetBireyselTotal - simGlobalRealizedBireysel;
+
+            let organicRemainingTicari = remainingTicariTotal - guaranteedTop500;
+            let organicRemainingBireysel = remainingBireyselTotal;
+
+            if (organicRemainingTicari < 0) organicRemainingTicari = 0;
+            if (organicRemainingBireysel < 0) organicRemainingBireysel = 0;
+
+            let reqDailyTicari = organicRemainingTicari / simGlobalRemainingDays;
+            let reqDailyBireysel = organicRemainingBireysel / simGlobalRemainingDays;
+            
+            let requiredNewDailyOrganic = reqDailyTicari + reqDailyBireysel;
+            let gapFromProjection = targetVal - simGlobalExpectedTotal;
+
+            document.getElementById('sim-new-daily').innerText = formatCurrency(requiredNewDailyOrganic);
+            document.getElementById('sim-daily-req-ticari').innerText = formatCurrency(reqDailyTicari);
+            document.getElementById('sim-daily-req-bireysel').innerText = formatCurrency(reqDailyBireysel);
+
+            let gapEl = document.getElementById('sim-gap');
+            if (gapFromProjection > 0) {
+                gapEl.innerText = "-" + formatCurrency(Math.abs(gapFromProjection));
+                gapEl.className = "text-2xl font-black text-red-500 mt-1";
+                document.getElementById('sim-gap-desc').innerText = "Projeksiyon ve Hedef Arasındaki Eksik";
+            } else {
+                gapEl.innerText = "+" + formatCurrency(Math.abs(gapFromProjection));
+                gapEl.className = "text-2xl font-black text-green-500 mt-1";
+                document.getElementById('sim-gap-desc').innerText = "Projeksiyon Hedefi Aşılıyor";
+            }
+
+            let targetColIndex = globalChartLabels.indexOf("Hedeflenen Ort. Tahsilat");
+            let avgDaysPerRemainingMonth = simGlobalRemainingDays / simGlobalRemainingMonthsCount;
+            
+            let finalTargetTicari = reqDailyTicari * avgDaysPerRemainingMonth;
+            let finalTargetBireysel = reqDailyBireysel * avgDaysPerRemainingMonth;
+            let guaranteedMonthly = guaranteedTop500 / simGlobalRemainingMonthsCount;
+
+            if (targetColIndex > -1) {
+                globalTicariData[targetColIndex] = finalTargetTicari;
+                globalBireyselData[targetColIndex] = finalTargetBireysel;
+                globalIlk500Data[targetColIndex] = guaranteedMonthly;
+            } else {
+                globalChartLabels.push("Hedeflenen Ort. Tahsilat");
+                globalTicariData.push(finalTargetTicari);
+                globalBireyselData.push(finalTargetBireysel);
+                globalIlk500Data.push(guaranteedMonthly);
+                globalIsProj.push(false);
+                globalIsTarget.push(true);
+                globalTooltipsExtra.push({ text: `\nAylık Net Efor İhtiyacı: ${formatCurrency(finalTargetTicari + finalTargetBireysel)}` });
+            }
+
+            let breakdownHTML = '<h5 class="text-sm font-bold text-gray-500 mb-3 mt-2 uppercase border-b border-gray-100 pb-2"><i class="fa-regular fa-calendar-days mr-1"></i> Kalan Ayların Net Hedef Dağılımı (Organik Toplam Efor)</h5><div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">';
+            for(let i = simGlobalLastMonthIndex + 1; i < 12; i++) {
+                let days = workDays2026[i];
+                let targetForMonth = requiredNewDailyOrganic * days;
+                breakdownHTML += `<div class="bg-gray-50 p-3 rounded-lg border border-gray-100 text-center shadow-sm">
+                    <span class="text-[11px] text-gray-500 block font-bold uppercase mb-1">${monthNames[i]} <br><span class="opacity-70 font-normal">(${days} Gün)</span></span>
+                    <span class="font-black text-[12px] text-blue-600 block break-all">${formatShort(targetForMonth)}</span>
+                </div>`;
+            }
+            breakdownHTML += '</div>';
+            
+            let breakdownEl = document.getElementById('sim-breakdown');
+            breakdownEl.innerHTML = breakdownHTML;
+            breakdownEl.classList.remove('hidden');
+
+            document.getElementById('sim-results').classList.remove('hidden');
+            renderChart(globalChartLabels, globalTicariData, globalBireyselData, globalIlk500Data, globalIsProj, globalIsTarget, globalTooltipsExtra);
+        }
+
+        function renderChart(labels, ticariData, bireyselData, ilk500Data, isProj, isTarget, tooltipsExtra) {
+            const ctx = document.getElementById('chart-projeksiyon').getContext('2d');
+
+            const bgTicari = ticariData.map((_, i) => isTarget[i] ? '#2563EB' : (isProj[i] ? '#64748B' : '#0F172A'));
+            const bgBireysel = bireyselData.map((_, i) => isTarget[i] ? '#93C5FD' : (isProj[i] ? '#eef096' : '#FFB81C'));
+
+            // YENİ EKLENEN: Toplam grafiği için verilerin hesaplanması
+            const toplamData = ticariData.map((val, i) => val + bireyselData[i] + (ilk500Data[i] || 0));
+
+            if (myChart) myChart.destroy();
+
+            myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Ticari Segment (Organik Efor)',
+                            data: ticariData,
+                            backgroundColor: bgTicari,
+                            stack: 'Stack 0',
+                            datalabels: {
+                                color: '#ffffff',
+                                font: { weight: 'bold', size: 10 },
+                                formatter: (val) => val === 0 ? '' : formatShort(val)
+                            }
+                        },
+                        {
+                            label: 'İlk 500 (Ticari İlavesi)',
+                            data: ilk500Data,
+                            backgroundColor: '#22c55e',
+                            stack: 'Stack 0',
+                            datalabels: {
+                                color: '#ffffff',
+                                font: { weight: 'bold', size: 10 },
+                                formatter: (val) => val === 0 ? '' : formatShort(val)
+                            }
+                        },
+                        {
+                            label: 'Bireysel Segment',
+                            data: bireyselData,
+                            backgroundColor: bgBireysel,
+                            stack: 'Stack 0',
+                            datalabels: {
+                                color: '#0F172A',
+                                font: { weight: 'bold', size: 10 },
+                                formatter: (val) => val === 0 ? '' : formatShort(val)
+                            }
+                        },
+                        // YENİ EKLENEN: Line Grafiği (Toplam)
+                        {
+                            type: 'line',
+                            label: 'Toplam',
+                            data: toplamData,
+                            borderColor: '#000000', 
+                            backgroundColor: '#000000',
+                            borderWidth: 3,
+                            pointBackgroundColor: '#ffffff',
+                            pointBorderColor: '#000000',
+                            pointBorderWidth: 1,
+                            pointRadius: 3,
+                            pointHoverRadius: 5,
+                            fill: false,
+                            tension: 0.1,
+                            datalabels: {
+                                align: 'top',
+                                anchor: 'end',
+                                color: '##000000',
+                                font: { weight: 'bold', size: 12 },
+                                formatter: (val) => val === 0 ? '' : formatShort(val),
+                                offset: 4
+                            }
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                usePointStyle: true,
+                                font: { weight: '600' },
+                                generateLabels: function() {
+                                    return [
+                                        { text: 'Ticari', fillStyle: '#0F172A' },
+                                        { text: 'Bireysel', fillStyle: '#FFB81C' },
+                                        { text: 'Ticari (Trend Hızı)', fillStyle: '#64748B' },
+                                        { text: 'Bireysel (Trend Hızı)', fillStyle: '#eef096' },
+                                        { text: 'Ticari (Gereken Hedef)', fillStyle: '#2563EB' },
+                                        { text: 'Bireysel (Gereken Hedef)', fillStyle: '#93C5FD' },
+                                        { text: 'İlk 500 Firmadan Beklenen', fillStyle: '#22c55e' },
+                                    ];
+                                }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                            padding: 12,
+                            callbacks: {
+                                label: (context) => context.dataset.label + ': ' + formatCurrency(context.parsed.y),
+                                footer: function(context) {
+                                    // GÜNCELLENEN: Tooltip footer hesaplamasında toplam çizgisinin 2. kez toplanmasını engelleme
+                                    let filteredContext = context.filter(c => c.dataset.label !== 'Toplam');
+                                    let total = filteredContext.length > 0 
+                                                ? filteredContext.reduce((acc, val) => acc + val.parsed.y, 0)
+                                                : context.reduce((acc, val) => acc + val.parsed.y, 0);
+                                    
+                                    let text = '\nToplam Kolon Tutarı: ' + formatCurrency(total);
+                                    let idx = context[0].dataIndex;
+                                    if (tooltipsExtra[idx]) text += tooltipsExtra[idx].text;
+                                    return text;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { stacked: true, grid: { display: false } },
+                        y: { 
+                            stacked: true, 
+                            ticks: { callback: (value) => formatShort(value) },
+                            title: { display: true, text: 'Tutar (TL)', font: { weight: 'bold' } }
+                        }
+                    }
+                },
+                plugins: [ChartDataLabels]
+            });
+        }
+    </script>
+</body>
+</html>

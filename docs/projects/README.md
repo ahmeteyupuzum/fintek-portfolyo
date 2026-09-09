@@ -1,6 +1,6 @@
 # Proje Tanıtım ve Kullanım Sayfaları
 
-18 HTML dosyası, ilişkili mod ve araçları birlikte tutan 12 proje grubunda açıklanmıştır. Aşağıdaki adlar önerilen repository adlarıdır; kaynaklar taşınmamıştır.
+19 HTML dosyası, ilişkili mod ve araçları birlikte tutan 13 proje grubunda açıklanmıştır. Aşağıdaki adlar önerilen repository adlarıdır; kaynaklar taşınmamıştır.
 
 - [Kredi Portföyü ve Takip Paneli](credit-portfolio-dashboard/README.md): Kredi portföyü ve takip verilerini grafikler, tablolar ve taşınabilir raporlarla incelemeyi sağlayan tarayıcı uygulaması.
 - [Tahsilat Performans Panelleri](collection-performance-dashboard/README.md): Bölgesel ve merkezi tahsilat verilerini hedeflerle karşılaştırmaya yönelik iki raporlama aracı.
@@ -14,5 +14,6 @@
 - [Excel Yardımcı Araçları](spreadsheet-utilities/README.md): Excel dosyalarını bölgelere ayıran ve ilk çalışma sayfasını JSON'a dönüştüren iki küçük araç.
 - [Şube Haritası ve Mesafe Araçları](branch-route-tools/README.md): Excel koordinatlarını haritaya taşıyan ve koordinat çiftleri için sürüş mesafesi sorgulayan araçlar.
 - [Tarayıcıda Özgeçmiş Hazırlama](browser-resume-builder/README.md): Form alanları, fotoğraf ve eklenebilir satırlarla özgeçmiş hazırlayıp PDF indiren uygulama.
+- [Tahsilat Projeksiyonu](collection-projection/README.md): Aylık tahsilat verilerinden projeksiyon ve hedef simülasyonu; indirilebilir sentetik Excel/CSV verisi.
 
 [Ana portföy](../../README.md) · [Repository planı](../REPOSITORY-PLAN.md)
