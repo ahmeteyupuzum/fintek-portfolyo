@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VakıfBank Şube ve Bölge Haritası</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- SheetJS (Excel Okuma) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <style>
+        body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        #map { height: 100vh; width: 100%; }
+        #upload-container {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            max-width: 300px;
+        }
+        h3 { margin-top: 0; font-size: 16px; color: #333; }
+        input[type="file"] { margin-top: 10px; width: 100%; }
+        .info { font-size: 12px; color: #666; margin-top: 5px; }
+        .legend { margin-top: 10px; font-size: 12px; }
+        .legend-item { display: flex; align-items: center; margin-bottom: 4px; }
+        .color-box { width: 12px; height: 12px; margin-right: 8px; border-radius: 50%; }
+        
+        /* Buton Stilleri */
+        .action-btn {
+            margin-top: 10px;
+            width: 100%;
+            padding: 8px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        #export-html-btn {
+            background-color: #28a745;
+            color: white;
+        }
+        #export-html-btn:hover {
+            background-color: #218838;
+        }
+        #export-html-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+
+<div id="upload-container">
+    <h3>Veri Yükle</h3>
+    <p class="info">Excel dosyanızı seçin (.xlsx)</p>
+    <input type="file" id="excel-file" accept=".xlsx, .xls" />
+    
+    <button id="export-html-btn" class="action-btn" onclick="exportToHTML()" disabled>Haritayı HTML Olarak Dışa Aktar</button>
+    
+    <div id="status" class="info"></div>
+</div>
+
+<div id="map"></div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+    // 1. Harita Başlatma (Merkez: Türkiye)
+    const map = L.map('map').setView([39.0, 35.0], 6);
+
+    // 2. CartoDB Light Tema Katmanı Ekleme
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        subdomains: 'abcd',
+        maxZoom: 20
+    }).addTo(map);
+
+    let markersLayer = L.layerGroup().addTo(map);
+    let linesLayer = L.layerGroup().addTo(map);
+    const regionColors = {}; 
+    
+const palette = [
+'#FF0055', '#00FF99', '#00CCFF', '#FFAA00', '#FF6600',
+'#9D00FF', '#FF00CC', '#00FF66', '#FF3333', '#0099FF',
+'#CCFF00', '#FF0099', '#00FFCC', '#FF9900', '#6600FF',
+'#FF3366', '#00CC99', '#FFCC00'
+];
+    let colorIndex = 0;
+    let currentData = []; // Dışa aktarım için veriyi hafızada tutar
+
+    function getRegionColor(regionName) {
+        if (!regionColors[regionName]) {
+            regionColors[regionName] = palette[colorIndex % palette.length];
+            colorIndex++;
+        }
+        return regionColors[regionName];
+    }
+
+    // Excel Dosyasını İşleme
+    document.getElementById('excel-file').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, {type: 'array'});
+            
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            
+            const jsonData = XLSX.utils.sheet_to_json(worksheet);
+            
+            renderMapData(jsonData);
+        };
+        
+        reader.readAsArrayBuffer(file);
+    });
+
+    function renderMapData(data) {
+        markersLayer.clearLayers();
+        linesLayer.clearLayers();
+        Object.keys(regionColors).forEach(key => delete regionColors[key]);
+        colorIndex = 0;
+        currentData = []; // Veriyi sıfırla
+
+        if (data.length === 0) {
+            document.getElementById('status').innerText = "Veri bulunamadı.";
+            document.getElementById('export-html-btn').disabled = true;
+            return;
+        }
+
+        const bounds = [];
+
+        data.forEach(row => {
+            const subeAdi = row['SubeAdi'];
+            const subeLat = parseFloat(row['SubeLat']);
+            const subeLong = parseFloat(row['SubeLong']);
+            const bolgeAdi = row['BolgeAdi'];
+            const bolgeLat = parseFloat(row['BolgeLat']);
+            const bolgeLong = parseFloat(row['BolgeLong']);
+            const mesafe = row['Mesafe'];
+
+            if (isNaN(subeLat) || isNaN(subeLong) || isNaN(bolgeLat) || isNaN(bolgeLong)) {
+                console.warn("Geçersiz koordinat:", row);
+                return;
+            }
+
+            const color = getRegionColor(bolgeAdi);
+
+            // Veriyi dışa aktarım için kaydet
+            currentData.push({
+                subeAdi, subeLat, subeLong, bolgeAdi, bolgeLat, bolgeLong, mesafe, color
+            });
+
+            const bolgeMarker = L.circleMarker([bolgeLat, bolgeLong], {
+                radius: 8,
+                fillColor: color,
+                color: "#fff",
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 0.8
+            }).bindPopup(`<b>Bölge:</b> ${bolgeAdi}<br><b>Konum:</b> Bölge Merkezi`);
+            
+            markersLayer.addLayer(bolgeMarker);
+
+            const subeMarker = L.circleMarker([subeLat, subeLong], {
+                radius: 5,
+                fillColor: color,
+                color: "#fff",
+                weight: 1,
+                opacity: 1,
+                fillOpacity: 0.6
+            }).bindPopup(`<b>Şube:</b> ${subeAdi}<br><b>Bölge:</b> ${bolgeAdi}<br><b>Mesafe:</b> ${mesafe}`);
+            
+            markersLayer.addLayer(subeMarker);
+
+            const polyline = L.polyline([[bolgeLat, bolgeLong], [subeLat, subeLong]], {
+                color: color,
+                weight: 1,
+                opacity: 0.5,
+                dashArray: '5, 5'
+            });
+            
+            linesLayer.addLayer(polyline);
+
+            bounds.push([subeLat, subeLong]);
+            bounds.push([bolgeLat, bolgeLong]);
+        });
+
+        if (bounds.length > 0) {
+            map.fitBounds(bounds, {padding: [50, 50]});
+        }
+
+        document.getElementById('status').innerText = `${data.length} kayıt haritaya eklendi.`;
+        document.getElementById('export-html-btn').disabled = false;
+        createLegend();
+    }
+
+    function createLegend() {
+        const legendDiv = document.createElement('div');
+        legendDiv.className = 'legend';
+        legendDiv.innerHTML = '<strong>Bölgeler:</strong>';
+        
+        let count = 0;
+        for (const [region, color] of Object.entries(regionColors)) {
+            if (count >= 18) {
+                legendDiv.innerHTML += `<div class="legend-item">... ve ${Object.keys(regionColors).length - 10} bölge daha</div>`;
+                break;
+            }
+            legendDiv.innerHTML += `
+                <div class="legend-item">
+                    <div class="color-box" style="background-color: ${color}"></div>
+                    ${region}
+                </div>
+            `;
+            count++;
+        }
+        
+        const container = document.getElementById('upload-container');
+        const existingLegend = container.querySelector('.legend');
+        if (existingLegend) existingLegend.remove();
+        
+        container.appendChild(legendDiv);
+    }
+
+    // HTML Olarak Dışa Aktarma Fonksiyonu
+    function exportToHTML() {
+        if (currentData.length === 0) return;
+
+        const currentCenter = map.getCenter();
+        const currentZoom = map.getZoom();
+        
+        // Lejant HTML içeriğini al
+        const legendContainer = document.querySelector('#upload-container .legend');
+        const legendHTML = legendContainer ? legendContainer.innerHTML : '';
+
+        // Yeni HTML dosyasının şablonu
+        const htmlContent = `
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VakıfBank Şube ve Bölge Haritası (Dışa Aktarılan)</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        #map { height: 100vh; width: 100%; }
+        #info-container {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            max-width: 300px;
+        }
+        h3 { margin-top: 0; font-size: 16px; color: #333; }
+        .info { font-size: 12px; color: #666; margin-top: 5px; }
+        .legend { margin-top: 10px; font-size: 12px; }
+        .legend-item { display: flex; align-items: center; margin-bottom: 4px; }
+        .color-box { width: 12px; height: 12px; margin-right: 8px; border-radius: 50%; }
+    </style>
+</head>
+<body>
+
+<div id="info-container">
+    <h3>Harita Bilgisi</h3>
+    <p class="info">Toplam Şube: ${currentData.length}</p>
+    <div class="legend" id="embedded-legend">
+        <strong>Bölgeler:</strong>
+        ${legendHTML.replace('<strong>Bölgeler:</strong>', '')} 
+    </div>
+</div>
+
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script>
+<script>
+    const map = L.map('map').setView([${currentCenter.lat}, ${currentCenter.lng}], ${currentZoom});
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; OpenStreetMap &copy; CARTO',
+        subdomains: 'abcd',
+        maxZoom: 20
+    }).addTo(map);
+
+    const markersLayer = L.layerGroup().addTo(map);
+    const linesLayer = L.layerGroup().addTo(map);
+
+    // Gömülü Veriler
+    const embeddedData = ${JSON.stringify(currentData)};
+
+    embeddedData.forEach(row => {
+        // Bölge Merkezi
+        const bolgeMarker = L.circleMarker([row.bolgeLat, row.bolgeLong], {
+            radius: 8,
+            fillColor: row.color,
+            color: "#fff",
+            weight: 2,
+            opacity: 1,
+            fillOpacity: 0.8
+        }).bindPopup('<b>Bölge:</b> ' + row.bolgeAdi + '<br><b>Konum:</b> Bölge Merkezi');
+        
+        markersLayer.addLayer(bolgeMarker);
+
+        // Şube
+        const subeMarker = L.circleMarker([row.subeLat, row.subeLong], {
+            radius: 5,
+            fillColor: row.color,
+            color: "#fff",
+            weight: 1,
+            opacity: 1,
+            fillOpacity: 0.6
+        }).bindPopup('<b>Şube:</b> ' + row.subeAdi + '<br><b>Bölge:</b> ' + row.bolgeAdi + '<br><b>Mesafe:</b> ' + row.mesafe);
+        
+        markersLayer.addLayer(subeMarker);
+
+        // Bağlantı Çizgisi
+        const polyline = L.polyline([[row.bolgeLat, row.bolgeLong], [row.subeLat, row.subeLong]], {
+            color: row.color,
+            weight: 1,
+            opacity: 0.5,
+            dashArray: '5, 5'
+        });
+        
+        linesLayer.addLayer(polyline);
+    });
+<\/script>
+
+</body>
+</html>
+        `;
+
+        // Dosyayı indir
+        const blob = new Blob([htmlContent], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'vakifbank_harita_gomulu.html';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+</script>
+
+</body>
+</html>

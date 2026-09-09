@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel'den JSON'a Dönüştürücü</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f3f4f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 800px;
+        }
+        h1 {
+            color: #1f2937;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        .upload-area {
+            border: 2px dashed #d1d5db;
+            padding: 2rem;
+            text-align: center;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            transition: border-color 0.3s;
+        }
+        .upload-area:hover {
+            border-color: #3b82f6;
+        }
+        input[type="file"] {
+            display: none;
+        }
+        .custom-file-upload {
+            display: inline-block;
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #3b82f6;
+            color: white;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+        .custom-file-upload:hover {
+            background-color: #2563eb;
+        }
+        #fileName {
+            margin-top: 10px;
+            display: block;
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 1rem;
+        }
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1rem;
+            transition: opacity 0.3s;
+        }
+        #convertBtn {
+            background-color: #10b981;
+            color: white;
+        }
+        #downloadBtn {
+            background-color: #4b5563;
+            color: white;
+        }
+        button:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        button:hover:not(:disabled) {
+            opacity: 0.9;
+        }
+        pre {
+            background-color: #1e293b;
+            color: #a5f3fc;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            max-height: 400px;
+            font-size: 0.9rem;
+            white-space: pre-wrap;       /* Uzun satırları kaydır */
+            word-wrap: break-word;       /* Kelimeleri bölerek kaydır */
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Excel (XLSX) ➡️ JSON Dönüştürücü</h1>
+
+    <div class="upload-area">
+        <label for="fileInput" class="custom-file-upload">
+            📂 Excel Dosyası Seç
+        </label>
+        <input type="file" id="fileInput" accept=".xlsx, .xls, .csv" />
+        <span id="fileName">Dosya seçilmedi</span>
+    </div>
+
+    <div class="controls">
+        <button id="convertBtn" disabled>Dönüştür</button>
+        <button id="downloadBtn" class="hidden">JSON İndir</button>
+    </div>
+
+    <div id="resultArea" class="hidden">
+        <h3>Önizleme (İlk 5 Kayıt):</h3>
+        <pre id="jsonOutput"></pre>
+    </div>
+</div>
+
+<script>
+    let selectedFile = null;
+    let jsonData = null;
+
+    const fileInput = document.getElementById('fileInput');
+    const fileNameSpan = document.getElementById('fileName');
+    const convertBtn = document.getElementById('convertBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const resultArea = document.getElementById('resultArea');
+    const jsonOutput = document.getElementById('jsonOutput');
+
+    // Dosya seçildiğinde çalışır
+    fileInput.addEventListener('change', (e) => {
+        selectedFile = e.target.files[0];
+        if (selectedFile) {
+            fileNameSpan.textContent = selectedFile.name;
+            convertBtn.disabled = false;
+            // Yeni dosya seçilince eski sonuçları temizle
+            resultArea.classList.add('hidden');
+            downloadBtn.classList.add('hidden');
+        } else {
+            fileNameSpan.textContent = "Dosya seçilmedi";
+            convertBtn.disabled = true;
+        }
+    });
+
+    // Dönüştür butonuna basıldığında çalışır
+    convertBtn.addEventListener('click', () => {
+        if (!selectedFile) return;
+
+        const reader = new FileReader();
+
+        reader.onload = (e) => {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+
+            // İlk çalışma sayfasını al
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+
+            // Sayfayı JSON'a çevir
+            // raw: false -> Tarihleri ve sayıları göründüğü gibi metin olarak alır (genelde daha güvenli)
+            // defval: "" -> Boş hücreleri boş string yapar
+            jsonData = XLSX.utils.sheet_to_json(worksheet, { raw: false, defval: "" });
+
+            // Ekrana bas (Sadece ilk 5 tanesini gösterelim ki tarayıcı donmasın)
+            const previewData = jsonData.slice(0, 5); 
+            jsonOutput.textContent = JSON.stringify(previewData, null, 4) + (jsonData.length > 5 ? "\n\n... (Diğer kayıtlar dosyada mevcut)" : "");
+            
+            resultArea.classList.remove('hidden');
+            downloadBtn.classList.remove('hidden');
+        };
+
+        reader.readAsArrayBuffer(selectedFile);
+    });
+
+    // İndir butonuna basıldığında çalışır
+    downloadBtn.addEventListener('click', () => {
+        if (!jsonData) return;
+
+        const jsonString = JSON.stringify(jsonData, null, 4);
+        const blob = new Blob([jsonString], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        // Dosya ismini orjinal ismin sonuna .json ekleyerek ayarla
+        const originalName = selectedFile.name.split('.')[0];
+        a.download = `${originalName}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    });
+</script>
+
+</body>
+</html>

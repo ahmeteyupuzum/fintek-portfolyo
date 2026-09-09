@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Koordinat Bazlı Mesafe Hesaplayıcı (OSRM)</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f8; color: #333; padding: 20px; }
+.container { max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+h1 { color: #d71f2e; margin-bottom: 20px; font-size: 24px; }
+.controls { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
+input[type="file"] { padding: 10px; border: 1px solid #ddd; border-radius: 4px; background: #fff; }
+button { padding: 10px 20px; background-color: #d71f2e; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 14px; transition: background 0.2s; }
+button:hover { background-color: #b0121f; }
+button:disabled { background-color: #ccc; cursor: not-allowed; }
+#status { margin-bottom: 15px; font-weight: bold; color: #555; background: #d1ecf1; padding: 15px; border-radius: 4px; border: 1px solid #bee5eb; line-height: 1.5; }
+.progress-bar { width: 100%; background-color: #e0e0e0; border-radius: 4px; height: 25px; margin-bottom: 20px; display: none; position: relative; overflow: hidden; }
+.progress-fill { height: 100%; background-color: #28a745; width: 0%; transition: width 0.3s; }
+.progress-text { position: absolute; width: 100%; text-align: center; top: 3px; font-size: 12px; color: #000; font-weight: bold; }
+table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 12px; }
+th, td { border: 1px solid #ddd; padding: 8px; text-align: left; vertical-align: top; }
+th { background-color: #f8f9fa; color: #333; position: sticky; top: 0; z-index: 10; }
+tr:nth-child(even) { background-color: #f9f9f9; }
+.error { color: #dc3545; font-size: 11px; font-weight: bold; }
+.success { color: #28a745; font-weight: bold; }
+.warning { color: #856404; font-size: 11px; }
+.info-box { background-color: #fff3cd; border-left: 6px solid #ffc107; margin-bottom: 15px; padding: 15px; font-size: 14px; }
+.blink { animation: blinker 1s linear infinite; color: #d71f2e; }
+@keyframes blinker { 50% { opacity: 0; } }
+</style>
+</head>
+<body>
+
+<div class="container">
+<h1>Koordinat Bazlı Mesafe Hesaplayıcı</h1>
+
+<div class="info-box">
+<strong>Kullanım Talimatı:</strong><br>
+Excel dosyanızda aşağıdaki sütun başlıklarının (büyük/küçük harf duyarlı değildir) bulunduğundan emin olun:<br>
+<code>SubeLat, SubeLong, BolgeLat, BolgeLong</code><br>
+Sistem bu koordinatları alarak OSRM üzerinden karayolu mesafesini hesaplar.
+</div>
+
+<div class="controls">
+<input type="file" id="dataFile" accept=".csv, .xlsx, .xls">
+<button id="btnCalculate" onclick="startCalculation()">Hesaplamayı Başlat</button>
+<button id="btnDownload" onclick="downloadResults()" disabled>Sonuçları İndir (Excel)</button>
+</div>
+
+<div id="status">Hazır...</div>
+<div class="progress-bar" id="progressBar">
+<div class="progress-fill" id="progressFill"></div>
+<div class="progress-text" id="progressText">%0</div>
+</div>
+
+<div style="overflow-x: auto; max-height: 600px; overflow-y: auto;">
+<table id="resultTable">
+<thead>
+<tr>
+<th style="width: 10%">Şube Adı</th>
+<th style="width: 10%">Şube Lat</th>
+<th style="width: 10%">Şube Long</th>
+<th style="width: 10%">Bölge Adı</th>
+<th style="width: 10%">Bölge Lat</th>
+<th style="width: 10%">Bölge Long</th>
+<th style="width: 10%">Mesafe (km)</th>
+<th style="width: 20%">Durum</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+</div>
+</div>
+
+<script>
+let globalResults = [];
+let isRunning = false;
+let stopRequested = false;
+
+function fixEncoding(text) {
+    if (!text) return "";
+    let str = text.toString();
+    // Temel encoding düzeltmeleri
+    str = str.replace(/Åž/g, "Ş").replace(/ÅŸ/g, "ş").replace(/ÄŸ/g, "ğ").replace(/Ã¼/g, "ü")
+    .replace(/Ã¶/g, "ö").replace(/Ã§/g, "ç").replace(/Ä°/g, "İ").replace(/Ä±/g, "ı");
+    return str.trim();
+}
+
+function findColumnIndex(headers, keywords) {
+    for (let i = 0; i < headers.length; i++) {
+        let h = fixEncoding(headers[i]).toLowerCase().replace(/\s+/g, '');
+        h = h.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        for (let key of keywords) {
+            let k = key.toLowerCase().replace(/\s+/g, '');
+            k = k.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            if (h === k || h.includes(k) || k.includes(h)) return i;
+        }
+    }
+    return -1;
+}
+
+function parseFile(file, callback) {
+    const reader = new FileReader();
+    if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+        reader.onload = function(e) {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
+                processDataRows(jsonData, callback);
+            } catch (err) { callback(null, "Excel hatası: " + err.message); }
+        };
+        reader.readAsArrayBuffer(file);
+    } else {
+        reader.onload = function(e) {
+            try {
+                let text = e.target.result;
+                const lines = text.split(/\r?\n/).filter(l => l.trim() !== '');
+                if (lines.length === 0) throw new Error("Boş dosya");
+                const sep = lines[0].includes(';') && !lines[0].includes(',') ? ';' : ',';
+                const rows = lines.map(l => l.split(sep).map(c => fixEncoding(c.trim().replace(/^"|"$/g, ''))));
+                processDataRows(rows, callback);
+            } catch (err) { callback(null, "CSV hatası: " + err.message); }
+        };
+        reader.readAsText(file, 'UTF-8');
+    }
+}
+
+function processDataRows(rows, callback) {
+    if (!rows || rows.length < 2) { callback(null, "Veri yok"); return; }
+    
+    const headers = rows[0];
+    
+    // Yeni sütun isimlerini ara
+    const idx = {
+        sAdi: findColumnIndex(headers, ['subeadi', 'şubeadı', 'sube', 'şube']),
+        sLat: findColumnIndex(headers, ['subelat', 'şubelat', 'subeenlem']),
+        sLong: findColumnIndex(headers, ['subelong', 'şubelong', 'subeboylam']),
+        bAdi: findColumnIndex(headers, ['bolgeadi', 'bölgeadı', 'bolge', 'bölge']),
+        bLat: findColumnIndex(headers, ['bolgelat', 'bölgelat', 'bolgeenlem']),
+        bLong: findColumnIndex(headers, ['bolgelong', 'bölgelong', 'bolgeboylam'])
+    };
+
+    // Zorunlu alan kontrolü
+    if (idx.sLat === -1) { callback(null, "SubeLat sütunu bulunamadı."); return; }
+    if (idx.sLong === -1) { callback(null, "SubeLong sütunu bulunamadı."); return; }
+    if (idx.bLat === -1) { callback(null, "BolgeLat sütunu bulunamadı."); return; }
+    if (idx.bLong === -1) { callback(null, "BolgeLong sütunu bulunamadı."); return; }
+
+    // İsim sütunları yoksa boş geç
+    if (idx.sAdi === -1) idx.sAdi = -1; 
+    if (idx.bAdi === -1) idx.bAdi = -1;
+
+    const data = [];
+    for (let i = 1; i < rows.length; i++) {
+        const r = rows[i];
+        if (!r || r.length === 0) continue;
+
+        const sLat = r[idx.sLat];
+        const sLong = r[idx.sLong];
+        const bLat = r[idx.bLat];
+        const bLong = r[idx.bLong];
+
+        // Koordinatlar boşsa atla
+        if (!sLat || !sLong || !bLat || !bLong) continue;
+
+        data.push({
+            SubeAdi: idx.sAdi !== -1 && r[idx.sAdi] ? r[idx.sAdi].toString() : "-", 
+            SubeLat: sLat,
+            SubeLong: sLong,
+            BolgeAdi: idx.bAdi !== -1 && r[idx.bAdi] ? r[idx.bAdi].toString() : "-", 
+            BolgeLat: bLat,
+            BolgeLong: bLong
+        });
+    }
+    callback(data, null);
+}
+
+// OSRM API ile Mesafe Hesaplama
+async function getDistance(lat1, lon1, lat2, lon2) {
+    // OSRM formatı: lon,lat;lon,lat
+    const url = `https://router.project-osrm.org/route/v1/driving/${lon1},${lat1};${lon2},${lat2}?overview=false`;
+    
+    try {
+        const response = await fetch(url, { timeout: 5000 });
+        if (!response.ok) throw new Error('OSRM Bağlantı Hatası');
+        
+        const d = await response.json();
+        
+        if (d.code === 'Ok' && d.routes && d.routes.length > 0) {
+            // Mesafe metre cinsinden gelir, km'ye çevir
+            return (d.routes[0].distance / 1000).toFixed(2);
+        }
+        return null;
+    } catch (e) {
+        console.error(e);
+        return null;
+    }
+}
+
+async function startCalculation() {
+    if (isRunning) { 
+        if(confirm("İşlem devam ediyor. Durdurmak istiyor musunuz?")) {
+            stopRequested = true;
+            isRunning = false;
+            document.getElementById('btnCalculate').disabled = false;
+            document.getElementById('btnCalculate').innerText = "Hesaplamayı Başlat";
+            document.getElementById('status').innerHTML = "<span class='error'>İşlem durduruldu.</span>";
+        }
+        return; 
+    }
+
+    const fileInput = document.getElementById('dataFile');
+    const statusDiv = document.getElementById('status');
+    const progressBar = document.getElementById('progressBar');
+    const progressFill = document.getElementById('progressFill');
+    const progressText = document.getElementById('progressText');
+    const tbody = document.querySelector('#resultTable tbody');
+    const btnCalc = document.getElementById('btnCalculate');
+    const btnDownload = document.getElementById('btnDownload');
+
+    if (!fileInput.files.length) { alert('Lütfen dosya seçin.'); return; }
+
+    isRunning = true;
+    stopRequested = false;
+    btnCalc.disabled = false;
+    btnCalc.innerText = "Durdur";
+    btnCalc.style.backgroundColor = "#dc3545";
+    btnDownload.disabled = true;
+    progressBar.style.display = 'block';
+
+    parseFile(fileInput.files[0], async (data, error) => {
+        if (error) { 
+            statusDiv.innerHTML = `<span class='error'>${error}</span>`; 
+            resetUI();
+            return; 
+        }
+
+        tbody.innerHTML = ''; 
+        globalResults = []; 
+        let successCount = 0;
+        let errorCount = 0;
+
+        for (let i = 0; i < data.length; i++) {
+            if (stopRequested) break;
+
+            const row = data[i];
+            const tr = document.createElement('tr');
+
+            tr.innerHTML = `
+                <td>${row.SubeAdi}</td>
+                <td>${row.SubeLat}</td>
+                <td>${row.SubeLong}</td>
+                <td>${row.BolgeAdi}</td>
+                <td>${row.BolgeLat}</td>
+                <td>${row.BolgeLong}</td>
+                <td id="dist-${i}">-</td>
+                <td id="status-${i}" class="blink">Hesaplanıyor...</td>
+            `;
+            tbody.appendChild(tr);
+
+            if (i % 10 === 0) tr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            statusDiv.innerHTML = `İşleniyor: <strong>${i + 1} / ${data.length}</strong>`;
+
+            // Koordinat geçerliliği kontrolü
+            const lat1 = parseFloat(row.SubeLat);
+            const lon1 = parseFloat(row.SubeLong);
+            const lat2 = parseFloat(row.BolgeLat);
+            const lon2 = parseFloat(row.BolgeLong);
+
+            if (isNaN(lat1) || isNaN(lon1) || isNaN(lat2) || isNaN(lon2)) {
+                document.getElementById(`status-${i}`).innerHTML = `<span class='error'>Geçersiz Koordinat</span>`;
+                document.getElementById(`status-${i}`).classList.remove('blink');
+                globalResults.push({...row, Mesafe: '-', Durum: 'Geçersiz Koordinat'});
+                errorCount++;
+            } else {
+                try {
+                    const dist = await getDistance(lat1, lon1, lat2, lon2);
+
+                    if (dist) {
+                        document.getElementById(`dist-${i}`).innerText = dist;
+                        document.getElementById(`status-${i}`).innerHTML = `<span class='success'>Tamamlandı</span>`;
+                        document.getElementById(`status-${i}`).classList.remove('blink');
+                        globalResults.push({...row, Mesafe: dist, Durum: 'Başarılı'});
+                        successCount++;
+                    } else {
+                        throw new Error("Rota bulunamadı");
+                    }
+                } catch (err) {
+                    document.getElementById(`status-${i}`).innerHTML = `<span class='error'>${err.message}</span>`;
+                    document.getElementById(`status-${i}`).classList.remove('blink');
+                    globalResults.push({...row, Mesafe: '-', Durum: err.message});
+                    errorCount++;
+                }
+            }
+
+            const percent = ((i + 1) / data.length) * 100;
+            progressFill.style.width = percent + '%';
+            progressText.innerText = `%${Math.round(percent)} (Başarılı: ${successCount})`;
+
+            // API limitlerine takılmamak için kısa bekleme (OSRM demo sunucusu için önemli)
+            await new Promise(r => setTimeout(r, 100)); 
+        }
+
+        if (stopRequested) {
+            statusDiv.innerHTML = `<span class='warning'>İşlem durduruldu.</span>`;
+        } else {
+            statusDiv.innerHTML = `TAMAMLANDI! Başarılı: ${successCount} | Hatalı: ${errorCount}`;
+        }
+
+        resetUI();
+        if (!stopRequested) btnDownload.disabled = false;
+    });
+}
+
+function resetUI() {
+    isRunning = false;
+    const btnCalc = document.getElementById('btnCalculate');
+    btnCalc.disabled = false;
+    btnCalc.innerText = "Hesaplamayı Başlat";
+    btnCalc.style.backgroundColor = "#d71f2e";
+}
+
+function downloadResults() {
+    if (!globalResults.length) { alert("İndirilecek veri yok."); return; }
+    const ws = XLSX.utils.json_to_sheet(globalResults);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Sonuc");
+    XLSX.writeFile(wb, "Mesafe_Sonuc_Koordinatli.xlsx");
+}
+</script>
+
+</body>
+</html>

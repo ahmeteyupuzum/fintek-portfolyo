@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Takip Ödeme Planı Parametre Tanım</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SheetJS (Excel Export için) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        bankBlue: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            600: '#2563eb',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #c7c7c7;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #a0a0a0;
+        }
+        
+        .tab-active {
+            border-bottom: 3px solid #1e40af;
+            color: #1e3a8a;
+            font-weight: 600;
+        }
+        .tab-inactive {
+            color: #6b7280;
+            border-bottom: 3px solid transparent;
+        }
+        .tab-inactive:hover {
+            color: #374151;
+            border-bottom: 3px solid #d1d5db;
+        }
+        
+        /* Checkbox wrapper style */
+        .checkbox-item:hover {
+            background-color: #f3f4f6;
+        }
+        .checkbox-item input:checked + div {
+            font-weight: 600;
+            color: #1e40af;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans">
+
+    <!-- Navbar -->
+    <nav class="bg-black text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="64" viewBox="0 0 48 48" height="64"><defs><clipPath id="7590b00e14"><path d="M 1 8.074219 L 47.507812 8.074219 L 47.507812 38.929688 L 1 38.929688 Z M 1 8.074219 " clip-rule="nonzero"/></clipPath></defs><g clip-path="url(#7590b00e14)"><path fill="#fbc34e" d="M 46.933594 16.664062 C 47.515625 13.335938 44.453125 8.699219 36.109375 8.699219 L 15.382812 8.699219 C 9.703125 8.699219 6.140625 12.597656 5.507812 16.527344 L 1.304688 38.636719 C 4.996094 38.625 29.320312 38.636719 29.269531 38.636719 L 30.851562 38.636719 C 39.5625 38.585938 44.578125 36.628906 45.496094 30.304688 C 46.101562 26.050781 42.367188 23.300781 39.3125 22.71875 C 42.402344 22.15625 46.152344 21.105469 46.933594 16.664062 Z M 46.933594 16.664062 " fill-opacity="1" fill-rule="nonzero"/></g><path fill="#ffffff" d="M 27.46875 17.960938 C 25.355469 20.640625 17.671875 29.933594 16.117188 31.695312 C 12.648438 35.644531 5.492188 35.054688 5.445312 34.957031 C 5.445312 34.953125 8.023438 22.75 8.859375 19.308594 C 11.152344 9.957031 19.0625 12.171875 19.0625 12.171875 C 19.0625 12.171875 16.953125 12.472656 15.464844 14.371094 C 13.957031 16.296875 12.246094 25.671875 11.28125 30.054688 C 15.8125 24.753906 22.023438 17.921875 23.082031 16.640625 C 27.597656 11.175781 34.667969 11.929688 34.667969 11.929688 C 34.667969 11.929688 31.914062 12.3125 27.46875 17.960938 Z M 27.46875 17.960938 " fill-opacity="1" fill-rule="nonzero"/></svg>
+                    <span class="font-bold text-xl tracking-tight">RİSK TASFİYE KOORDİNASYON MÜDÜRLÜĞÜ - TAKİP ÖDEME PLANI PARAMETRE TANIM EKRANI</span>
+                </div>
+                <div class="text-sm opacity-80">AEÜ</div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Tab Navigation -->
+        <div class="flex space-x-8 border-b border-gray-200 mb-8">
+            <button onclick="switchTab('taksit')" id="tab-taksit" class="tab-active pb-4 px-2 text-lg transition-colors duration-200">
+                <i class="fa-solid fa-list-ol mr-2"></i>Ödeme Planı Taksit Parametre
+            </button>
+            <button onclick="switchTab('faiz')" id="tab-faiz" class="tab-inactive pb-4 px-2 text-lg transition-colors duration-200">
+                <i class="fa-solid fa-percent mr-2"></i>Ödeme Planı Faiz Parametre
+            </button>
+        </div>
+
+        <!-- Form Area -->
+        <div class="bg-white rounded-xl shadow-md p-6 mb-8 border border-gray-100">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-lg font-semibold text-gray-700">Parametre Tanımlama</h2>
+            </div>
+
+            <form id="paramForm">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                    <!-- Plan Tanım (Custom Multi Select) -->
+                    <div class="col-span-1 md:col-span-2 lg:col-span-1">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Ödeme Planı Tipleri</label>
+                        <div class="border border-gray-300 rounded-md overflow-hidden bg-white h-[300px] flex flex-col shadow-sm">
+                            <!-- Search & Actions -->
+                            <div class="p-2 border-b bg-gray-50 space-y-2">
+                                <input type="text" onkeyup="filterList(this, 'planListContainer')" placeholder="Plan Ara... (indirimli, taksitli vb.)" class="w-full text-sm border border-gray-300 rounded px-2 py-1 focus:outline-none focus:border-bankBlue-600">
+                                <div class="flex justify-between text-xs">
+                                    <button type="button" onclick="selectAll('planListContainer', true)" class="text-bankBlue-600 hover:underline">Hepsini Seç</button>
+                                    <button type="button" onclick="selectAll('planListContainer', false)" class="text-red-500 hover:underline">Temizle</button>
+                                </div>
+                            </div>
+                            <!-- List -->
+                            <div id="planListContainer" class="flex-1 overflow-y-auto custom-scrollbar p-1">
+                                <!-- JS ile doldurulacak -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dosya Birim (Custom Multi Select) -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Takip Dosyalarının Bulunduğu Birim </label>
+                        <div class="border border-gray-300 rounded-md overflow-hidden bg-white h-[300px] flex flex-col shadow-sm">
+                            <div class="p-2 border-b bg-gray-50 space-y-2">
+                                <input type="text" onkeyup="filterList(this, 'dosyaListContainer')" placeholder="Birim Ara..." class="w-full text-sm border border-gray-300 rounded px-2 py-1 focus:outline-none focus:border-bankBlue-600">
+                                <div class="flex justify-between text-xs">
+                                    <button type="button" onclick="selectAll('dosyaListContainer', true)" class="text-bankBlue-600 hover:underline">Hepsini Seç</button>
+                                    <button type="button" onclick="selectAll('dosyaListContainer', false)" class="text-red-500 hover:underline">Temizle</button>
+                                </div>
+                            </div>
+                            <div id="dosyaListContainer" class="flex-1 overflow-y-auto custom-scrollbar p-1">
+                                <!-- JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Kullanıcı Birim (Custom Multi Select) -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Kullanıcıların Birimleri</label>
+                        <div class="border border-gray-300 rounded-md overflow-hidden bg-white h-[300px] flex flex-col shadow-sm">
+                            <div class="p-2 border-b bg-gray-50 space-y-2">
+                                <input type="text" onkeyup="filterList(this, 'kullaniciBirimListContainer')" placeholder="Kullanıcı Birimi Ara..." class="w-full text-sm border border-gray-300 rounded px-2 py-1 focus:outline-none focus:border-bankBlue-600">
+                                <div class="flex justify-between text-xs">
+                                    <button type="button" onclick="selectAll('kullaniciBirimListContainer', true)" class="text-bankBlue-600 hover:underline">Hepsini Seç</button>
+                                    <button type="button" onclick="selectAll('kullaniciBirimListContainer', false)" class="text-red-500 hover:underline">Temizle</button>
+                                </div>
+                            </div>
+                            <div id="kullaniciBirimListContainer" class="flex-1 overflow-y-auto custom-scrollbar p-1">
+                                <!-- JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Roles (Custom Multi Select - Dependent) -->
+                    <div class="col-span-1 md:col-span-3">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Kullanıcı Rolleri</label>
+                        <div class="border border-gray-300 rounded-md overflow-hidden bg-white h-[250px] flex flex-col shadow-sm">
+                            <div class="p-2 border-b bg-gray-50 flex flex-wrap gap-2 justify-between items-center">
+                                <input type="text" onkeyup="filterList(this, 'rolListContainer')" placeholder="Rol Ara..." class="flex-1 min-w-[200px] text-sm border border-gray-300 rounded px-2 py-1 focus:outline-none focus:border-bankBlue-600">
+                                <div class="flex gap-3 text-xs items-center">
+                                    <button type="button" onclick="selectAll('rolListContainer', true)" class="text-bankBlue-600 hover:underline font-medium">Hepsini Seç</button>
+                                    <button type="button" onclick="removeManagers()" class="text-orange-600 hover:underline font-medium border border-orange-200 bg-orange-50 px-2 py-0.5 rounded">Müdürü Çıkart</button>
+                                    <button type="button" onclick="selectAll('rolListContainer', false)" class="text-red-500 hover:underline font-medium">Temizle</button>
+                                </div>
+                            </div>
+                            <div id="rolListContainer" class="flex-1 overflow-y-auto custom-scrollbar p-1 bg-gray-50">
+                                <div class="p-4 text-center text-gray-400 italic text-sm">Önce 'Kullanıcı Birim Tipi' seçiniz...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Numeric Fields Common -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Müşteri Min. Asıl Alacak</label>
+                        <input type="number" id="minAlacak" value="0" class="w-full border-gray-300 rounded-md shadow-sm focus:border-bankBlue-600 focus:ring focus:ring-bankBlue-200 text-sm border p-2 h-10">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Müşteri Maks. Asıl Alacak</label>
+                        <input type="number" id="maxAlacak" value="999999999" class="w-full border-gray-300 rounded-md shadow-sm focus:border-bankBlue-600 focus:ring focus:ring-bankBlue-200 text-sm border p-2 h-10">
+                    </div>
+
+                    <!-- TAKSIT Specific Fields -->
+                    <div class="taksit-field">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Min. Taksit Sayısı</label>
+                        <input type="number" id="minTaksit" value="1" class="w-full border-gray-300 rounded-md shadow-sm focus:border-bankBlue-600 focus:ring focus:ring-bankBlue-200 text-sm border p-2 h-10">
+                    </div>
+                    <div class="taksit-field">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Maks. Taksit Sayısı</label>
+                        <input type="number" id="maxTaksit" value="12" class="w-full border-gray-300 rounded-md shadow-sm focus:border-bankBlue-600 focus:ring focus:ring-bankBlue-200 text-sm border p-2 h-10">
+                    </div>
+                    <div class="taksit-field">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Varsayılan Taksit</label>
+                        <input type="number" id="defTaksit" value="6" class="w-full border-gray-300 rounded-md shadow-sm focus:border-bankBlue-600 focus:ring focus:ring-bankBlue-200 text-sm border p-2 h-10">
+                    </div>
+                    <div class="taksit-field">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">İlk Taksit Gün Fark</label>
+                        <input type="number" id="gunFark" value="30" class="w-full border-gray-300 rounded-md shadow-sm focus:border-bankBlue-600 focus:ring focus:ring-bankBlue-200 text-sm border p-2 h-10">
+                    </div>
+                    <div class="taksit-field">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Maks. Erteleme Gün</label>
+                        <input type="number" id="ertelemeGun" value="0" class="w-full border-gray-300 rounded-md shadow-sm focus:border-bankBlue-600 focus:ring focus:ring-bankBlue-200 text-sm border p-2 h-10">
+                    </div>
+                    <div class="taksit-field">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">İlk Taksit Peşinat?</label>
+                        <select id="pesinat" class="w-full border-gray-300 rounded-md shadow-sm focus:border-bankBlue-600 focus:ring focus:ring-bankBlue-200 text-sm border p-2 h-10">
+                            <option value="Hayır">Hayır</option>
+                            <option value="Evet">Evet</option>
+                        </select>
+                    </div>
+                    <div class="taksit-field">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Çift Sicil Onayı?</label>
+                        <select id="ciftSicil" class="w-full border-gray-300 rounded-md shadow-sm focus:border-bankBlue-600 focus:ring focus:ring-bankBlue-200 text-sm border p-2 h-10">
+                            <option value="Hayır">Hayır</option>
+                            <option value="Evet">Evet</option>
+                        </select>
+                    </div>
+
+                    <!-- FAIZ Specific Fields -->
+                    <div class="faiz-field hidden">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Teminat Durumu</label>
+                        <select id="teminatDurumu" class="w-full border-gray-300 rounded-md shadow-sm focus:border-bankBlue-600 focus:ring focus:ring-bankBlue-200 text-sm border p-2 h-10">
+                            <option value="Hepsi">Hepsi</option>
+                            <option value="Teminat Yeterli">Teminat Yeterli</option>
+                            <option value="Teminat Yetersiz">Teminat Yetersiz</option>
+                        </select>
+                    </div>
+                    <div class="faiz-field hidden">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Minimum Faiz Oranı</label>
+                        <input type="number" step="0.01" id="minFaiz" value="0.00" class="w-full border-gray-300 rounded-md shadow-sm focus:border-bankBlue-600 focus:ring focus:ring-bankBlue-200 text-sm border p-2 h-10">
+                    </div>
+
+                </div>
+
+                <!-- Actions -->
+                <div class="mt-8 flex justify-end space-x-4 border-t pt-4 border-gray-100">
+                    <button type="button" onclick="clearForm()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors">
+                        Tüm Alanları Temizle
+                    </button>
+                    <button type="button" onclick="addEntries()" class="px-6 py-2 bg-bankBlue-800 text-white rounded-md hover:bg-bankBlue-900 transition-colors shadow-md flex items-center">
+                        <i class="fa-solid fa-plus mr-2"></i> Listeye Ekle
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Preview Table Section -->
+        <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+            <div class="flex justify-between items-center mb-4">
+                <div class="flex items-center space-x-2">
+                    <h2 class="text-lg font-semibold text-gray-700">Oluşturulacak Liste</h2>
+                    <span id="rowCount" class="bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded-full font-bold">0 Satır</span>
+                </div>
+                <div>
+                    <button onclick="clearTable()" class="text-red-500 text-sm hover:underline mr-4">Listeyi Boşalt</button>
+                    <button onclick="exportToExcel()" class="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors shadow-md flex items-center">
+                        <i class="fa-solid fa-file-excel mr-2"></i> Excel İndir
+                    </button>
+                </div>
+            </div>
+            
+            <div class="overflow-x-auto border rounded-lg max-h-[600px] overflow-y-auto custom-scrollbar">
+                <table class="min-w-full divide-y divide-gray-200 relative">
+                    <thead class="bg-gray-50 sticky top-0 shadow-sm z-10">
+                        <tr id="tableHeader">
+                            <!-- JS ile doldurulacak -->
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody" class="bg-white divide-y divide-gray-200 text-sm">
+                        <!-- JS ile doldurulacak -->
+                        <tr>
+                            <td colspan="100%" class="px-6 py-4 text-center text-gray-400">Henüz veri eklenmedi.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data & Logic -->
+    <script>
+        // --- DATA TANIMLARI ---
+        const PLAN_TYPES = [
+            "Faiz İndirimli Defaten Kapama","Faiz İndirimsiz Defaten", "Faiz İndirimli Taksitli", "Faiz İndirimsiz Taksitli",
+            "İcra Taahhütlü Faiz İndirimli Defaten Kapama", "İcra Taahhütlü Faiz İndirimli Taksitli",
+            "İcra Taahhütlü Faiz İndirimsiz Defaten Kapama", "İcra Taahhütlü Faiz İndirimsiz Taksitli",
+            "Uzun Vadeli Faiz İndirimli Taksitli", "Uzun Vadeli Faiz İndirimsiz Taksitli",
+            "Uzun Vadeli İcra Taahhütlü Faiz İndirimli Taksitli", "Uzun Vadeli İcra Taahhütlü Faiz İndirimsiz Taksitli",
+            "FYYS Standart Ödeme Planı Sabit Faiz Tam Bakiyeli", "FYYS Standart Ödeme Planı Sabit Faiz Kısmi Bakiyeli",
+            "FYYS Standart Ödeme Planı Değişken Faiz Tam Bakiyeli", "FYYS Standart Ödeme Planı Değişken Faiz Kısmi Bakiyeli",
+            "FYYS Büyük Model Ödeme Planı Sabit Faiz Tam Bakiyeli", "FYYS Büyük Model Ödeme Planı Sabit Faiz Kısmi Bakiyeli",
+            "FYYS Büyük Model Ödeme Planı Değişken Faiz Tam Bakiyeli", "FYYS Büyük Model Ödeme Planı Değişken Faiz  Kısmi Bakiyeli",
+            "Prim Ödüllü Takip Kampanyası 2025 Bireysel Faiz İndirimli Defaten","Prim Ödüllü Takip Kampanyası 2025 Bireysel Faiz İndirimli Taksitli",
+            "Prim Ödüllü Takip Kampanyası 2025 Bireysel Faiz İndirimsiz Defaten","Prim Ödüllü Takip Kampanyası 2025 Bireysel Faiz İndirimsiz Taksitli",
+            "Prim Ödüllü Takip Kampanyası 2025 Ticari Faiz İndirimli Defaten","Prim Ödüllü Takip Kampanyası 2025 Ticari Faiz İndirimli Taksitli",
+            "Prim Ödüllü Takip Kampanyası 2025 Ticari Faiz İndirimsiz Defaten","Prim Ödüllü Takip Kampanyası 2025 Ticari Faiz İndirimsiz Taksitli"
+        ];
+
+        const DOSYA_BIRIMLERI = [
+            "Risk Tasfiye ve Tahsil Müdürlüğü 1", "Risk Tasfiye ve Tahsil Müdürlüğü 2-3-4", "Bölge Risk Tasfiye Müdürlüğü"
+        ];
+
+        const ROLES_MAP = {
+            "Şube": ["MÜŞTERİ İLİŞKİLERİ SORUMLUSU 1", "MÜŞTERİ İLİŞKİLERİ SORUMLUSU 2", "KOBİ PORTFÖY YÖNETİCİSİ", "BİREYSEL PORTFÖY YÖNETİCİSİ", "OPERASYON KOORDİNATÖRÜ 1", "OPERASYON KOORDİNATÖRÜ 2", "MÜŞTERİ ODAKLI BANKACILIK YETKİLİSİ M1", "MÜŞTERİ ODAKLI BANKACILIK YETKİLİSİ", "MÜŞTERİ ODAKLI BANKACILIK YETKİLİSİ M2", "MÜŞTERİ ODAKLI BANKACILIK YETKİLİSİ M3", "MÜŞTERİ ODAKLI BANKACILIK YETKİLİSİ YP", "MÜŞTERİ ODAKLI BANKACILIK YETKİLİSİ YB"],
+            "Bölge Müdürlüğü": ["BÖLGE KREDİ İZLEME YETKİLİSİ", "BÖLGE MÜDÜRÜ"],
+            "Kredi Risk Tasfiye Başkanlığı": ["KREDİ İZLEME VE RİSK TAKİP BAŞKANI"],
+            "Risk Tasfiye Koordinasyon Müdürlüğü": ["RİSK TASFİYE KOORDİNASYON YETKİLİSİ", "RİSK TASFİYE KOORDİNASYON YÖNETİCİSİ", "RİSK TASFİYE KOORDİNASYON MÜDÜRÜ"],
+            "Bölge Hukuk İşleri Müdürlüğü": ["BÖLGE HUKUK İŞLERİ TAKİP ELEMANI", "BÖLGE HUKUK İŞLERİ YETKİLİSİ", "BÖLGE HUKUK İŞLERİ MÜDÜRÜ", "BÖLGE HUKUK İŞLERİ YÖNETİCİSİ", "BÖLGE HUKUK İŞLERİ AVUKAT"],
+            "Bölge Risk Tasfiye Müdürlüğü": ["BÖLGE RİSK TASFİYE YETKİLİSİ", "BÖLGE RİSK TASFİYE MÜDÜRÜ", "BÖLGE RİSK TASFİYE YÖNETİCİSİ"],
+            "Risk Tasfiye ve Tahsil Müdürlüğü 1": ["RİSK TASFİYE VE TAHSİL MÜDÜRLÜĞÜ 1 YETKİLİSİ", "RİSK TASFİYE VE TAHSİL MÜDÜRLÜĞÜ 1 YÖNETİCİSİ", "RİSK TASFİYE VE TAHSİL MÜDÜRÜ"],
+            "Risk Tasfiye ve Tahsil Müdürlüğü 2-3-4": ["RİSK TASFİYE VE TAHSİL MÜDÜRÜ", "RİSK TASFİYE VE TAHSİL MÜDÜRLÜĞÜ 2 YÖNETİCİSİ", "RİSK TASFİYE VE TAHSİL MÜDÜRLÜĞÜ 2 YETKİLİSİ"],
+            "Hukuk İşleri İzleme ve Değerlendirme Müdürlüğü": ["HUKUK İŞLERİ İZLEME VE DEĞERLENDİRME MÜDÜRLÜĞÜ YÖNETİCİSİ", "HUKUK İŞLERİ İZLEME VE DEĞERLENDİRME MÜDÜRLÜĞÜ DANIŞMANI", "HUKUK İŞLERİ İZLEME VE DEĞERLENDİRME MÜDÜRLÜĞÜ YETKİLİSİ", "HUKUK İŞLERİ İZLEME VE DEĞERLENDİRME MÜDÜRLÜĞÜ MÜDÜRÜ", "HUKUK İŞLERİ İZLEME VE DEĞERLENDİRME MÜDÜRLÜĞÜ AVUKATI"],
+            "Sözleşmeli Hukuk Büroları": ["SÖZLEŞMELİ HUKUK BÜROSU KATİP", "SÖZLEŞMELİ HUKUK BÜROSU OPERASYON GÖREVLİSİ", "SÖZLEŞMELİ AVUKAT", "SÖZLEŞMELİ BİRİM SORUMLUSU", "SÖZLEŞMELİ HUKUK BÜROSU PROJE KATİBİ", "SÖZLEŞMELİ HUKUK BÜROSU PROJE OPERASYON GÖREVLİSİ", "SÖZLEŞMELİ PROJE AVUKATI", "SÖZLEŞMELİ PROJE SORUMLUSU"]
+        };
+
+        // --- STATE VE CONFIG ---
+        let currentMode = 'taksit'; 
+        let tableData = { taksit: [], faiz: [] };
+
+        const COLUMNS = {
+            taksit: ["Id", "Ödeme Plan İndirim Tanım", "Dosya Birim Tipi", "Kullanıcı Birim Tipi", "Kullanıcı Rol Tanımı", "Müşteri Min. Asıl Alacak", "Müşteri Maks. Asıl Alacak", "Min. Taksit Sayısı", "Maks. Taksit Sayısı", "Varsayılan Taksit Sayısı", "İlk Taksit Gün Fark Sayısı", "Maks. Taksit Erteleme Gün Sayısı", "İlk Taksit Peşinat Alınsın", "Çift Sicil Onayı Var"],
+            faiz: ["Id", "Ödeme Plan İndirim Tanım", "Dosya Birim Tipi", "Kullanıcı Birim Tipi", "Kullanıcı Rol Tanımı", "Müşteri Min. Asıl Alacak", "Müşteri Maks. Asıl Alacak", "Teminat Durumu", "Minimum Faiz Oranı"]
+        };
+
+        // --- INIT ---
+        window.onload = function() {
+            renderMultiSelects();
+            renderTable();
+        };
+
+        // --- CUSTOM MULTI-SELECT FUNCTIONS ---
+
+        function normalizeTR(text) {
+            return text.replace(/İ/g, "i").replace(/I/g, "ı").toLowerCase()
+                       .replace(/ı/g, "i")
+                       .replace(/ğ/g, "g")
+                       .replace(/ü/g, "u")
+                       .replace(/ş/g, "s")
+                       .replace(/ö/g, "o")
+                       .replace(/ç/g, "c");
+        }
+
+        function createCheckboxItem(value, label, containerId, extraData = null) {
+            const div = document.createElement('div');
+            div.className = 'checkbox-item flex items-start p-2 cursor-pointer transition-colors border-b border-gray-100 last:border-0';
+            
+            // Checkbox
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.value = value;
+            checkbox.className = 'mt-1 mr-3 h-4 w-4 text-bankBlue-600 border-gray-300 rounded focus:ring-bankBlue-500';
+            
+            // Veri taşıma (Roller için parent birim bilgisi lazım)
+            if(extraData) {
+                Object.keys(extraData).forEach(key => {
+                    checkbox.dataset[key] = extraData[key];
+                });
+            }
+
+            // Olaylar
+            if(containerId === 'kullaniciBirimListContainer') {
+                checkbox.onchange = updateRolesFromCheckbox;
+            }
+
+            // Label Text
+            const textDiv = document.createElement('div');
+            textDiv.className = 'text-sm text-gray-700 leading-snug select-none';
+            textDiv.innerText = label;
+
+            // Tıklama ile checkbox tetikleme
+            div.onclick = (e) => {
+                if (e.target !== checkbox) {
+                    checkbox.checked = !checkbox.checked;
+                    // Manuel tetikleme (onchange)
+                    if(checkbox.onchange) checkbox.onchange();
+                }
+            };
+
+            div.appendChild(checkbox);
+            div.appendChild(textDiv);
+            return div;
+        }
+
+        function renderMultiSelects() {
+            // 1. Planlar
+            const planContainer = document.getElementById('planListContainer');
+            planContainer.innerHTML = '';
+            PLAN_TYPES.forEach(p => {
+                planContainer.appendChild(createCheckboxItem(p, p, 'planListContainer'));
+            });
+
+            // 2. Dosya Birim
+            const dosyaContainer = document.getElementById('dosyaListContainer');
+            dosyaContainer.innerHTML = '';
+            DOSYA_BIRIMLERI.forEach(d => {
+                dosyaContainer.appendChild(createCheckboxItem(d, d, 'dosyaListContainer'));
+            });
+
+            // 3. Kullanıcı Birim
+            const userContainer = document.getElementById('kullaniciBirimListContainer');
+            userContainer.innerHTML = '';
+            Object.keys(ROLES_MAP).forEach(k => {
+                userContainer.appendChild(createCheckboxItem(k, k, 'kullaniciBirimListContainer'));
+            });
+        }
+
+        function updateRolesFromCheckbox() {
+            // Kullanıcı Birim checkboxlarına her basıldığında burası çalışır
+            const userContainer = document.getElementById('kullaniciBirimListContainer');
+            const roleContainer = document.getElementById('rolListContainer');
+            
+            // Seçili birimleri bul
+            const selectedUnits = Array.from(userContainer.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
+
+            roleContainer.innerHTML = ''; // Temizle
+
+            if(selectedUnits.length === 0) {
+                roleContainer.innerHTML = '<div class="p-4 text-center text-gray-400 italic text-sm">Önce Kullanıcı Birim Tipi seçiniz...</div>';
+                return;
+            }
+
+            selectedUnits.forEach(unit => {
+                if(ROLES_MAP[unit]) {
+                    // Grup başlığı (Opsiyonel görsel ayraç)
+                    const groupHeader = document.createElement('div');
+                    groupHeader.className = 'bg-gray-200 px-2 py-1 text-xs font-bold text-gray-600 uppercase tracking-wide';
+                    groupHeader.innerText = unit;
+                    roleContainer.appendChild(groupHeader);
+
+                    ROLES_MAP[unit].forEach(role => {
+                        // Dataset unit ekliyoruz ki sonra hangi birime ait olduğunu bilelim
+                        roleContainer.appendChild(createCheckboxItem(role, role, 'rolListContainer', {unit: unit}));
+                    });
+                }
+            });
+        }
+
+        function filterList(input, containerId) {
+            const filter = normalizeTR(input.value);
+            const container = document.getElementById(containerId);
+            const items = container.getElementsByClassName('checkbox-item');
+
+            for (let i = 0; i < items.length; i++) {
+                const textDiv = items[i].getElementsByTagName('div')[0];
+                const txtValue = normalizeTR(textDiv.textContent || textDiv.innerText);
+                if (txtValue.indexOf(filter) > -1) {
+                    items[i].style.display = "";
+                } else {
+                    items[i].style.display = "none";
+                }
+            }
+        }
+
+        function selectAll(containerId, isSelect) {
+            const container = document.getElementById(containerId);
+            // Sadece görünür olanları seç (filtre varsa hepsi seçilmesin, sadece arananlar seçilsin)
+            const items = container.querySelectorAll('.checkbox-item');
+            
+            items.forEach(item => {
+                if(item.style.display !== 'none') {
+                    const cb = item.querySelector('input[type="checkbox"]');
+                    cb.checked = isSelect;
+                    if(cb.onchange) cb.onchange(); // Trigger event (özellikle kullanıcı birim için önemli)
+                }
+            });
+        }
+
+        function removeManagers() {
+            const container = document.getElementById('rolListContainer');
+            const checkboxes = container.querySelectorAll('input[type="checkbox"]:checked');
+            let count = 0;
+            checkboxes.forEach(cb => {
+                const val = normalizeTR(cb.value);
+                // "müdür" veya "yönetici" geçenleri çıkar
+                if(val.includes('muduru')) {
+                    cb.checked = false;
+                    count++;
+                }
+            });
+            // Ufak bir bildirim (opsiyonel)
+            if(count > 0) {
+                // alert(count + " adet Müdür/Yönetici rolü seçimden çıkarıldı.");
+            }
+        }
+
+        function getSelectedValuesFromContainer(containerId) {
+            const container = document.getElementById(containerId);
+            const checkedBoxes = container.querySelectorAll('input[type="checkbox"]:checked');
+            return Array.from(checkedBoxes).map(cb => ({
+                value: cb.value,
+                dataset: cb.dataset // Rollerde parent unit lazım olabilir
+            }));
+        }
+
+        // --- CORE LOGIC ---
+        function uuidv4() {
+            return "1000" + Math.floor(Math.random() * 9000); 
+        }
+
+        function addEntries() {
+            // 1. Get Selections
+            const plans = getSelectedValuesFromContainer('planListContainer').map(x => x.value);
+            const fileUnits = getSelectedValuesFromContainer('dosyaListContainer').map(x => x.value);
+            const roleObjects = getSelectedValuesFromContainer('rolListContainer'); // Contains value & dataset.unit
+            
+            if(plans.length === 0 || fileUnits.length === 0 || roleObjects.length === 0) {
+                alert("Lütfen tüm zorunlu alanlardan (Plan, Dosya Birim, Kullanıcı Birim/Rol) en az bir seçim yapınız.");
+                return;
+            }
+
+            // 2. Get Common Inputs
+            const minAlc = document.getElementById('minAlacak').value;
+            const maxAlc = document.getElementById('maxAlacak').value;
+
+            // 3. Mode Specific Inputs
+            let rowBase = {};
+            if(currentMode === 'taksit') {
+                rowBase = {
+                    minTaksit: document.getElementById('minTaksit').value,
+                    maxTaksit: document.getElementById('maxTaksit').value,
+                    defTaksit: document.getElementById('defTaksit').value,
+                    gunFark: document.getElementById('gunFark').value,
+                    erteleme: document.getElementById('ertelemeGun').value,
+                    pesinat: document.getElementById('pesinat').value,
+                    ciftSicil: document.getElementById('ciftSicil').value,
+                };
+            } else {
+                rowBase = {
+                    teminat: document.getElementById('teminatDurumu').value,
+                    minFaiz: document.getElementById('minFaiz').value
+                };
+            }
+
+            // 4. Cartesian Product Generation
+            let newRows = [];
+
+            // Iterate Plans
+            plans.forEach(plan => {
+                // Iterate File Units
+                fileUnits.forEach(fUnit => {
+                    // Iterate Selected Roles
+                    roleObjects.forEach(roleObj => {
+                        const roleName = roleObj.value;
+                        const uUnit = roleObj.dataset.unit; // Checkbox oluştururken eklemiştik
+
+                        const id = uuidv4();
+
+                        let row = {};
+                        if(currentMode === 'taksit') {
+                            row = {
+                                "Id": id,
+                                "Ödeme Plan İndirim Tanım": plan,
+                                "Dosya Birim Tipi": fUnit,
+                                "Kullanıcı Birim Tipi": uUnit,
+                                "Kullanıcı Rol Tanımı": roleName,
+                                "Müşteri Min. Asıl Alacak": parseInt(minAlc),
+                                "Müşteri Maks. Asıl Alacak": parseInt(maxAlc),
+                                "Min. Taksit Sayısı": parseInt(rowBase.minTaksit),
+                                "Maks. Taksit Sayısı": parseInt(rowBase.maxTaksit),
+                                "Varsayılan Taksit Sayısı": parseInt(rowBase.defTaksit),
+                                "İlk Taksit Gün Fark Sayısı": parseInt(rowBase.gunFark),
+                                "Maks. Taksit Erteleme Gün Sayısı": parseInt(rowBase.erteleme),
+                                "İlk Taksit Peşinat Alınsın": rowBase.pesinat,
+                                "Çift Sicil Onayı Var": rowBase.ciftSicil
+                            };
+                        } else {
+                            row = {
+                                "Id": id,
+                                "Ödeme Plan İndirim Tanım": plan,
+                                "Dosya Birim Tipi": fUnit,
+                                "Kullanıcı Birim Tipi": uUnit,
+                                "Kullanıcı Rol Tanımı": roleName,
+                                "Müşteri Min. Asıl Alacak": parseInt(minAlc),
+                                "Müşteri Maks. Asıl Alacak": parseInt(maxAlc),
+                                "Teminat Durumu": rowBase.teminat,
+                                "Minimum Faiz Oranı": parseFloat(rowBase.minFaiz)
+                            };
+                        }
+                        newRows.push(row);
+                    });
+                });
+            });
+
+            // Add to state
+            tableData[currentMode].push(...newRows);
+            renderTable();
+            
+            // Feedback Animation
+            const btn = document.querySelector('button[onclick="addEntries()"]');
+            const originalHTML = btn.innerHTML;
+            const originalClass = btn.className;
+            btn.innerHTML = `<i class="fa-solid fa-check mr-2"></i> ${newRows.length} Eklendi`;
+            btn.className = "px-6 py-2 bg-green-600 text-white rounded-md shadow-md flex items-center transition-all";
+            setTimeout(() => {
+                btn.innerHTML = originalHTML;
+                btn.className = originalClass;
+            }, 1500);
+        }
+
+        function deleteRow(index) {
+            tableData[currentMode].splice(index, 1);
+            renderTable();
+        }
+
+        function clearTable() {
+            if(confirm("Tüm liste silinecek. Emin misiniz?")) {
+                tableData[currentMode] = [];
+                renderTable();
+            }
+        }
+        
+        function clearForm() {
+            document.getElementById('paramForm').reset();
+            // Checkboxları temizle
+            selectAll('planListContainer', false);
+            selectAll('dosyaListContainer', false);
+            selectAll('kullaniciBirimListContainer', false);
+            // Rolleri temizle (trigger ile)
+            updateRolesFromCheckbox();
+        }
+
+        function switchTab(mode) {
+            currentMode = mode;
+            // UI Toggle
+            document.getElementById('tab-taksit').className = mode === 'taksit' ? 'tab-active pb-4 px-2 text-lg transition-colors duration-200' : 'tab-inactive pb-4 px-2 text-lg transition-colors duration-200';
+            document.getElementById('tab-faiz').className = mode === 'faiz' ? 'tab-active pb-4 px-2 text-lg transition-colors duration-200' : 'tab-inactive pb-4 px-2 text-lg transition-colors duration-200';
+
+            // Show/Hide Fields
+            const taksitFields = document.querySelectorAll('.taksit-field');
+            const faizFields = document.querySelectorAll('.faiz-field');
+
+            if(mode === 'taksit') {
+                taksitFields.forEach(el => el.classList.remove('hidden'));
+                faizFields.forEach(el => el.classList.add('hidden'));
+            } else {
+                taksitFields.forEach(el => el.classList.add('hidden'));
+                faizFields.forEach(el => el.classList.remove('hidden'));
+            }
+            renderTable();
+        }
+
+        function renderTable() {
+            const thead = document.getElementById('tableHeader');
+            const tbody = document.getElementById('tableBody');
+            const countSpan = document.getElementById('rowCount');
+            
+            const data = tableData[currentMode];
+            const cols = COLUMNS[currentMode];
+
+            countSpan.innerText = `${data.length} Satır`;
+
+            // Headers
+            let hHtml = '';
+            cols.forEach(c => hHtml += `<th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b whitespace-nowrap">${c}</th>`);
+            hHtml += `<th class="px-3 py-3 border-b bg-gray-50 sticky right-0"></th>`; // Actions
+            thead.innerHTML = hHtml;
+
+            // Body
+            if(data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="100%" class="px-6 py-8 text-center text-gray-400 italic">Liste boş. Yukarıdan seçim yapıp "Listeye Ekle" butonuna basınız.</td></tr>`;
+                return;
+            }
+
+            let bHtml = '';
+            data.forEach((row, idx) => {
+                bHtml += `<tr class="hover:bg-blue-50 transition-colors group">`;
+                cols.forEach(key => {
+                    bHtml += `<td class="px-3 py-2 text-gray-700 border-b border-gray-100 min-w-[100px] max-w-[300px] truncate" title="${row[key]}">${row[key]}</td>`;
+                });
+                bHtml += `<td class="px-3 py-2 border-b border-gray-100 text-right sticky right-0 bg-white group-hover:bg-blue-50 shadow-[-5px_0px_5px_-5px_rgba(0,0,0,0.1)]">
+                    <button onclick="deleteRow(${idx})" class="text-red-400 hover:text-red-700 p-1"><i class="fa-solid fa-trash"></i></button>
+                </td></tr>`;
+            });
+            tbody.innerHTML = bHtml;
+        }
+
+        function exportToExcel() {
+            const data = tableData[currentMode];
+            if(data.length === 0) {
+                alert("İndirilecek veri yok.");
+                return;
+            }
+
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.json_to_sheet(data);
+
+            const wscols = COLUMNS[currentMode].map(c => ({wch: c.length + 5}));
+            ws['!cols'] = wscols;
+
+            XLSX.utils.book_append_sheet(wb, ws, "Parametreler");
+
+            const fileName = currentMode === 'taksit' 
+                ? "ÖDEME PLANI TAKSİT PARAMETRE.xlsx" 
+                : "ÖDEME PLAN FAİZ PARAMETRE.xlsx";
+
+            XLSX.writeFile(wb, fileName);
+        }
+
+    </script>
+</body>
+</html>

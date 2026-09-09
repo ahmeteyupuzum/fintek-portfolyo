@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bölge Bazlı Excel Ayırma Aracı</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f3f4f6;color:#111}
+.header{background:#111;padding:28px 42px;color:#fff;border-bottom:6px solid #ffcc00}
+.header h1{margin:0;font-size:28px;letter-spacing:.3px}
+.header p{margin:8px 0 0;color:#d1d5db;font-size:14px}
+.container{max-width:1100px;margin:35px auto;padding:0 20px}
+.card{background:#fff;border-radius:14px;padding:28px;box-shadow:0 8px 30px rgba(0,0,0,.08);margin-bottom:20px}
+.upload{border:2px dashed #c7cbd1;border-radius:12px;padding:42px;text-align:center;cursor:pointer;transition:.2s}
+.upload:hover,.upload.drag{border-color:#ffcc00;background:#fffdf0}
+.upload strong{display:block;font-size:18px;margin-bottom:8px}
+.upload span{font-size:13px;color:#6b7280}
+input[type=file]{display:none}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+select{padding:12px;border:1px solid #d1d5db;border-radius:8px;min-width:320px;background:#fff}
+button{border:0;border-radius:8px;padding:12px 18px;font-weight:700;cursor:pointer}
+.primary{background:#ffcc00;color:#111}
+.dark{background:#111;color:#fff}
+.secondary{background:#e5e7eb;color:#111}
+button:disabled{opacity:.45;cursor:not-allowed}
+.info{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:20px}
+.stat{background:#f8f9fa;border-radius:10px;padding:18px}
+.stat b{display:block;font-size:24px;margin-top:5px}
+table{width:100%;border-collapse:collapse;margin-top:15px}
+th,td{padding:11px 12px;border-bottom:1px solid #e5e7eb;text-align:left;font-size:13px}
+th{background:#111;color:#fff}
+.status{margin-top:16px;padding:12px;border-radius:8px;background:#f3f4f6;font-size:13px}
+.success{background:#ecfdf5;color:#065f46}
+.warning{background:#fffbeb;color:#92400e}
+.error{background:#fef2f2;color:#991b1b}
+.hidden{display:none}
+.note{font-size:12px;color:#6b7280;line-height:1.5;margin-top:12px}
+@media(max-width:700px){.info{grid-template-columns:1fr}.container{margin:20px auto}.card{padding:18px}}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>BÖLGE BAZLI EXCEL AYIRMA ARACI</h1>
+  <p>Excel dosyanızı “BÖLGE ADI” sütununa göre otomatik olarak ayrı bölge dosyalarına ayırın.</p>
+</div>
+
+<div class="container">
+  <div class="card">
+    <label class="upload" id="dropZone" for="fileInput">
+      <strong>Excel dosyanızı buraya sürükleyin</strong>
+      <span>veya seçmek için tıklayın (.xlsx / .xls / .csv)</span>
+      <input id="fileInput" type="file" accept=".xlsx,.xls,.csv">
+    </label>
+    <div id="status" class="status">Henüz dosya yüklenmedi.</div>
+  </div>
+
+  <div class="card hidden" id="resultCard">
+    <h2 style="margin-top:0">Dosya Analizi</h2>
+    <div class="info">
+      <div class="stat">Toplam kayıt<b id="totalRows">0</b></div>
+      <div class="stat">Bölge sayısı<b id="regionCount">0</b></div>
+      <div class="stat">Bulunan sütun<b id="columnName">-</b></div>
+    </div>
+
+    <div style="margin-top:24px" class="row">
+      <select id="sheetSelect"></select>
+      <select id="regionSelect">
+        <option value="">Tüm bölgeler</option>
+      </select>
+      <button class="primary" id="downloadSelected" disabled>Seçili Bölgeyi İndir</button>
+      <button class="dark" id="downloadAll">TÜM BÖLGELERİ ZIP OLARAK İNDİR</button>
+    </div>
+
+    <div class="note">
+      “BÖLGE ADI” sütunu otomatik bulunur. Sütun adı büyük/küçük harf, Türkçe karakter ve başındaki/sonundaki boşluklardan bağımsız değerlendirilir.
+      Her bölge için orijinal sütun yapısı ve veri tipleri (sayı, metin, tarih) korunarak ayrı bir Excel dosyası oluşturulur.
+    </div>
+
+    <div style="overflow:auto">
+      <table>
+        <thead><tr><th>Bölge</th><th>Kayıt Sayısı</th><th>Dosya Adı</th></tr></thead>
+        <tbody id="regionTable"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+let workbook = null;
+let sourceFileName = "Bolge_Raporu.xlsx";
+let sheetData = {};
+let activeSheet = null;
+let regionMap = {};
+
+const fileInput = document.getElementById("fileInput");
+const dropZone = document.getElementById("dropZone");
+const statusEl = document.getElementById("status");
+const resultCard = document.getElementById("resultCard");
+const sheetSelect = document.getElementById("sheetSelect");
+const regionSelect = document.getElementById("regionSelect");
+const downloadSelected = document.getElementById("downloadSelected");
+const downloadAll = document.getElementById("downloadAll");
+
+function normalize(s){
+  return String(s ?? "")
+    .trim()
+    .toLocaleUpperCase("tr-TR")
+    .replace(/\s+/g," ");
+}
+function safeFileName(s){
+  return String(s)
+    .replace(/[<>:"/\\|?*\x00-\x1F]/g,"-")
+    .replace(/\s+/g," ")
+    .trim()
+    .substring(0,120) || "BOLGE";
+}
+function setStatus(text, type=""){
+  statusEl.textContent = text;
+  statusEl.className = "status " + type;
+}
+function findRegionColumn(headers){
+  const target = normalize("BÖLGE ADI");
+  let idx = headers.findIndex(h => normalize(h) === target);
+  if(idx >= 0) return idx;
+  idx = headers.findIndex(h => normalize(h).replace(/İ/g,"I").replace(/Ğ/g,"G").replace(/Ü/g,"U").replace(/Ş/g,"S").replace(/Ö/g,"O").replace(/Ç/g,"C") === "BOLGE ADI");
+  return idx;
+}
+function processSheet(name){
+  const ws = workbook.Sheets[name];
+  // DEĞİŞİKLİK: raw: true kullanılarak veri tipleri (sayı, tarih vb.) korunur
+  const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:"", raw:true});
+  
+  if(!rows.length) return {headers:[], data:[], regionCol:-1, regions:{}};
+  
+  // Başlıkları string olarak alıyoruz (görüntüleme için)
+  const headers = rows[0].map(x => String(x ?? ""));
+  const regionCol = findRegionColumn(headers);
+  const data = rows.slice(1);
+  const regions = {};
+  
+  if(regionCol >= 0){
+    data.forEach(row=>{
+      // Bölge anahtarı için string dönüşümü yapılır, ancak satırın geri kalanı ham kalır
+      const region = String(row[regionCol] ?? "").trim();
+      const key = region || "BÖLGE ADI BOŞ";
+      if(!regions[key]) regions[key] = [];
+      regions[key].push(row);
+    });
+  }
+  return {headers,data,regionCol,regions};
+}
+function rebuild(){
+  const info = sheetData[activeSheet];
+  if(!info) return;
+  regionMap = info.regions;
+  document.getElementById("totalRows").textContent = info.data.length.toLocaleString("tr-TR");
+  document.getElementById("regionCount").textContent = Object.keys(regionMap).length.toLocaleString("tr-TR");
+  document.getElementById("columnName").textContent = info.regionCol >= 0 ? info.headers[info.regionCol] : "Bulunamadı";
+
+  regionSelect.innerHTML = '<option value="">Tüm bölgeler</option>';
+  Object.keys(regionMap).sort((a,b)=>a.localeCompare(b,"tr")).forEach(r=>{
+    const o=document.createElement("option"); o.value=r; o.textContent=`${r} (${regionMap[r].length.toLocaleString("tr-TR")})`;
+    regionSelect.appendChild(o);
+  });
+
+  const tbody=document.getElementById("regionTable");
+  tbody.innerHTML="";
+  Object.keys(regionMap).sort((a,b)=>a.localeCompare(b,"tr")).forEach(r=>{
+    const tr=document.createElement("tr");
+    const td1=document.createElement("td"); td1.textContent=r;
+    const td2=document.createElement("td"); td2.textContent=regionMap[r].length.toLocaleString("tr-TR");
+    const td3=document.createElement("td"); td3.textContent=safeFileName(r)+".xlsx";
+    tr.append(td1,td2,td3); tbody.appendChild(tr);
+  });
+  downloadSelected.disabled = Object.keys(regionMap).length === 0;
+}
+async function loadFile(file){
+  try{
+    setStatus("Excel okunuyor...");
+    sourceFileName=file.name;
+    const buffer=await file.arrayBuffer();
+    workbook=XLSX.read(buffer,{type:"array",cellDates:true});
+    sheetData={};
+    workbook.SheetNames.forEach(name=>sheetData[name]=processSheet(name));
+
+    sheetSelect.innerHTML="";
+    workbook.SheetNames.forEach(name=>{
+      const o=document.createElement("option"); o.value=name; o.textContent=name;
+      sheetSelect.appendChild(o);
+    });
+    activeSheet=workbook.SheetNames[0];
+    sheetSelect.value=activeSheet;
+    const info=sheetData[activeSheet];
+
+    if(info.regionCol < 0){
+      resultCard.classList.remove("hidden");
+      rebuild();
+      setStatus('“BÖLGE ADI” sütunu bulunamadı. Lütfen sütun adını kontrol edin.','error');
+      downloadAll.disabled=true;
+      return;
+    }
+    resultCard.classList.remove("hidden");
+    downloadAll.disabled=false;
+    rebuild();
+    setStatus(`Dosya başarıyla okundu: ${file.name} — ${Object.keys(info.regions).length} bölge bulundu. Veri tipleri korundu.`, "success");
+  }catch(e){
+    console.error(e);
+    setStatus("Dosya okunamadı: " + e.message,"error");
+  }
+}
+function makeRegionWorkbook(region){
+  const info=sheetData[activeSheet];
+  // Ham veriler (sayı, tarih vb.) doğrudan kullanılır
+  const rows=[info.headers,...info.regions[region]];
+  const ws=XLSX.utils.aoa_to_sheet(rows);
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,activeSheet.substring(0,31));
+  return XLSX.write(wb,{bookType:"xlsx",type:"array"});
+}
+function downloadBlob(data,name,type="application/octet-stream"){
+  const blob=new Blob([data],{type});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob); a.download=name; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+downloadSelected.addEventListener("click",()=>{
+  const region=regionSelect.value;
+  if(!region){ alert("Lütfen indirilecek bölgeyi seçin."); return; }
+  const data=makeRegionWorkbook(region);
+  downloadBlob(data,`${safeFileName(region)}.xlsx`,
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+});
+downloadAll.addEventListener("click",async()=>{
+  const regions=Object.keys(regionMap);
+  if(!regions.length){alert("İndirilecek bölge bulunamadı.");return;}
+  downloadAll.disabled=true;
+  downloadAll.textContent="ZIP HAZIRLANIYOR...";
+  try{
+    const zip=new JSZip();
+    regions.forEach(region=>{
+      zip.file(`${safeFileName(region)}.xlsx`,makeRegionWorkbook(region));
+    });
+    const blob=await zip.generateAsync({type:"blob",compression:"DEFLATE",compressionOptions:{level:6}});
+    const base=safeFileName(sourceFileName.replace(/\.[^.]+$/,""));
+    downloadBlob(blob,`${base}_BOLGELERE_AYRILMIS.zip`,"application/zip");
+    setStatus(`${regions.length} bölge ayrı Excel dosyaları olarak ZIP içine aktarıldı. Veri formatları korundu.`, "success");
+  }catch(e){
+    console.error(e);
+    setStatus("ZIP oluşturulamadı: "+e.message,"error");
+  }finally{
+    downloadAll.disabled=false;
+    downloadAll.textContent="TÜM BÖLGELERİ ZIP OLARAK İNDİR";
+  }
+});
+sheetSelect.addEventListener("change",()=>{
+  activeSheet=sheetSelect.value;
+  const info=sheetData[activeSheet];
+  if(info.regionCol<0){
+    rebuild();
+    downloadAll.disabled=true;
+    setStatus(`“${activeSheet}” sayfasında “BÖLGE ADI” sütunu bulunamadı.`,"warning");
+  }else{
+    downloadAll.disabled=false;
+    rebuild();
+    setStatus(`Aktif sayfa: ${activeSheet}`, "success");
+  }
+});
+regionSelect.addEventListener("change",()=>{});
+fileInput.addEventListener("change",e=>{if(e.target.files[0]) loadFile(e.target.files[0]);});
+["dragenter","dragover"].forEach(ev=>dropZone.addEventListener(ev,e=>{e.preventDefault();dropZone.classList.add("drag");}));
+["dragleave","drop"].forEach(ev=>dropZone.addEventListener(ev,e=>{e.preventDefault();dropZone.classList.remove("drag");}));
+dropZone.addEventListener("drop",e=>{const f=e.dataTransfer.files[0];if(f)loadFile(f);});
+</script>
+</body>
+</html>

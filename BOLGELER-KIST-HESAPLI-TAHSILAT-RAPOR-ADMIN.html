@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KRTB | Bölge Performans Paneli (Final)</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; transition: background-color 0.3s, color 0.3s; }
+        .modern-card { border-radius: 16px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); border: 1px solid rgba(229, 231, 235, 0.5); transition: background-color 0.3s, border-color 0.3s; }
+        .table-container { max-height: 600px; overflow-y: auto; }
+        thead th { position: sticky; top: 0; z-index: 20; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: background-color 0.3s, color 0.3s; }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        
+        .tab-btn.active { border-bottom: 3px solid #FFB81C; }
+        .tab-btn { border-bottom: 3px solid transparent; transition: all 0.2s; }
+        .sort-icon { display: inline-block; margin-left: 4px; transition: transform 0.2s; color: #cbd5e1; }
+        .sort-active { color: #FFB81C; }
+
+        .clickable-cell { cursor: pointer; transition: all 0.2s; border-radius: 6px; padding: 4px 8px; }
+        .clickable-cell:hover { background-color: rgba(255, 184, 28, 0.15); color: #b45309; transform: scale(1.02); }
+
+        .chart-toggle-btn { padding: 6px 12px; font-size: 0.85rem; font-weight: 600; border-radius: 8px; transition: all 0.2s; border: 1px solid transparent; }
+        .chart-toggle-btn.active { background-color: #FFB81C; color: #ffffff; border-color: #d99a16; }
+        .chart-toggle-btn.inactive { background-color: #f3f4f6; color: #6b7280; border-color: #e5e7eb; }
+        .chart-toggle-btn.inactive:hover { background-color: #e5e7eb; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.5s ease-out; }
+
+        /* TEMA YÖNETİMİ */
+        body.theme-day { background-color: #f3f4f6; color: #1e293b; }
+        body.theme-day .modern-card { background: #ffffff; }
+        body.theme-day thead th { background-color: #f8fafc; }
+        body.theme-day .active-tab-text { color: #1e293b; }
+
+        body.theme-night { background-color: #0f172a; color: #e2e8f0; }
+        body.theme-night nav { background-color: #1e293b !important; border-bottom-color: #334155 !important; }
+        body.theme-night .modern-card { background-color: #1e293b; border-color: #334155; }
+        body.theme-night .text-brand-dark { color: #f1f5f9 !important; }
+        body.theme-night .text-gray-500, body.theme-night .text-gray-600, body.theme-night .text-gray-700, body.theme-night .text-gray-800, body.theme-night .text-gray-900,body.theme-night .text-slate-800 { color: #94a3b8 !important; }
+        body.theme-night thead th { background-color: #0f172a !important; color: #cbd5e1; border-bottom-color: #334155; }
+        body.theme-night tbody tr:nth-child(even) { background-color: rgba(255, 255, 255, 0.02) !important; }
+        body.theme-night .bg-gray-50 { background-color: #1e293b !important; } 
+        body.theme-night .bg-white { background-color: #1e293b !important; }
+        body.theme-night .hover\:bg-gray-100:hover { background-color: #334155 !important; }
+        body.theme-night .bg-blue-50\/30, body.theme-night .bg-blue-50\/50 { background-color: rgba(59, 130, 246, 0.1) !important; color: #e2e8f0 !important; }
+        body.theme-night select { background-color: #0f172a; color: #e2e8f0; border-color: #334155; }
+        body.theme-night .active-tab-text { color: #f1f5f9 !important; }
+        body.theme-night .chart-toggle-btn.inactive { background-color: #1e293b; color: #94a3b8; border-color: #334155; }
+        body.theme-night .chart-toggle-btn.inactive:hover { background-color: #334155; }
+
+        body.theme-eye { background-color: #f5f2eb; color: #44403c; }
+        body.theme-eye nav { background-color: #e7e0d3 !important; border-bottom-color: #d6cfc2 !important; }
+        body.theme-eye .modern-card { background-color: #fbf9f5; border-color: #e5e0d6; }
+        body.theme-eye .text-brand-dark { color: #292524 !important; }
+        body.theme-eye thead th { background-color: #e7e0d3 !important; color: #57534e; }
+        body.theme-eye tbody tr { border-bottom-color: #e5e0d6; }
+        body.theme-eye .bg-gray-50 { background-color: #f5f2eb !important; }
+        body.theme-eye .bg-white { background-color: #fbf9f5 !important; }
+        body.theme-eye .hover\:bg-gray-100:hover { background-color: #e7e0d3 !important; }
+        body.theme-eye .bg-blue-50\/30 { background-color: rgba(120, 113, 108, 0.1) !important; }
+        body.theme-eye .active-tab-text { color: #292524 !important; }
+
+        body.viewer-mode #admin-controls { display: none !important; }
+        body.viewer-mode #upload-info-text { display: none; }
+        body.viewer-mode #viewer-info-text { display: flex !important; }
+        body.viewer-mode #header-right-section { display: none !important; }
+    </style>
+
+    <script>
+        tailwind.config = {
+            theme: { extend: { colors: { brand: { yellow: '#FFB81C', dark: '#1e293b', gray: '#64748b' } } } }
+        }
+    </script>
+</head>
+<body class="theme-day min-h-screen flex flex-col">
+
+    <nav class="bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center sticky top-0 z-50 shadow-sm transition-colors duration-300">
+        <div class="flex items-center gap-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="64" viewBox="0 0 48 48" height="64"><g clip-path="url(#7590b00e14)"><path fill="#fbc34e" d="M 46.933594 16.664062 C 47.515625 13.335938 44.453125 8.699219 36.109375 8.699219 L 15.382812 8.699219 C 9.703125 8.699219 6.140625 12.597656 5.507812 16.527344 L 1.304688 38.636719 C 4.996094 38.625 29.320312 38.636719 29.269531 38.636719 L 30.851562 38.636719 C 39.5625 38.585938 44.578125 36.628906 45.496094 30.304688 C 46.101562 26.050781 42.367188 23.300781 39.3125 22.71875 C 42.402344 22.15625 46.152344 21.105469 46.933594 16.664062 Z M 46.933594 16.664062 " fill-opacity="1" fill-rule="nonzero"></path></g><path fill="#ffffff" d="M 27.46875 17.960938 C 25.355469 20.640625 17.671875 29.933594 16.117188 31.695312 C 12.648438 35.644531 5.492188 35.054688 5.445312 34.957031 C 5.445312 34.953125 8.023438 22.75 8.859375 19.308594 C 11.152344 9.957031 19.0625 12.171875 19.0625 12.171875 C 19.0625 12.171875 16.953125 12.472656 15.464844 14.371094 C 13.957031 16.296875 12.246094 25.671875 11.28125 30.054688 C 15.8125 24.753906 22.023438 17.921875 23.082031 16.640625 C 27.597656 11.175781 34.667969 11.929688 34.667969 11.929688 31.914062 12.3125 27.46875 17.960938 Z M 27.46875 17.960938 " fill-opacity="1" fill-rule="nonzero"></path></svg>
+            <div class="flex flex-col">
+                <h1 class="text-xl font-bold tracking-tight text-brand-dark">KREDİ RİSK TASFİYE BAŞKANLIĞI</h1>
+                <div class="flex items-center gap-2 mt-0.5">
+                    <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                    <p class="text-xs text-gray-500 font-medium uppercase tracking-wide">Bölge Performans Paneli</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex-1 flex justify-end items-center mr-6 gap-4">
+            <div class="bg-blue-50 border border-blue-100 px-4 py-2 rounded-lg flex flex-col items-end">
+                <span class="text-[10px] text-blue-400 font-bold uppercase tracking-wider">RAPOR TARİHİ</span>
+                <span id="reportDateLabel" class="text-sm font-bold text-blue-800 font-mono">--.--.----</span>
+            </div>
+
+            <div class="bg-gray-100 p-1 rounded-lg flex items-center border border-gray-200">
+                <button onclick="setTheme('day')" id="btn-theme-day" class="w-8 h-8 rounded-md flex items-center justify-center text-gray-500 hover:text-brand-yellow transition-all" title="Gündüz Modu"><i class="fa-solid fa-sun text-sm"></i></button>
+                <button onclick="setTheme('night')" id="btn-theme-night" class="w-8 h-8 rounded-md flex items-center justify-center text-gray-500 hover:text-indigo-400 transition-all" title="Gece Modu"><i class="fa-solid fa-moon text-sm"></i></button>
+                <button onclick="setTheme('eye')" id="btn-theme-eye" class="w-8 h-8 rounded-md flex items-center justify-center text-gray-500 hover:text-orange-700 transition-all" title="Göz Koruma"><i class="fa-solid fa-eye text-sm"></i></button>
+            </div>
+        </div>
+        
+        <div id="header-right-section" class="flex items-center gap-6">
+            <div class="text-right hidden md:block">
+                <p class="text-xs text-gray-400 font-medium">Veri Kaynağı</p>
+                <div id="upload-info-text" class="flex items-center gap-1 text-sm font-bold text-brand-dark">
+                    <i class="fa-solid fa-database text-brand-yellow"></i> <span id="fileNameLabel">Sistem Verisi</span>
+                </div>
+                <div id="viewer-info-text" class="hidden items-center gap-1 text-sm font-bold text-brand-dark">
+                    <i class="fa-solid fa-lock text-red-500"></i> <span>Salt Okunur (Arşiv)</span>
+                </div>
+            </div>
+            
+            <div id="admin-controls" class="flex items-center gap-2">
+                <input type="file" id="excelInput" accept=".xlsx, .xls" class="hidden" onchange="handleExcelUpload(event)">
+                <button onclick="document.getElementById('excelInput').click()" class="h-10 px-4 rounded-full bg-green-600 text-white flex items-center gap-2 hover:bg-green-700 transition-colors shadow-sm text-sm font-semibold"><i class="fa-solid fa-file-excel"></i> Excel Yükle</button>
+                <button onclick="downloadTestExcel()" class="h-10 px-4 rounded-full bg-blue-600 text-white flex items-center gap-2 hover:bg-blue-700 transition-colors shadow-sm text-sm font-semibold"><i class="fa-solid fa-download"></i> Örnek İndir</button>
+                <div class="w-px h-8 bg-gray-300 mx-2"></div>
+                <button onclick="exportViewerMode()" class="h-10 px-4 rounded-full bg-indigo-600 text-white flex items-center gap-2 hover:bg-indigo-700 transition-colors shadow-sm text-sm font-semibold"><i class="fa-solid fa-file-export"></i> Dışa Aktar</button>
+            </div>
+            
+            <div class="h-10 w-10 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center border border-gray-200 shadow-sm"><i class="fa-solid fa-user"></i></div>
+        </div>
+    </nav>
+
+    <main class="flex-1 p-8 max-w-[1600px] mx-auto w-full">
+        <div class="flex gap-8 mb-8 border-b border-gray-200">
+            <button onclick="switchTab('mudurluk')" id="tab-mudurluk" class="tab-btn active pb-4 text-brand-dark font-bold text-lg transition-all active-tab-text"><i class="fa-solid fa-building-columns mr-2"></i>MÜDÜRLÜK BAZLI</button>
+            <button onclick="switchTab('personel')" id="tab-personel" class="tab-btn pb-4 text-gray-400 hover:text-gray-600 font-bold text-lg transition-all"><i class="fa-solid fa-users mr-2"></i>PORTFÖY BAZLI</button>
+        </div>
+
+        <div id="section-mudurluk" class="space-y-8 animate-fade-in">
+            <div class="modern-card p-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-brand-dark">Müdürlük Hedef/Gerçekleşme Durumu</h2>
+                    <div class="flex bg-gray-100 p-1 rounded-lg gap-1">
+                        <button onclick="setChartMode('mudurluk', 'ratio')" id="btn-mode-mudurluk-ratio" class="chart-toggle-btn active">Genel Başarı</button>
+                        <button onclick="setChartMode('mudurluk', 'daily')" id="btn-mode-mudurluk-daily" class="chart-toggle-btn inactive">Günlük Puan (Son Gün)</button>
+                    </div>
+                </div>
+                <div class="h-[350px] w-full relative"><canvas id="mudurlukChart"></canvas></div>
+            </div>
+            <div class="modern-card p-8 overflow-hidden">
+                <h2 class="text-xl font-bold text-brand-dark mb-4">Müdürlük Detay Tablosu</h2>
+                <div class="flex items-center gap-2 mb-2 text-xs text-gray-500"><i class="fa-solid fa-circle-info"></i><span>Tablo sütunlarına tıklayarak detay grafikleri açabilirsiniz.</span></div>
+                <div class="overflow-x-auto rounded-lg border border-gray-100">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="text-gray-500 text-xs uppercase tracking-wider border-b border-gray-200 bg-gray-50">
+                                <th class="p-4 font-semibold cursor-pointer hover:bg-gray-100" onclick="sortDirectorates('code')">Müdürlük Adı <i class="fa-solid fa-sort sort-icon"></i></th>
+                                <th class="p-4 text-right font-semibold cursor-pointer hover:bg-gray-100" onclick="sortDirectorates('balance')">Asıl Alacak Bakiyesi <i class="fa-solid fa-sort sort-icon"></i></th>
+                                <th class="p-4 text-right font-semibold cursor-pointer hover:bg-gray-100" onclick="sortDirectorates('target')">Hedef <i class="fa-solid fa-sort sort-icon"></i></th>
+                                <th class="p-4 text-right font-semibold cursor-pointer hover:bg-gray-100 bg-blue-50/50" onclick="sortDirectorates('daily')">Günlük Tahsilat <i class="fa-solid fa-sort sort-icon"></i></th>
+                                <th class="p-4 text-right font-semibold cursor-pointer hover:bg-gray-100" onclick="sortDirectorates('collected')">Toplam Tahsilat <i class="fa-solid fa-sort sort-icon"></i></th>
+                                <th class="p-4 text-center font-semibold cursor-pointer hover:bg-gray-100 bg-blue-50/50" onclick="sortDirectorates('dailyPct')">Günlük % <i class="fa-solid fa-sort sort-icon"></i></th>
+                                <th class="p-4 text-center font-semibold cursor-pointer hover:bg-gray-100" onclick="sortDirectorates('ratio')">BŞR Oranı <i class="fa-solid fa-sort sort-icon"></i></th>
+                            </tr>
+                        </thead>
+                        <tbody id="mudurlukTableBody" class="text-sm"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="section-personel" class="hidden space-y-8">
+            <div class="flex flex-col md:flex-row justify-between items-center bg-white p-5 rounded-2xl shadow-sm border border-gray-200 gap-4 modern-card">
+                <div class="flex items-center gap-3">
+                    <div class="bg-brand-yellow/10 p-2 rounded-lg text-brand-yellow"><i class="fa-solid fa-filter text-xl"></i></div>
+                    <div><span class="block font-bold text-brand-dark text-sm">Birim Filtresi</span><span class="text-xs text-gray-500">Müdürlük/Birim Adı Seçimi</span></div>
+                </div>
+                <select id="personelCategoryFilter" onchange="applyPersonnelFilters()" class="bg-gray-50 text-gray-700 border border-gray-200 rounded-lg px-4 py-2 text-sm font-medium focus:border-brand-yellow focus:ring-2 focus:ring-brand-yellow/20 outline-none w-full md:w-80 transition-all">
+                    <option value="all">Tüm Birimler</option>
+                </select>
+            </div>
+            <div class="modern-card p-8 relative overflow-hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <div><h2 class="text-2xl font-bold text-brand-dark">Portföy Performans Analizi</h2><p class="text-sm text-gray-500 mt-1">İlk 10 Portföy Yöneticisi</p></div>
+                    <div class="flex bg-gray-100 p-1 rounded-lg gap-1">
+                        <button onclick="setChartMode('personel', 'ratio')" id="btn-mode-personel-ratio" class="chart-toggle-btn active">Genel Başarı</button>
+                        <button onclick="setChartMode('personel', 'daily')" id="btn-mode-personel-daily" class="chart-toggle-btn inactive">Günlük Puan (Son Gün)</button>
+                    </div>
+                </div>
+                <div class="h-[350px] w-full"><canvas id="personelChart"></canvas></div>
+            </div>
+            <div class="modern-card p-8 overflow-hidden">
+                <div class="flex justify-between items-center mb-6">
+                     <h2 class="text-xl font-bold text-brand-dark">Takip Portföy Listesi</h2>
+                     <span class="text-xs bg-gray-100 text-gray-500 px-3 py-1.5 rounded-full font-medium">Toplam <span id="totalStaffCount" class="text-brand-dark font-bold">0</span> Kayıt</span>
+                </div>
+                <div class="table-container rounded-lg border border-gray-100 relative" style="max-height: 800px;">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="text-gray-500 text-xs uppercase tracking-wider border-b border-gray-200">
+                                <th class="p-4 bg-gray-50 font-bold">#</th>
+                                <th class="p-4 bg-gray-50 cursor-pointer hover:bg-gray-100" onclick="sortPersonnel('TAKIPBIRIMKODU')">Birim Adı <i class="fa-solid fa-sort sort-icon"></i></th>
+                                <th class="p-4 bg-gray-50 cursor-pointer hover:bg-gray-100" onclick="sortPersonnel('TAKIPPORTFOY')">Takip Portföy <i class="fa-solid fa-sort sort-icon"></i></th>
+                                <th class="p-4 text-right bg-gray-50 cursor-pointer hover:bg-gray-100" onclick="sortPersonnel('ASILALACAKBAKIYESI')">Top. Asıl Alacak <i class="fa-solid fa-sort sort-icon"></i></th>
+                                <th class="p-4 text-right bg-gray-50 cursor-pointer hover:bg-gray-100" onclick="sortPersonnel('HEDEF')"> Toplam Hedef <i class="fa-solid fa-sort sort-icon"></i></th>
+                                <th class="p-4 text-right bg-gray-50 cursor-pointer hover:bg-gray-100 bg-blue-50/50" onclick="sortPersonnel('daily')">Günlük Tahsilat <i class="fa-solid fa-sort sort-icon"></i></th>
+                                <th class="p-4 text-right bg-gray-50 cursor-pointer hover:bg-gray-100" onclick="sortPersonnel('collected')">Gerçekleşen <i class="fa-solid fa-sort sort-icon"></i></th>
+                                <th class="p-4 text-center bg-gray-50 cursor-pointer hover:bg-gray-100 bg-blue-50/50" onclick="sortPersonnel('dailyPct')">Günlük % <i class="fa-solid fa-sort sort-icon"></i></th>
+                                <th class="p-4 text-center bg-gray-50 cursor-pointer hover:bg-gray-100" onclick="sortPersonnel('ratio')">Başarı % <i class="fa-solid fa-sort sort-icon"></i></th>
+                            </tr>
+                        </thead>
+                        <tbody id="personelTableBody" class="text-sm"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="drilldownModal" class="fixed inset-0 bg-brand-dark/60 hidden items-center justify-center z-[100] backdrop-blur-sm transition-opacity">
+        <div class="bg-white w-full max-w-5xl p-8 rounded-2xl shadow-2xl relative m-4 transform transition-all scale-100 modern-card">
+            <button onclick="closeModal()" class="absolute top-6 right-6 text-gray-400 hover:text-red-500 transition-colors bg-gray-100 hover:bg-red-50 w-8 h-8 rounded-full flex items-center justify-center"><i class="fa-solid fa-times"></i></button>
+            <div class="mb-6">
+                <h2 id="modalTitle" class="text-2xl font-bold text-brand-dark">Detay Grafiği</h2>
+                <div class="flex gap-4 items-center">
+                    <p id="modalSubtitle" class="text-sm text-gray-500">Analiz</p>
+                    <div id="modalLegend" class="flex items-center gap-2 text-xs">
+                        <span class="w-3 h-1 bg-gray-400 border-dashed border border-gray-600"></span> Beklenen
+                        <span class="w-3 h-3 bg-brand-yellow rounded-full border border-yellow-600 ml-2"></span> Gerçekleşen
+                    </div>
+                </div>
+            </div>
+            <div class="h-[400px] w-full bg-gray-50 rounded-xl p-4 border border-gray-100"><canvas id="drilldownChart"></canvas></div>
+        </div>
+    </div>
+
+    <script id="database-script">
+    // 1. TABLO: 6 Bölge (Müdürlük) ve 32 Personel Tanımlaması
+    window.rawTable1 = [
+        // İSTANBUL ANADOLU YAKASI (B00375) - 6 Personel
+        {"TAKIPPORTFOY": "Ahmet Yılmaz", "SUBEKODU": "101", "TAKIPBIRIMKODU": "B00375", "ASILALACAKBAKIYESI": 12500000, "HEDEF": 950000},
+        {"TAKIPPORTFOY": "Zeynep Demir", "SUBEKODU": "102", "TAKIPBIRIMKODU": "B00375", "ASILALACAKBAKIYESI": 11200000, "HEDEF": 850000},
+        {"TAKIPPORTFOY": "Caner Erkin", "SUBEKODU": "103", "TAKIPBIRIMKODU": "B00375", "ASILALACAKBAKIYESI": 14000000, "HEDEF": 1100000},
+        {"TAKIPPORTFOY": "Elif Şahin", "SUBEKODU": "104", "TAKIPBIRIMKODU": "B00375", "ASILALACAKBAKIYESI": 9800000,  "HEDEF": 750000},
+        {"TAKIPPORTFOY": "Burak Öz", "SUBEKODU": "105", "TAKIPBIRIMKODU": "B00375", "ASILALACAKBAKIYESI": 13500000, "HEDEF": 1050000},
+        {"TAKIPPORTFOY": "Seda Sayın", "SUBEKODU": "106", "TAKIPBIRIMKODU": "B00375", "ASILALACAKBAKIYESI": 10500000, "HEDEF": 800000},
+
+        // İSTANBUL AVRUPA YAKASI (B00449) - 6 Personel
+        {"TAKIPPORTFOY": "Murat Kaya", "SUBEKODU": "201", "TAKIPBIRIMKODU": "B00449", "ASILALACAKBAKIYESI": 15500000, "HEDEF": 1250000},
+        {"TAKIPPORTFOY": "Ayşe Çelik", "SUBEKODU": "202", "TAKIPBIRIMKODU": "B00449", "ASILALACAKBAKIYESI": 14200000, "HEDEF": 1150000},
+        {"TAKIPPORTFOY": "Volkan Şen", "SUBEKODU": "203", "TAKIPBIRIMKODU": "B00449", "ASILALACAKBAKIYESI": 16000000, "HEDEF": 1300000},
+        {"TAKIPPORTFOY": "Gizem Karaca", "SUBEKODU": "204", "TAKIPBIRIMKODU": "B00449", "ASILALACAKBAKIYESI": 12800000, "HEDEF": 950000},
+        {"TAKIPPORTFOY": "Kemal Can", "SUBEKODU": "205", "TAKIPBIRIMKODU": "B00449", "ASILALACAKBAKIYESI": 13900000, "HEDEF": 1080000},
+        {"TAKIPPORTFOY": "Melis Akar", "SUBEKODU": "206", "TAKIPBIRIMKODU": "B00449", "ASILALACAKBAKIYESI": 11500000, "HEDEF": 880000},
+
+        // ANKARA (B00332) - 5 Personel
+        {"TAKIPPORTFOY": "Hakan Taş", "SUBEKODU": "301", "TAKIPBIRIMKODU": "B00332", "ASILALACAKBAKIYESI": 10500000, "HEDEF": 820000},
+        {"TAKIPPORTFOY": "Feyza Işık", "SUBEKODU": "302", "TAKIPBIRIMKODU": "B00332", "ASILALACAKBAKIYESI": 9200000,  "HEDEF": 700000},
+        {"TAKIPPORTFOY": "Onur Çevik", "SUBEKODU": "303", "TAKIPBIRIMKODU": "B00332", "ASILALACAKBAKIYESI": 11000000, "HEDEF": 850000},
+        {"TAKIPPORTFOY": "Gamze Yücel", "SUBEKODU": "304", "TAKIPBIRIMKODU": "B00332", "ASILALACAKBAKIYESI": 8800000,  "HEDEF": 650000},
+        {"TAKIPPORTFOY": "Deniz Aras", "SUBEKODU": "305", "TAKIPBIRIMKODU": "B00332", "ASILALACAKBAKIYESI": 10200000, "HEDEF": 780000},
+
+        // EGE (B00369) - 5 Personel
+        {"TAKIPPORTFOY": "Ebru Gündeş", "SUBEKODU": "401", "TAKIPBIRIMKODU": "B00369", "ASILALACAKBAKIYESI": 11500000, "HEDEF": 880000},
+        {"TAKIPPORTFOY": "Sarp Apak", "SUBEKODU": "402", "TAKIPBIRIMKODU": "B00369", "ASILALACAKBAKIYESI": 10800000, "HEDEF": 830000},
+        {"TAKIPPORTFOY": "Ezgi Mola", "SUBEKODU": "403", "TAKIPBIRIMKODU": "B00369", "ASILALACAKBAKIYESI": 12500000, "HEDEF": 960000},
+        {"TAKIPPORTFOY": "Büşra Pekin", "SUBEKODU": "404", "TAKIPBIRIMKODU": "B00369", "ASILALACAKBAKIYESI": 9500000,  "HEDEF": 720000},
+        {"TAKIPPORTFOY": "Ali Taran", "SUBEKODU": "405", "TAKIPBIRIMKODU": "B00369", "ASILALACAKBAKIYESI": 10100000, "HEDEF": 770000},
+
+        // ÇUKUROVA (B00457) - 5 Personel
+        {"TAKIPPORTFOY": "Fatih Terim", "SUBEKODU": "501", "TAKIPBIRIMKODU": "B00457", "ASILALACAKBAKIYESI": 9800000,  "HEDEF": 740000},
+        {"TAKIPPORTFOY": "Şenol Güneş", "SUBEKODU": "502", "TAKIPBIRIMKODU": "B00457", "ASILALACAKBAKIYESI": 8500000,  "HEDEF": 650000},
+        {"TAKIPPORTFOY": "Sergen Yalçın", "SUBEKODU": "503", "TAKIPBIRIMKODU": "B00457", "ASILALACAKBAKIYESI": 10500000, "HEDEF": 810000},
+        {"TAKIPPORTFOY": "Rıza Çalımbay", "SUBEKODU": "504", "TAKIPBIRIMKODU": "B00457", "ASILALACAKBAKIYESI": 9200000,  "HEDEF": 690000},
+        {"TAKIPPORTFOY": "Samet Aybaba", "SUBEKODU": "505", "TAKIPBIRIMKODU": "B00457", "ASILALACAKBAKIYESI": 8900000,  "HEDEF": 670000},
+
+        // TİCARİ TAHSİLAT (TIC-01) - 5 Personel
+        {"TAKIPPORTFOY": "İsmail Kartal", "SUBEKODU": "601", "TAKIPBIRIMKODU": "TIC-01", "ASILALACAKBAKIYESI": 25000000, "HEDEF": 2100000},
+        {"TAKIPPORTFOY": "Aykut Kocaman", "SUBEKODU": "602", "TAKIPBIRIMKODU": "TIC-01", "ASILALACAKBAKIYESI": 22000000, "HEDEF": 1850000},
+        {"TAKIPPORTFOY": "Ersun Yanal", "SUBEKODU": "603", "TAKIPBIRIMKODU": "TIC-01", "ASILALACAKBAKIYESI": 28500000, "HEDEF": 2400000},
+        {"TAKIPPORTFOY": "Mustafa Denizli", "SUBEKODU": "604", "TAKIPBIRIMKODU": "TIC-01", "ASILALACAKBAKIYESI": 21500000, "HEDEF": 1780000},
+        {"TAKIPPORTFOY": "Emre Belözoğlu", "SUBEKODU": "605", "TAKIPBIRIMKODU": "TIC-01", "ASILALACAKBAKIYESI": 24000000, "HEDEF": 1950000}
+    ];
+
+    window.rawTable2 = []; // Müdürlük tablosu (Script içindeki aggregasyon ile otomatik doluyor)
+
+    // 2. TABLO: 1.5 Aylık İşlem Verisi (1 Ocak 2026 - 15 Şubat 2026)
+    // Her şube için Ocak ayında 3 farklı işlem, ve panelin "Son Gün (Günlük)" metriklerini 
+    // test edebilmek için özellikle son tarih olan 15 Şubat'a işlemler eklenmiştir.
+    
+    // İşlemleri otomatik üreten script (Kod kalabalığı yapmaması için JSON dizisi dinamik oluşturuluyor)
+    // 2. TABLO: 1.5 Aylık Günlük İşlem Verisi (1 Ocak 2026 - 15 Şubat 2026)
+    window.rawTable3 = (function() {
+        const transactions = [];
+        const transactionDates = [];
+        
+        // 1 Ocak 2026'dan 15 Şubat 2026'ya kadar her günü otomatik oluştur
+        let startDate = new Date("2026-01-01");
+        let endDate = new Date("2026-02-15");
+        
+        while (startDate <= endDate) {
+            transactionDates.push(startDate.toISOString().split('T')[0]);
+            startDate.setDate(startDate.getDate() + 1);
+        }
+        
+        window.rawTable1.forEach(p => {
+            const baseDailyCollection = p.HEDEF / 90; // 90 günlük hedefte günlük düşen ideal pay
+            
+            transactionDates.forEach(dateStr => {
+                const currentDay = new Date(dateStr).getDay();
+                const isWeekend = (currentDay === 0 || currentDay === 6); // 0: Pazar, 6: Cumartesi
+                
+                // Gerçekçilik katıyoruz: Hafta sonları tahsilat ihtimali çok düşüktür (%80 boş geçsin)
+                if (isWeekend && Math.random() > 0.2) return; 
+                
+                // Günlük tahsilatta dalgalanma (hedefin yarısı ile 1.5 katı arası)
+                const variance = 0.5 + Math.random(); 
+                
+                // Ay sonları ve ayın 15'i (maaş günleri) tahsilatların zıpladığı günlerdir
+                let multiplier = 1;
+                if (dateStr.endsWith("30") || dateStr.endsWith("31") || dateStr.endsWith("15")) {
+                    multiplier = 2.5; 
+                }
+
+                transactions.push({
+                    "SUBEKODU": p.SUBEKODU,
+                    "TARIH": dateStr,
+                    "TOPLAMTAHSILAT": Math.round(baseDailyCollection * variance * multiplier)
+                });
+            });
+        });
+        
+        return transactions;
+    })();
+</script>
+
+    <script>
+        // --- GÜNCELLENMİŞ DEĞİŞKENLER VE INIT FONKSİYONU ---
+    
+    // Veri tutucular
+    let processedDirectorates = [];
+    let processedPersonnel = [];
+    
+    // Varsayılan sıralamayı 'dailyPct' (Günlük Puan) ve 'desc' (Büyükten Küçüğe) yapıyoruz
+    let currentSort = { column: 'dailyPct', order: 'desc' };
+    let dirSort = { column: 'dailyPct', order: 'desc' };
+    let lastDataDate = "";
+    
+    // Varsayılan modları 'daily' yapıyoruz
+    let chartModes = {
+        mudurluk: 'daily',
+        personel: 'daily'
+    };
+    
+    Chart.defaults.font.family = 'Plus Jakarta Sans';
+    Chart.defaults.color = '#64748b';
+    Chart.register(ChartDataLabels);
+    let mudurlukChart = null, personelChart = null, drillChart = null;
+
+    function initApp() {
+        processData();
+        setupFilters();
+        
+        // 1. Önce Portföy Sekmesini Aç
+        switchTab('personel');
+        
+        // 2. Modları 'daily' (Günlük Puan) olarak ayarla
+        // Bu fonksiyonlar içlerinde otomatik olarak 'desc' (Büyükten Küçüğe) sıralamayı tetikler.
+        setChartMode('personel', 'daily');
+        setChartMode('mudurluk', 'daily');
+
+        if(lastDataDate) {
+            document.getElementById('reportDateLabel').innerText = formatDateTR(lastDataDate);
+        }
+        const savedTheme = localStorage.getItem('appTheme') || 'eye';
+        setTheme(savedTheme);
+    }
+
+        function processData() {
+            // 1. ADIM: Son Tarihi Belirle (Tüm tabloyu taramak yerine hızlıca)
+            if (window.rawTable3 && window.rawTable3.length > 0) {
+                // Tarihler genellikle sıralı gelir ama yine de kontrol edelim.
+                // Performans için map/max yerine basit döngü
+                let maxT = 0;
+                window.rawTable3.forEach(t => {
+                    if(t.TARIH) {
+                        let tm = new Date(t.TARIH).getTime();
+                        if(tm > maxT) maxT = tm;
+                    }
+                });
+                lastDataDate = maxT > 0 ? new Date(maxT).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+            } else {
+                lastDataDate = new Date().toISOString().split('T')[0];
+            }
+
+            // 2. ADIM: İşlemleri Şube Koduna Göre İndeksle (OPTIMIZASYONUN KALBİ)
+            // Bu sayede iç içe döngülerden kurtuluyoruz.
+            transactionsBySube = {};
+            if(window.rawTable3) {
+                window.rawTable3.forEach(t => {
+                    if (!t.SUBEKODU) return;
+                    const sCode = String(t.SUBEKODU);
+                    if (!transactionsBySube[sCode]) transactionsBySube[sCode] = [];
+                    transactionsBySube[sCode].push(t);
+                });
+            }
+
+            const PERIOD_START = new Date('2026-01-01');
+            const PERIOD_END = new Date('2026-03-31');
+            const TOTAL_PERIOD_DAYS = 90; 
+
+            let personnelMap = {};
+
+            // 3. ADIM: Personel Verisi ve Kıst Hesabı
+            window.rawTable1.forEach(p => {
+                let pStart = p['BAŞLANGIÇ'] ? parseExcelDate(p['BAŞLANGIÇ']) : PERIOD_START;
+                let pEnd = p['BİTİŞ'] ? parseExcelDate(p['BİTİŞ']) : PERIOD_END;
+
+                if (!pStart || isNaN(pStart.getTime())) pStart = PERIOD_START;
+                if (!pEnd || isNaN(pEnd.getTime())) pEnd = PERIOD_END;
+                if (pStart < PERIOD_START) pStart = PERIOD_START;
+                if (pEnd > PERIOD_END) pEnd = PERIOD_END;
+
+                let activeDays = Math.ceil((pEnd - pStart) / (1000 * 60 * 60 * 24)) + 1;
+                if (activeDays < 0) activeDays = 0;
+                
+                // Kıst Oranı
+                let ratio = activeDays / TOTAL_PERIOD_DAYS;
+                
+                let rawTarget = parseFloat(p.HEDEF) || 0;
+                let rawBalance = parseFloat(p.ASILALACAKBAKIYESI) || 0; 
+                let effectiveTarget = rawTarget * ratio;
+                let effectiveBalance = rawBalance * ratio; 
+
+                const name = p.TAKIPPORTFOY || "BİLİNMEYEN";
+                const subeKodu = String(p.SUBEKODU);
+                const birimKodu = p.TAKIPBIRIMKODU || "DIGER";
+
+                if (!personnelMap[name]) {
+                    personnelMap[name] = {
+                        TAKIPBIRIMKODU: birimKodu,
+                        TAKIPPORTFOY: name,
+                        ASILALACAKBAKIYESI: 0,
+                        HEDEF: 0, 
+                        subeList: [],
+                        rawEntries: [] 
+                    };
+                }
+                personnelMap[name].ASILALACAKBAKIYESI += effectiveBalance;
+                personnelMap[name].HEDEF += effectiveTarget; 
+                if(!personnelMap[name].subeList.includes(subeKodu)) personnelMap[name].subeList.push(subeKodu);
+                
+                personnelMap[name].rawEntries.push({ sube: subeKodu, start: pStart, end: pEnd });
+            });
+
+            // 4. ADIM: Tahsilat Eşleştirme (Index Kullanarak - ÇOK HIZLI)
+            processedPersonnel = Object.values(personnelMap).map((p, index) => {
+                let totalCollected = 0;
+                let dailyCollected = 0;
+
+                p.rawEntries.forEach(entry => {
+                    // OPTIMIZASYON: Tüm tabloyu filtrelemek yerine indeksten çekiyoruz.
+                    const branchTrans = transactionsBySube[entry.sube] || [];
+                    
+                    // Sadece bu şubenin işlemleri üzerinde dönüyoruz (Çok daha kısa liste)
+                    branchTrans.forEach(t => {
+                        if (!t.TARIH) return;
+                        
+                        // Tarih kontrolü (String split yerine date objesi, daha güvenli)
+                        // Performans için string split de yapılabilir ama tutarlılık önemli.
+                        let tDate = new Date(t.TARIH);
+                        // Saat sıfırla
+                        tDate.setHours(0,0,0,0);
+                        let sDate = new Date(entry.start); sDate.setHours(0,0,0,0);
+                        let eDate = new Date(entry.end); eDate.setHours(23,59,59,999);
+
+                        if (tDate >= sDate && tDate <= eDate) {
+                            let amt = parseFloat(t.TOPLAMTAHSILAT) || 0;
+                            totalCollected += amt;
+                            
+                            // Günlük Kontrolü
+                            let dStr = typeof t.TARIH === 'string' ? t.TARIH.split('T')[0] : tDate.toISOString().split('T')[0];
+                            if (dStr === lastDataDate) {
+                                dailyCollected += amt;
+                            }
+                        }
+                    });
+                });
+
+                return {
+                    id: index,
+                    TAKIPBIRIMKODU: p.TAKIPBIRIMKODU,
+                    TAKIPPORTFOY: p.TAKIPPORTFOY,
+                    ASILALACAKBAKIYESI: p.ASILALACAKBAKIYESI,
+                    HEDEF: p.HEDEF,
+                    collected: totalCollected,
+                    daily: dailyCollected,
+                    subeList: p.subeList,
+                    dailyPct: p.HEDEF > 0 ? (dailyCollected / p.HEDEF) * 100 : 0,
+                    ratio: p.HEDEF > 0 ? (totalCollected / p.HEDEF) * 100 : 0
+                };
+            });
+
+            // 5. ADIM: Müdürlük Agregasyonu
+            const directorateMap = {};
+            processedPersonnel.forEach(p => {
+                const code = p.TAKIPBIRIMKODU;
+                if(!directorateMap[code]) {
+                    directorateMap[code] = {
+                        code: code,
+                        name: getDirectorateName(code),
+                        target: 0, balance: 0, collected: 0, daily: 0
+                    };
+                }
+                directorateMap[code].target += p.HEDEF;
+                directorateMap[code].balance += p.ASILALACAKBAKIYESI;
+                directorateMap[code].collected += p.collected;
+                directorateMap[code].daily += p.daily;
+            });
+
+            processedDirectorates = Object.values(directorateMap).map(d => {
+                return {
+                    ...d,
+                    dailyPct: d.target > 0 ? ((d.daily / d.target) * 100) : 0,
+                    ratio: d.target > 0 ? ((d.collected / d.target) * 100) : 0
+                };
+            });
+        }
+
+        function renderMudurlukPage() {
+            let chartData = [...processedDirectorates];
+            const totalTarget = processedDirectorates.reduce((sum, d) => sum + d.target, 0);
+            const totalCollected = processedDirectorates.reduce((sum, d) => sum + d.collected, 0);
+            const totalDaily = processedDirectorates.reduce((sum, d) => sum + d.daily, 0);
+            const avgRatio = totalTarget > 0 ? (totalCollected / totalTarget) * 100 : 0;
+            const avgDailyPct = totalTarget > 0 ? (totalDaily / totalTarget) * 100 : 0;
+
+            chartData.push({
+                code: 'GRAND_TOTAL',
+                name: 'BÖLGE MÜDÜRLÜKLER ORT.',
+                target: totalTarget,
+                collected: totalCollected,
+                daily: totalDaily,
+                dailyPct: avgDailyPct,
+                ratio: avgRatio,
+                balance: 0 
+            });
+
+            chartData.sort((a, b) => {
+                let valA = a[dirSort.column];
+                let valB = b[dirSort.column];
+                if(['target','collected','balance','ratio','daily','dailyPct'].includes(dirSort.column)) { 
+                    valA = parseFloat(valA); valB = parseFloat(valB); 
+                }
+                if (valA < valB) return dirSort.order === 'asc' ? -1 : 1;
+                if (valA > valB) return dirSort.order === 'asc' ? 1 : -1;
+                return 0;
+            });
+            
+            let isDailyMode = chartModes.mudurluk === 'daily';
+            let dataKey = isDailyMode ? 'dailyPct' : 'ratio';
+            let chartLabel = isDailyMode ? 'Günlük Puan' : 'Başarı (%)';
+
+            const ctx = document.getElementById('mudurlukChart').getContext('2d');
+            if(mudurlukChart) mudurlukChart.destroy();
+
+            const backgroundColors = chartData.map(d => {
+                if (d.code === 'GRAND_TOTAL') return '#000000'; 
+                return '#FFB81C'; 
+            });
+
+            mudurlukChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: chartData.map(d => d.name),
+                    datasets: [{
+                        label: chartLabel,
+                        data: chartData.map(d => d[dataKey]), 
+                        backgroundColor: backgroundColors, 
+                        borderRadius: 8, 
+                        barPercentage: 0.6
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    onClick: (e, activeEls) => { 
+                        if(activeEls.length > 0) {
+                            const selectedDir = chartData[activeEls[0].index];
+                            if (selectedDir.code === 'GRAND_TOTAL') {
+                                if (isDailyMode) openDailyPerformanceChart('GRAND_TOTAL', 'BÖLGE GENELİ', 'grand_total');
+                                else openDrilldown('GRAND_TOTAL', 'BÖLGE GENELİ', 'grand_total', selectedDir.target);
+                            } else {
+                                if (isDailyMode) openDailyPerformanceChart(selectedDir.code, selectedDir.name, 'dir');
+                                else openDrilldown(selectedDir.code, selectedDir.name, 'dir', selectedDir.target); 
+                            }
+                        }
+                    },
+                    scales: { 
+                        y: { beginAtZero: true }, 
+                        x: { 
+                            grid: {display:false}, 
+                            ticks: { font: { weight: 'bold', size: 11, family: 'Plus Jakarta Sans' } } 
+                        } 
+                    }, 
+                    plugins: { 
+                        legend: {display:false},
+                        datalabels: {
+                            color: function(context) {
+                                const bg = context.dataset.backgroundColor;
+                                if (Array.isArray(bg) && bg[context.dataIndex] === '#000000') {
+                                    return '#ffffff';
+                                }
+                                return '#1e293b';
+                            },
+                            font: { weight: '900', family: 'Plus Jakarta Sans', size: 12 }, 
+                            formatter: (value) => {
+                                return '%' + parseFloat(value).toFixed(2).replace('.', ',');
+                            }, 
+                            // GÜNCELLEME: ETİKETLER TAM ORTADA
+                            anchor: 'center',
+                            align: 'center',
+                            offset: 0
+                        }
+                    }
+                }
+            });
+
+            // Tabloyu çiz (Mevcut kodunuzdaki gibi kalabilir, buraya sadece grafiği ekledim)
+            const tbody = document.getElementById('mudurlukTableBody');
+            tbody.innerHTML = '';
+            
+            let tableData = [...processedDirectorates];
+            tableData.sort((a, b) => {
+                let valA = a[dirSort.column]; let valB = b[dirSort.column];
+                if(['target','collected','balance','ratio','daily','dailyPct'].includes(dirSort.column)) { valA = parseFloat(valA); valB = parseFloat(valB); }
+                if (valA < valB) return dirSort.order === 'asc' ? -1 : 1;
+                if (valA > valB) return dirSort.order === 'asc' ? 1 : -1;
+                return 0;
+            });
+
+            tableData.forEach(d => {
+               let barColor = d.ratio >= 100 ? 'bg-green-500' : (d.ratio >= 75 ? 'bg-brand-yellow' : 'bg-red-500');
+               let dailyVal = parseFloat(d.dailyPct);
+               let dailyBadgeColor = dailyVal > 1.59 ? 'bg-green-100 text-green-700 border-green-200' : (dailyVal >= 1.00 ? 'bg-yellow-100 text-yellow-700 border-yellow-200' : 'bg-red-100 text-red-700 border-red-200');
+
+               tbody.innerHTML += `
+                    <tr class="even:bg-slate-50 hover:bg-gray-100 transition-colors border-b border-gray-100 last:border-0 group">
+                        <td class="p-4 font-mono text-l font-semibold text-gray-500 group-hover:text-brand-dark">${d.name}</td>
+                        <td class="p-4 text-right"><div class="clickable-cell text-gray-500 font-mono" onclick="openDrilldown('${d.code}', '${d.name}', 'dir', ${d.target})">${formatMoney(d.balance)}</div></td>
+                        <td class="p-4 text-right"><div class="clickable-cell text-gray-600 font-mono" onclick="openDrilldown('${d.code}', '${d.name}', 'dir', ${d.target})">${formatMoney(d.target)}</div></td>
+                        <td class="p-4 text-right bg-blue-50/30"><div class="clickable-cell text-brand-dark font-bold font-mono" onclick="openDrilldown('${d.code}', '${d.name}', 'dir', ${d.target})">${formatMoney(d.daily)}</div></td>
+                        <td class="p-4 text-right"><div class="clickable-cell text-brand-dark font-bold font-mono text-lg" onclick="openDrilldown('${d.code}', '${d.name}', 'dir', ${d.target})">${formatMoney(d.collected)}</div></td>
+                        <td class="p-4 text-center align-middle bg-blue-50/30">
+                            <div class="clickable-cell flex justify-center" onclick="openDailyPerformanceChart('${d.code}', '${d.name}', 'dir')">
+                                <span class="inline-block px-2 py-1 rounded-md text-xs font-bold border ${dailyBadgeColor}">%${d.dailyPct.toFixed(2)}</span>
+                            </div>
+                        </td>
+                        <td class="p-4 text-center align-middle">
+                            <div class="clickable-cell" onclick="openDrilldown('${d.code}', '${d.name}', 'dir', ${d.target})">
+                                <div class="flex flex-col items-center gap-1">
+                                    <div class="w-full bg-gray-200 h-2 rounded-full overflow-hidden w-40">
+                                        <div class="h-full ${barColor}" style="width: ${Math.min(d.ratio, 100)}%"></div>
+                                    </div>
+                                    <span class="text-[10px] font-bold text-gray-500">%${d.ratio.toFixed(1)}</span>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>`;
+            });
+            
+            let totalBarColor = avgRatio >= 100 ? 'bg-green-500' : (avgRatio >= 75 ? 'bg-brand-yellow' : 'bg-red-500');
+            tbody.innerHTML += `
+                <tr class="bg-gray-800 text-white font-bold border-t-2 border-gray-300 sticky bottom-0 z-10 shadow-lg">
+                    <td class="p-4 text-left">GENEL TOPLAM</td>
+                    <td class="p-4 text-right font-mono">${formatMoney(processedDirectorates.reduce((sum, d) => sum + d.balance, 0))}</td>
+                    <td class="p-4 text-right font-mono">${formatMoney(totalTarget)}</td>
+                    <td class="p-4 text-right font-mono text-brand-yellow">${formatMoney(totalDaily)}</td>
+                    <td class="p-4 text-right font-mono text-lg">${formatMoney(totalCollected)}</td>
+                    <td class="p-4 text-center">
+                         <span class="inline-block px-2 py-1 rounded-md text-xs bg-white/20 text-white border border-white/30">%${avgDailyPct.toFixed(2)}</span>
+                    </td>
+                    <td class="p-4 text-center">
+                        <div class="flex flex-col items-center gap-1">
+                            <div class="w-full bg-gray-600 h-2 rounded-full overflow-hidden w-40">
+                                <div class="h-full ${totalBarColor}" style="width: ${Math.min(avgRatio, 100)}%"></div>
+                            </div>
+                            <span class="text-[10px] text-gray-300">%${avgRatio.toFixed(1)}</span>
+                        </div>
+                    </td>
+                </tr>
+            `;
+
+            updateChartsForTheme(localStorage.getItem('appTheme') || 'day');
+        }
+
+        function applyPersonnelFilters() {
+            const cat = document.getElementById('personelCategoryFilter').value;
+            let filtered = processedPersonnel.filter(p => cat === 'all' || p.TAKIPBIRIMKODU === cat);
+
+            filtered.sort((a, b) => {
+                let valA = a[currentSort.column]; let valB = b[currentSort.column];
+                if (['ratio', 'dailyPct', 'HEDEF', 'collected', 'daily', 'ASILALACAKBAKIYESI'].includes(currentSort.column)) {
+                    valA = parseFloat(valA) || 0; valB = parseFloat(valB) || 0;
+                } else {
+                    if (typeof valA === 'string') valA = valA.toLowerCase(); 
+                    if (typeof valB === 'string') valB = valB.toLowerCase();
+                }
+                if (valA < valB) return currentSort.order === 'asc' ? -1 : 1; 
+                if (valA > valB) return currentSort.order === 'asc' ? 1 : -1; 
+                return 0;
+            });
+
+            document.getElementById('totalStaffCount').innerText = filtered.length;
+            renderPersonnelChart(filtered);
+            renderPersonnelTable(filtered);
+        }
+
+        // MEVCUT renderPersonnelChart FONKSİYONUNU BUNUNLA DEĞİŞTİRİN
+        function renderPersonnelChart(data) {
+            const ctx = document.getElementById('personelChart').getContext('2d');
+            if(personelChart) personelChart.destroy();
+            
+            let chartData = [...data];
+            const totalTarget = data.reduce((sum, p) => sum + p.HEDEF, 0);
+            const totalCollected = data.reduce((sum, p) => sum + p.collected, 0);
+            const totalDaily = data.reduce((sum, p) => sum + p.daily, 0);
+            
+            const avgRatio = totalTarget > 0 ? (totalCollected / totalTarget) * 100 : 0;
+            const avgDailyPct = totalTarget > 0 ? (totalDaily / totalTarget) * 100 : 0;
+
+            let isDailyMode = chartModes.personel === 'daily';
+            let dataKey = isDailyMode ? 'dailyPct' : 'ratio';
+            let chartLabel = isDailyMode ? 'Günlük Puan' : 'Başarı (%)';
+
+            const selectedFilter = document.getElementById('personelCategoryFilter').value;
+            let avgLabel = 'BÖLGE MÜDÜRLÜKLER ORT.';
+            if (selectedFilter !== 'all') {
+                avgLabel = getDirectorateName(selectedFilter);
+            }
+
+            chartData.push({
+                TAKIPPORTFOY: avgLabel,
+                isGrandTotal: true,
+                HEDEF: totalTarget,
+                collected: totalCollected,
+                daily: totalDaily,
+                dailyPct: avgDailyPct,
+                ratio: avgRatio,
+                ASILALACAKBAKIYESI: 0,
+                TAKIPBIRIMKODU: ''
+            });
+
+            chartData.sort((a, b) => {
+                let valA = a[currentSort.column]; 
+                let valB = b[currentSort.column];
+                if (['ratio', 'dailyPct', 'HEDEF', 'collected', 'daily', 'ASILALACAKBAKIYESI'].includes(currentSort.column)) {
+                    valA = parseFloat(valA) || 0;
+                    valB = parseFloat(valB) || 0;
+                } else {
+                    if (typeof valA === 'string') valA = valA.toLowerCase(); 
+                    if (typeof valB === 'string') valB = valB.toLowerCase();
+                }
+                if (valA < valB) return currentSort.order === 'asc' ? -1 : 1; 
+                if (valA > valB) return currentSort.order === 'asc' ? 1 : -1; 
+                return 0;
+            });
+
+            // DÜZELTME: Burayı 12'den 10'a düşürdük
+            const topData = chartData.slice(0, 10); 
+
+            const backgroundColors = topData.map(p => {
+                if (p.isGrandTotal) return '#000000'; 
+                return '#FFB81C';
+            });
+
+            personelChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: topData.map(p => p.TAKIPPORTFOY), 
+                    datasets: [{
+                        label: chartLabel, 
+                        data: topData.map(p => p[dataKey]), 
+                        backgroundColor: backgroundColors, 
+                        borderRadius: 8, barPercentage: 0.6
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    onClick: (e, activeEls) => { 
+                        if(activeEls.length > 0) { 
+                            const p = topData[activeEls[0].index]; 
+                            if (p.isGrandTotal) {
+                                let drillId = 'GRAND_TOTAL';
+                                let drillType = 'grand_total';
+                                if (selectedFilter !== 'all') {
+                                    drillId = selectedFilter; 
+                                    drillType = 'dir';
+                                }
+                                if (isDailyMode) openDailyPerformanceChart(drillId, avgLabel, drillType);
+                                else openDrilldown(drillId, avgLabel, drillType, p.HEDEF);
+                            } else {
+                                if (isDailyMode) openDailyPerformanceChart(p.TAKIPPORTFOY, p.TAKIPPORTFOY, 'personel');
+                                else openDrilldown(p.TAKIPPORTFOY, p.TAKIPPORTFOY, 'personel', p.HEDEF); 
+                            }
+                        } 
+                    },
+                    scales: { 
+                        y: { border: {display:false} }, 
+                        x: { 
+                            grid: {display:false}, 
+                            ticks: {autoSkip: false, maxRotation: 90, minRotation: 45, font: { weight: 'bold', family: 'Plus Jakarta Sans', size: 11 }} 
+                        } 
+                    }, 
+                    plugins: { 
+                        legend: {display:false},
+                        datalabels: {
+                            color: function(context) {
+                                const bg = context.dataset.backgroundColor;
+                                if (Array.isArray(bg) && bg[context.dataIndex] === '#000000') {
+                                    return '#ffffff';
+                                }
+                                return '#1e293b';
+                            },
+                            font: { weight: '900', family: 'Plus Jakarta Sans', size: 12 }, 
+                            formatter: (value) => {
+                                return '%' + parseFloat(value).toFixed(2).replace('.', ',');
+                            }, 
+                            anchor: 'center',
+                            align: 'center',
+                            offset: 0,
+                            rotation: 0
+                        }
+                    }
+                }
+            });
+
+            updateChartsForTheme(localStorage.getItem('appTheme') || 'day');
+        }
+
+        function renderPersonnelTable(data) {
+            const tbody = document.getElementById('personelTableBody');
+            
+            // OPTIMIZASYON: Çok fazla veri varsa tarayıcı donmasın diye limit koyabiliriz
+            // Ancak kullanıcı "tümü" dediği için şimdilik sadece string birleştirme ile hızlandırıyoruz.
+            const rowsHTML = data.map((p, idx) => {
+                let barColor = p.ratio >= 100 ? 'bg-green-500' : (p.ratio >= 75 ? 'bg-brand-yellow' : 'bg-red-500');
+                let dailyVal = p.dailyPct; 
+                let dailyBadgeColor = dailyVal > 1.59 ? 'bg-green-100 text-green-700 border-green-200' : (dailyVal >= 1.00 ? 'bg-yellow-100 text-yellow-700 border-yellow-200' : 'bg-red-100 text-red-700 border-red-200');
+
+                return `<tr class="even:bg-slate-50 hover:bg-gray-100 transition-colors border-b border-gray-100 last:border-0">
+                        <td class="p-4 text-gray-400 font-bold">${idx+1}</td>
+                        <td class="p-4 text-xs font-semibold text-gray-600">${getDirectorateName(p.TAKIPBIRIMKODU)}</td>
+                        <td class="p-4 font-semibold text-gray-800 flex items-center gap-2"><div class="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-[10px] text-gray-500 font-bold">${p.TAKIPPORTFOY.charAt(0)}</div>${p.TAKIPPORTFOY}</td>
+                        <td class="p-4 text-right"><div class="clickable-cell text-gray-500 font-mono text-xs" onclick="openDrilldown('${p.TAKIPPORTFOY}', '${p.TAKIPPORTFOY}', 'personel', ${p.HEDEF})">${formatMoney(p.ASILALACAKBAKIYESI)}</div></td>
+                        <td class="p-4 text-right"><div class="clickable-cell text-gray-600 font-mono text-xs" onclick="openDrilldown('${p.TAKIPPORTFOY}', '${p.TAKIPPORTFOY}', 'personel', ${p.HEDEF})">${formatMoney(p.HEDEF)}</div></td>
+                        <td class="p-4 text-right bg-blue-50/30"><div class="clickable-cell text-brand-dark font-bold font-mono" onclick="openDrilldown('${p.TAKIPPORTFOY}', '${p.TAKIPPORTFOY}', 'personel', ${p.HEDEF})">${formatMoney(p.daily)}</div></td>
+                        <td class="p-4 text-right"><div class="clickable-cell text-brand-dark font-bold font-mono" onclick="openDrilldown('${p.TAKIPPORTFOY}', '${p.TAKIPPORTFOY}', 'personel', ${p.HEDEF})">${formatMoney(p.collected)}</div></td>
+                        <td class="p-4 text-center align-middle bg-blue-50/30">
+                            <div class="clickable-cell flex justify-center" onclick="openDailyPerformanceChart('${p.TAKIPPORTFOY}', '${p.TAKIPPORTFOY}', 'personel')">
+                                <span class="inline-block px-2 py-1 rounded-md text-xs font-bold border ${dailyBadgeColor}">%${p.dailyPct.toFixed(2)}</span>
+                            </div>
+                        </td>
+                        <td class="p-4 text-center align-middle">
+                            <div class="clickable-cell" onclick="openDrilldown('${p.TAKIPPORTFOY}', '${p.TAKIPPORTFOY}', 'personel', ${p.HEDEF})">
+                                <div class="flex flex-col items-center gap-1">
+                                    <div class="w-full bg-gray-200 h-2 rounded-full overflow-hidden w-40">
+                                        <div class="h-full ${barColor}" style="width: ${Math.min(p.ratio, 100)}%"></div>
+                                    </div>
+                                    <span class="text-[10px] font-bold text-gray-500">%${p.ratio.toFixed(0)}</span>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>`;
+            }).join('');
+
+            // Totals Calculation
+            const pTotalBalance = data.reduce((sum, p) => sum + p.ASILALACAKBAKIYESI, 0);
+            const pTotalTarget = data.reduce((sum, p) => sum + p.HEDEF, 0);
+            const pTotalDaily = data.reduce((sum, p) => sum + p.daily, 0);
+            const pTotalCollected = data.reduce((sum, p) => sum + p.collected, 0);
+            const pTotalDailyPct = pTotalTarget > 0 ? (pTotalDaily / pTotalTarget) * 100 : 0;
+            const pTotalRatio = pTotalTarget > 0 ? (pTotalCollected / pTotalTarget) * 100 : 0;
+            let pTotalBarColor = pTotalRatio >= 100 ? 'bg-green-500' : (pTotalRatio >= 75 ? 'bg-brand-yellow' : 'bg-red-500');
+
+            const footerHTML = `
+                <tr class="bg-gray-800 text-white font-bold border-t-2 border-gray-300 sticky bottom-0 z-10 shadow-lg">
+                    <td class="p-4">TOPLAM</td>
+                    <td class="p-4" colspan="2">GENEL TOPLAM</td>
+                    <td class="p-4 text-right font-mono text-xs">${formatMoney(pTotalBalance)}</td>
+                    <td class="p-4 text-right font-mono text-xs">${formatMoney(pTotalTarget)}</td>
+                    <td class="p-4 text-right font-mono text-brand-yellow">${formatMoney(pTotalDaily)}</td>
+                    <td class="p-4 text-right font-mono">${formatMoney(pTotalCollected)}</td>
+                    <td class="p-4 text-center">
+                        <span class="inline-block px-2 py-1 rounded-md text-xs bg-white/20 text-white border border-white/30">%${pTotalDailyPct.toFixed(2)}</span>
+                    </td>
+                    <td class="p-4 text-center">
+                        <div class="flex flex-col items-center gap-1">
+                            <div class="w-full bg-gray-600 h-2 rounded-full overflow-hidden w-40">
+                                <div class="h-full ${pTotalBarColor}" style="width: ${Math.min(pTotalRatio, 100)}%"></div>
+                            </div>
+                            <span class="text-[10px] text-gray-300">%${pTotalRatio.toFixed(1)}</span>
+                        </div>
+                    </td>
+                </tr>
+            `;
+
+            tbody.innerHTML = rowsHTML + footerHTML; // TEK SEFERDE DOM
+        }
+
+        // --- YARDIMCI FONKSİYONLAR ---
+        function openDrilldown(id, title, type, targetVal) {
+            const modal = document.getElementById('drilldownModal');
+            modal.classList.remove('hidden'); modal.classList.add('flex');
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalSubtitle').innerText = "Kümülatif Hedef ve Gerçekleşme";
+            document.getElementById('modalLegend').style.display = 'flex';
+
+            // OPTIMIZASYON: Filtreleme yerine indeks kullan
+            let transactions = [];
+            
+            if (id === 'GRAND_TOTAL') {
+                transactions = window.rawTable3;
+            } 
+            else if (type === 'dir') {
+                 // Müdürlük için şubeleri bulmamız lazım. Ancak veri yapısında müdürlük -> şube map'i tam yok.
+                 // Mecburen filter (Bu nadir açıldığı için sorun değil)
+                transactions = window.rawTable3.filter(t => t.TAKIPBIRIMKODU == id);
+            } else { // Personel
+                const p = processedPersonnel.find(x => x.TAKIPPORTFOY === id);
+                if(p) {
+                    targetVal = p.HEDEF;
+                    // Indeksten çek
+                    p.subeList.forEach(sube => {
+                        if(transactionsBySube[sube]) transactions.push(...transactionsBySube[sube]);
+                    });
+                }
+            }
+            
+            // Tarihe göre sırala
+            transactions = transactions.filter(t => t.TARIH).sort((a, b) => new Date(a.TARIH) - new Date(b.TARIH));
+            
+            const dailyTotals = {};
+            transactions.forEach(t => { 
+                const dStr = typeof t.TARIH === 'string' ? t.TARIH.split('T')[0] : new Date(t.TARIH).toISOString().split('T')[0];
+                if(!dailyTotals[dStr]) dailyTotals[dStr] = 0; 
+                dailyTotals[dStr] += (parseFloat(t.TOPLAMTAHSILAT) || 0); 
+            });
+
+            const labels = [], actualData = [], targetData = [];
+            let cumulative = 0;
+            
+            // Aralık: 1 Ocak - Bugün
+            let startDate = new Date('2026-01-01');
+            let endDate = new Date(lastDataDate);
+            let totalDays = Math.ceil((endDate - startDate) / (86400000)) + 1;
+            
+            for (let i = 0; i < totalDays; i++) {
+                let d = new Date(startDate); d.setDate(startDate.getDate() + i);
+                let dStr = d.toISOString().split('T')[0];
+                
+                targetData.push((targetVal / 90) * (i + 1)); // Basit lineer hedef
+                if (dailyTotals[dStr]) cumulative += dailyTotals[dStr];
+                actualData.push(cumulative);
+                labels.push(formatDateTR(dStr));
+            }
+            
+            renderDrillChart(labels, actualData, targetData, 'line');
+        }
+
+        function openDailyPerformanceChart(id, title, type) {
+            const modal = document.getElementById('drilldownModal');
+            modal.classList.remove('hidden'); modal.classList.add('flex');
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalSubtitle').innerText = "Günlük Puan (Gerçekleşen / Hedef %)";
+            document.getElementById('modalLegend').style.display = 'none';
+
+            let targetVal = 0, transactions = [];
+
+            if (id === 'GRAND_TOTAL') {
+                targetVal = processedDirectorates.reduce((sum, d) => sum + d.target, 0);
+                transactions = window.rawTable3;
+            } else if (type === 'dir') {
+                const d = processedDirectorates.find(x => x.code === id);
+                if(d) targetVal = d.target;
+                transactions = window.rawTable3.filter(t => t.TAKIPBIRIMKODU == id);
+            } else {
+                const p = processedPersonnel.find(x => x.TAKIPPORTFOY === id);
+                if(p) {
+                    targetVal = p.HEDEF;
+                    p.subeList.forEach(sube => {
+                        if(transactionsBySube[sube]) transactions.push(...transactionsBySube[sube]);
+                    });
+                }
+            }
+
+            const dailyPoints = {};
+            transactions.forEach(t => {
+                const dStr = typeof t.TARIH === 'string' ? t.TARIH.split('T')[0] : new Date(t.TARIH).toISOString().split('T')[0];
+                if(!dailyPoints[dStr]) dailyPoints[dStr] = 0;
+                if(targetVal > 0) dailyPoints[dStr] += ((parseFloat(t.TOPLAMTAHSILAT)||0) / targetVal) * 100;
+            });
+
+            // Sadece veri olan günleri göster (Boş günleri çizmek grafiği yorar)
+            const sortedDates = Object.keys(dailyPoints).sort();
+            const labels = sortedDates.map(d => formatDateTR(d));
+            const dataPoints = sortedDates.map(d => dailyPoints[d]);
+
+            renderDrillChart(labels, dataPoints, [], 'dailyLine');
+        }
+
+        function renderDrillChart(labels, actualData, targetData, chartType) {
+            const ctx = document.getElementById('drilldownChart').getContext('2d');
+            
+            if(drillChart) drillChart.destroy();
+            
+            const fillGradient = ctx.createLinearGradient(0,0,0,350);
+            fillGradient.addColorStop(0, 'rgba(255, 184, 28, 0.4)'); 
+            fillGradient.addColorStop(1, 'rgba(255, 184, 28, 0.0)'); 
+            
+            const datasets = [];
+            if (chartType === 'line') {
+                datasets.push({ 
+                    label: 'Gerçekleşen', 
+                    data: actualData, 
+                    borderColor: '#FFB81C', borderWidth: 3, backgroundColor: fillGradient, fill: true, tension: 0.3, 
+                    pointRadius: 4, pointBackgroundColor: '#ffffff', pointBorderColor: '#FFB81C', pointBorderWidth: 2, order: 1,
+                    datalabels: { display: false }
+                });
+                datasets.push({ 
+                    label: 'Hedef', 
+                    data: targetData, 
+                    borderColor: '#94a3b8', borderWidth: 2, borderDash: [6, 6], pointRadius: 0, fill: false, tension: 0, order: 2,
+                    datalabels: { display: false }
+                });
+            } else if (chartType === 'dailyLine') {
+                datasets.push({
+                    label: 'Günlük Puan',
+                    data: actualData,
+                    borderColor: '#FFB81C',
+                    backgroundColor: 'rgba(255, 184, 28, 0.1)',
+                    borderWidth: 2,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#ffffff',
+                    pointBorderColor: '#FFB81C',
+                    pointBorderWidth: 2,
+                    fill: false,
+                    tension: 0.1,
+                    datalabels: {
+                        color: '#1e293b', 
+                        anchor: 'end', 
+                        align: 'top', 
+                        font: {size: 11, weight:'bold'},
+                        // GÜNCELLEME: Puan Katkısını Yazdır
+                        formatter: (val) => val > 0.01 ? val.toFixed(2) : ''
+                    }
+                });
+            }
+
+            drillChart = new Chart(ctx, {
+                type: (chartType === 'dailyLine') ? 'line' : chartType,
+                data: {
+                    labels: labels,
+                    datasets: datasets
+                },
+                options: { 
+                    responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+                    scales: { 
+                        y: { 
+                            beginAtZero: true,
+                            grid: { color: '#f3f4f6', borderDash: [5, 5] }, 
+                            ticks: { callback: function(value) { return chartType === 'line' ? new Intl.NumberFormat('tr-TR', { notation: "compact", compactDisplay: "short" }).format(value) : value.toFixed(2); } } 
+                        }, 
+                        x: { grid: { display: false }, ticks: { autoSkip: true, maxTicksLimit: 12 } } 
+                    },
+                    plugins: { 
+                        tooltip: { backgroundColor: '#1e293b', callbacks: { label: function(context) { 
+                            let label = context.dataset.label || '';
+                            if (label) label += ': ';
+                            if(chartType === 'line') return label + new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(context.parsed.y);
+                            else return label + context.parsed.y.toFixed(3) + ' Puan';
+                        } } }, 
+                        legend: { display: false },
+                        // Günlük Puan modunda etiketleri kesinlikle göster
+                        datalabels: { display: (chartType === 'dailyLine') } 
+                    }
+                }
+            });
+
+            const currentTheme = localStorage.getItem('appTheme') || 'day';
+            updateChartsForTheme(currentTheme);
+        }
+
+        function getDirectorateName(code) {
+            const map = { 'B00375': 'İSTANBUL ANADOLU YAKASI B.K.Y.R.T.M', 'B00377': 'ANTALYA B.K.Y.R.T.M', 'B00457': 'ÇUKUROVA B.K.Y.R.T.M', 'B00378': 'DİYARBAKIR B.K.Y.R.T.M', 'B00369': 'EGE B.K.Y.R.T.M', 'B00449': 'İSTANBUL AVRUPA YAKASI B.K.Y.R.T.M', 'B00324': 'MALATYA B.K.Y.R.T.M', 'B00506': 'MARMARA B.K.Y.R.T.M', 'B00376': 'SAMSUN B.K.Y.R.T.M', 'B00332': 'ANKARA B.K.Y.R.T.M', 'TIC-01': 'Ticari Tahsilat Müdürlüğü', 'KOB-01': 'Kobi Tahsilat Müdürlüğü', 'KRT-01': 'Kartları Tahsilat Müdürlüğü', 'YSL-01': 'Yasal Takip Müdürlüğü' };
+            return map[code] || code;
+        }
+
+        function parseExcelDate(val) {
+            if (!val) return null;
+            if (typeof val === 'number') return new Date(Math.round((val - 25569) * 86400 * 1000));
+            if (typeof val === 'string') {
+                if (val.includes('-')) return new Date(val);
+                if (val.includes('.')) { const parts = val.split('.'); return new Date(`${parts[2]}-${parts[1]}-${parts[0]}`); }
+            }
+            return new Date(val);
+        }
+
+        function handleExcelUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+                if (workbook.SheetNames.length >= 3) {
+                    window.rawTable1 = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+                    window.rawTable2 = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[1]]);
+                    const s3 = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[2]]);
+                    window.rawTable3 = s3.map(row => {
+                        let dt = parseExcelDate(row['TARIH']);
+                        if(dt) row['TARIH'] = dt.toISOString().split('T')[0];
+                        return row;
+                    });
+                    document.getElementById('fileNameLabel').innerText = file.name;
+                    initApp(); 
+                    alert("Veriler yüklendi ve işlendi.");
+                } else alert("Excel dosyasında en az 3 sayfa olmalıdır.");
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function exportViewerMode() {
+            const htmlClone = document.documentElement.cloneNode(true);
+            const scriptTag = htmlClone.querySelector('#database-script');
+            if (scriptTag) {
+                scriptTag.textContent = `window.rawTable1 = ${JSON.stringify(window.rawTable1)}; window.rawTable2 = ${JSON.stringify(window.rawTable2)}; window.rawTable3 = ${JSON.stringify(window.rawTable3)};`;
+            }
+            htmlClone.querySelector('body').classList.add('viewer-mode');
+            const blob = new Blob(["<!DOCTYPE html>" + htmlClone.outerHTML], {type: 'text/html'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Bolge_Takip_Raporu_${new Date().toISOString().slice(0,10)}.html`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        function downloadTestExcel() { alert("Lütfen gerçek veri setinizi kullanın."); }
+        function closeModal() { document.getElementById('drilldownModal').classList.add('hidden'); document.getElementById('drilldownModal').classList.remove('flex'); }
+        function formatMoney(amount) { return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 }).format(amount); }
+        function formatDateTR(dateStr) { const parts = dateStr.split('-'); return `${parts[2]}.${parts[1]}.${parts[0]}`; }
+        // --- BU FONKSİYONU GÜNCELLEYİN ---
+        function setTheme(theme) {
+
+            const body = document.body;
+            body.classList.remove('theme-day', 'theme-night', 'theme-eye');
+            body.classList.add('theme-' + theme);
+            
+            // Buton stillerini güncelle
+            document.getElementById('btn-theme-day').className = `w-8 h-8 rounded-md flex items-center justify-center transition-all ${theme==='day'?'bg-white text-brand-yellow shadow-sm':'text-gray-500 hover:text-brand-yellow hover:bg-white'}`;
+            document.getElementById('btn-theme-night').className = `w-8 h-8 rounded-md flex items-center justify-center transition-all ${theme==='night'?'bg-slate-700 text-indigo-400 shadow-sm':'text-gray-500 hover:text-indigo-400 hover:bg-slate-700'}`;
+            document.getElementById('btn-theme-eye').className = `w-8 h-8 rounded-md flex items-center justify-center transition-all ${theme==='eye'?'bg-orange-100 text-orange-700 shadow-sm':'text-gray-500 hover:text-orange-700 hover:bg-orange-100'}`;
+            
+            localStorage.setItem('appTheme', theme);
+            updateChartsForTheme(theme);
+        }
+        // MEVCUT updateChartsForTheme FONKSİYONUNU BUNUNLA DEĞİŞTİRİN
+        function updateChartsForTheme(theme) {
+            let textColor = '#64748b';
+            let gridColor = '#e5e7eb';
+            let dataLabelColor = '#1e293b';
+
+            if (theme === 'night') {
+                textColor = '#cbd5e1';
+                gridColor = '#334155';
+                dataLabelColor = '#f1f5f9';
+            } else if (theme === 'eye') {
+                textColor = '#57534e';
+                gridColor = '#d6cfc2';
+                dataLabelColor = '#292524';
+            }
+
+            const charts = [mudurlukChart, personelChart, drillChart];
+            charts.forEach(chart => {
+                if (chart) {
+                    chart.options.scales.x.ticks.color = textColor;
+                    chart.options.scales.y.ticks.color = textColor;
+                    if(chart.options.scales.x.grid) chart.options.scales.x.grid.color = 'transparent';
+                    if(chart.options.scales.y.grid) chart.options.scales.y.grid.color = gridColor;
+                    
+                    // BU KISIM EKSİKTİ: Siyah çubuklarda yazıyı beyaz yapma özelliği
+                    if (chart.options.plugins.datalabels) {
+                        chart.options.plugins.datalabels.color = function(context) {
+                            const bg = context.dataset.backgroundColor;
+                            if (Array.isArray(bg) && bg[context.dataIndex] === '#000000') {
+                                return '#ffffff';
+                            }
+                            return dataLabelColor;
+                        };
+                    }
+                    chart.update();
+                }
+            });
+        }
+        // --- GÜNCELLENMİŞ MOD DEĞİŞTİRME FONKSİYONU ---
+    function setChartMode(tab, mode) {
+        chartModes[tab] = mode;
+        const btnRatio = document.getElementById(`btn-mode-${tab}-ratio`);
+        const btnDaily = document.getElementById(`btn-mode-${tab}-daily`);
+        
+        // Buton stillerini güncelle
+        if (mode === 'ratio') {
+            btnRatio.classList.add('active'); btnRatio.classList.remove('inactive');
+            btnDaily.classList.add('inactive'); btnDaily.classList.remove('active');
+        } else {
+            btnDaily.classList.add('active'); btnDaily.classList.remove('inactive');
+            btnRatio.classList.add('inactive'); btnRatio.classList.remove('active');
+        }
+
+        // SIRALAMA MANTIĞI GÜNCELLEMESİ:
+        // Hangi moda geçilirse geçilsin, sıralamayı o modun verisine göre 'desc' (Büyükten Küçüğe) yap.
+        if (tab === 'mudurluk') {
+            if (mode === 'ratio') dirSort = { column: 'ratio', order: 'desc' };
+            else dirSort = { column: 'dailyPct', order: 'desc' };
+            renderMudurlukPage();
+        }
+        if (tab === 'personel') {
+            if (mode === 'ratio') currentSort = { column: 'ratio', order: 'desc' };
+            else currentSort = { column: 'dailyPct', order: 'desc' };
+            applyPersonnelFilters();
+        }
+    }
+        function sortDirectorates(col) { dirSort = { column: col, order: (dirSort.column === col && dirSort.order === 'desc') ? 'asc' : 'desc' }; renderMudurlukPage(); }
+        function sortPersonnel(col) { currentSort = { column: col, order: (currentSort.column === col && currentSort.order === 'desc') ? 'asc' : 'desc' }; applyPersonnelFilters(); }
+        function setupFilters() {
+             const uniqueUnits = [...new Set(window.rawTable1.map(item => item.TAKIPBIRIMKODU))];
+             const select = document.getElementById('personelCategoryFilter');
+             select.innerHTML = '<option value="all">Tüm Birimler</option>';
+             uniqueUnits.forEach(u => {
+                 const opt = document.createElement('option'); opt.value = u; opt.innerText = getDirectorateName(u); select.appendChild(opt);
+             });
+        }
+        function switchTab(tab) {
+            document.getElementById('section-mudurluk').classList.add('hidden'); 
+            document.getElementById('section-personel').classList.add('hidden');
+            document.querySelectorAll('.tab-btn').forEach(b => { b.classList.remove('active', 'text-brand-dark', 'active-tab-text'); b.classList.add('text-gray-400'); });
+            document.getElementById('tab-'+tab).classList.add('active', 'text-brand-dark', 'active-tab-text'); 
+            document.getElementById('tab-'+tab).classList.remove('text-gray-400');
+            document.getElementById('section-'+tab).classList.remove('hidden');
+            // Lazy render
+            if(tab === 'mudurluk') renderMudurlukPage();
+            if(tab === 'personel') applyPersonnelFilters();
+        }
+
+        window.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>

@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2025 Prim Ödüllü Takip Kampanyası</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        corp: {
+                            black: '#1f2937',  // Dark Gray - Çoğu içerik metni için kullanılır
+                            yellow: '#ffb81c', // Lufthansa Sarısı
+                            yellowHover: '#e0a119',
+                            gray: '#f3f4f6',
+                            deepdark: '#0d1117', // Simsiyah Arka Plan (Gece Modu İçerik)
+                            deepdarkcard: '#161b22' // Simsiyah Card (Gece Modu İçerik)
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Absolute Colors for Request */
+        :root {
+            --color-absolute-black: #000000;
+            --color-absolute-white: #ffffff;
+        }
+
+        /* --- GÜNDÜZ MODU (Varsayılan) --- */
+        body.day-mode { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f8fafc; /* Beyazımsı arka plan */
+            color: #1f2937;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        /* HEADER BAŞLIK ALANI - FULL BLACK */
+        .day-mode header {
+            background-color: var(--color-absolute-black); /* FULL BLACK */
+            color: var(--color-absolute-white); /* Full White Metin */
+            border-bottom-color: #ffb81c;
+        }
+        /* Başlık içindeki metin renklerini koya arkaplana göre ayarla */
+        .day-mode header .text-corp-black { color: var(--color-absolute-white); } /* RİSK TASFİYE yazısını beyaz yap */
+        .day-mode header .text-gray-400 { color: #9ca3af; } 
+        .day-mode header .text-gray-300 { color: #d1d5db; } 
+        
+        /* GÜNDÜZ MODU TEMA İKONU (Güneş) - FULL BLACK */
+        .day-mode #themeIcon { 
+            color: var(--color-absolute-black) !important; 
+        }
+
+        /* Tab butonları (navigasyon alanı) normal gün modu renklerinde kalmalı */
+        .day-mode .tab-btn.text-corp-yellow { color: #1f2937 !important; }
+
+        /* Geri kalan içerik için koyu renkler (Calculator Title, etc.) */
+        .day-mode .bg-corp-black { background-color: #1f2937 !important; color: #ffffff !important; }
+        .day-mode .bg-white { background-color: #ffffff; }
+        .day-mode .bg-gray-50 { background-color: #f9fafb; }
+        .day-mode .border-gray-200 { border-color: #e5e7eb; }
+        .day-mode input, .day-mode select { background-color: #ffffff; border-color: #d1d5db; }
+        
+        /* --- GECE MODU (Simsiyah) --- */
+        body.dark-mode {
+            background-color: #0d1117; /* Simsiyah Arka Plan (deepdark) */
+            color: #f3f4f6; /* Açık Metin */
+        }
+        /* HEADER BAŞLIK ALANI - FULL BLACK */
+        .dark-mode header {
+            background-color: var(--color-absolute-black); /* FULL BLACK */
+            border-bottom-color: #ffb81c;
+            color: #f3f4f6;
+        }
+        /* GECE MODU TEMA İKONU (Ay) - SARI */
+        .dark-mode #themeIcon {
+            color: #ffb81c !important; /* Sarı ikon */
+        }
+
+        /* Diğer içerik alanları (Card BG vs.) */
+        .dark-mode .text-corp-black { color: #f3f4f6; }
+        .dark-mode .bg-white { background-color: #161b22; }
+        .dark-mode .bg-gray-50 { background-color: #1f2328; }
+        .dark-mode .border-gray-200 { border-color: #30363d; }
+        /* Calculator Result Area ve Tab Title */
+        .dark-mode .bg-corp-black { background-color: #161b22 !important; color: #ffffff !important; }
+        .dark-mode input, .dark-mode select { background-color: #21262d; border-color: #30363d; color: #f3f4f6; }
+
+
+        /* Genel UI */
+        .tab-content { display: none; animation: fadeIn 0.3s ease-in-out; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .accordion-content { transition: max-height 0.3s ease-out, opacity 0.3s ease-out; max-height: 0; opacity: 0; overflow: hidden; }
+        .accordion-content.open { max-height: 2000px; opacity: 1; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        .day-mode::-webkit-scrollbar-track { background: #e5e7eb; }
+        .day-mode::-webkit-scrollbar-thumb { background: #9ca3af; border-radius: 4px; }
+        .dark-mode::-webkit-scrollbar-track { background: #1f2328; }
+        .dark-mode::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen day-mode"> <!-- Varsayılan: Gündüz Modu -->
+
+    <!-- HEADER / ÜST BİLGİ (FULL BLACK - Kullanıcının İsteği) -->
+    <header class="shadow-lg border-b-4 border-corp-yellow transition-colors duration-300">
+        <div class="container mx-auto px-4 py-6 flex flex-col md:flex-row justify-between items-center">
+            
+            <!-- Logo ve Başlık Alanı -->
+            <div class="flex items-center space-x-0 mb-4 md:mb-0">
+                <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="100" zoomAndPan="magnify" viewBox="0 0 75 37.5" height="50" preserveAspectRatio="xMidYMid meet" version="1.0"><defs><g/><clipPath id="4ead7af464"><path d="M 16 3 L 62.59375 3 L 62.59375 34 L 16 34 Z M 16 3 " clip-rule="nonzero"/></clipPath><clipPath id="e79d799fb5"><path d="M 5 3 L 51.972656 3 L 51.972656 34 L 5 34 Z M 5 3 " clip-rule="nonzero"/></clipPath><clipPath id="a43f688a57"><rect x="0" width="34" y="0" height="19"/></clipPath></defs><g clip-path="url(#4ead7af464)"><path fill="#fbc34e" d="M 62.023438 11.605469 C 62.609375 8.25 59.523438 3.578125 51.121094 3.578125 L 30.246094 3.578125 C 24.523438 3.578125 20.933594 7.507812 20.296875 11.46875 L 16.0625 33.738281 C 19.78125 33.726562 44.285156 33.738281 44.234375 33.738281 L 45.824219 33.738281 C 54.601562 33.6875 59.652344 31.71875 60.574219 25.347656 C 61.1875 21.058594 57.421875 18.292969 54.347656 17.703125 C 57.457031 17.136719 61.238281 16.078125 62.023438 11.605469 Z M 62.023438 11.605469 " fill-opacity="1" fill-rule="nonzero"/></g><path fill="#ffffff" d="M 42.417969 12.910156 C 40.289062 15.609375 32.546875 24.96875 30.984375 26.746094 C 27.488281 30.726562 20.28125 30.132812 20.234375 30.03125 C 20.234375 30.027344 22.832031 17.734375 23.675781 14.269531 C 25.984375 4.847656 33.949219 7.078125 33.949219 7.078125 C 33.949219 7.078125 31.828125 7.382812 30.328125 9.296875 C 28.808594 11.234375 27.085938 20.679688 26.113281 25.09375 C 30.675781 19.753906 36.933594 12.871094 38 11.582031 C 42.546875 6.074219 49.671875 6.835938 49.671875 6.835938 C 49.671875 6.835938 46.898438 7.222656 42.417969 12.910156 Z M 42.417969 12.910156 " fill-opacity="1" fill-rule="nonzero"/><g clip-path="url(#e79d799fb5)"><path fill="#fbc34e" d="M 51.402344 11.605469 C 51.992188 8.25 48.90625 3.578125 40.503906 3.578125 L 19.625 3.578125 C 13.902344 3.578125 10.3125 7.507812 9.675781 11.46875 L 5.441406 33.738281 C 9.160156 33.726562 33.664062 33.738281 33.613281 33.738281 L 35.207031 33.738281 C 43.980469 33.6875 49.03125 31.71875 49.957031 25.347656 C 50.566406 21.058594 46.804688 18.292969 43.730469 17.703125 C 46.839844 17.136719 50.617188 16.078125 51.402344 11.605469 Z M 51.402344 11.605469 " fill-opacity="1" fill-rule="nonzero"/></g><path fill="#ffffff" d="M 31.796875 12.910156 C 29.667969 15.609375 21.929688 24.96875 20.363281 26.746094 C 16.871094 30.726562 9.664062 30.132812 9.613281 30.03125 C 9.613281 30.027344 12.210938 17.734375 13.054688 14.269531 C 15.363281 4.847656 23.328125 7.078125 23.328125 7.078125 C 23.328125 7.078125 21.207031 7.382812 19.707031 9.296875 C 18.1875 11.234375 16.464844 20.679688 15.492188 25.09375 C 20.054688 19.753906 26.3125 12.871094 27.378906 11.582031 C 31.925781 6.074219 39.050781 6.835938 39.050781 6.835938 C 39.050781 6.835938 36.277344 7.222656 31.796875 12.910156 Z M 31.796875 12.910156 " fill-opacity="1" fill-rule="nonzero"/><g transform="matrix(1, 0, 0, 1, 24, 16)"><g clip-path="url(#a43f688a57)"><g fill="#000000" fill-opacity="1"><g transform="translate(1.011368, 13.716282)"><g><path d="M 0.78125 -8.390625 L 4.15625 -8.390625 C 5.050781 -8.390625 5.738281 -8.171875 6.21875 -7.734375 C 6.695312 -7.304688 6.9375 -6.675781 6.9375 -5.84375 C 6.9375 -5.226562 6.769531 -4.707031 6.4375 -4.28125 C 6.113281 -3.851562 5.648438 -3.5625 5.046875 -3.40625 L 6.90625 0 L 5.625 0 L 3.84375 -3.3125 L 2 -3.3125 L 2 0 L 0.78125 0 Z M 3.953125 -4.34375 C 4.484375 -4.34375 4.90625 -4.46875 5.21875 -4.71875 C 5.539062 -4.96875 5.703125 -5.34375 5.703125 -5.84375 C 5.703125 -6.382812 5.546875 -6.769531 5.234375 -7 C 4.929688 -7.238281 4.503906 -7.359375 3.953125 -7.359375 L 2 -7.359375 L 2 -4.34375 Z M 3.953125 -4.34375 "/></g></g></g><g fill="#000000" fill-opacity="1"><g transform="translate(8.068473, 13.716282)"><g><path d="M 2.90625 -7.359375 L 0.296875 -7.359375 L 0.296875 -8.390625 L 6.75 -8.390625 L 6.75 -7.359375 L 4.140625 -7.359375 L 4.140625 0 L 2.90625 0 Z M 2.90625 -7.359375 "/></g></g></g><g fill="#000000" fill-opacity="1"><g transform="translate(15.113577, 13.716282)"><g><path d="M 0.78125 -8.390625 L 2 -8.390625 L 2 0 L 0.78125 0 Z M 2.0625 -4.265625 L 5.890625 -8.390625 L 7.375 -8.390625 L 3.546875 -4.265625 L 7.625 0 L 6.125 0 Z M 2.0625 -4.265625 "/></g></g></g><g fill="#000000" fill-opacity="1"><g transform="translate(23.154836, 13.716282)"><g><path d="M 0.78125 -8.390625 L 2 -8.390625 L 4.984375 -1.84375 L 7.984375 -8.390625 L 9.203125 -8.390625 L 9.203125 0 L 8.015625 0 L 8.015625 -5.96875 L 5.296875 0 L 4.6875 0 L 1.953125 -5.96875 L 1.953125 0 L 0.78125 0 Z M 0.78125 -8.390625 "/></g></g></g></g></g></svg>
+                <div>
+                    <!-- RİSK TASFİYE KOORDİNASYON MÜDÜRLÜĞÜ (Gündüz modunda otomatik beyazlanır) -->
+                    <h1 class="text-xl font-bold tracking-wide uppercase text-corp-black transition-colors duration-300">RİSK TASFİYE KOORDİNASYON MÜDÜRLÜĞÜ</h1>
+                </div>
+            </div>
+
+            <!-- STATİK BAŞLIK VE TEMA TOGGLE ALANI -->
+            <div class="flex items-center space-x-4">
+                <!-- Statik Başlık (Animasyonsuz) -->
+                <div class="text-center md:text-right w-full md:w-auto mt-4 md:mt-0">
+                    <div class="text-corp-yellow font-bold text-lg transition-colors duration-300">
+                        2025 Prim Ödüllü Takip Kampanyası
+                    </div>
+                    <div class="text-gray-300 font-medium text-lg transition-colors duration-300">
+                        01 Aralık 2025 – 31 Mart 2026
+                    </div>
+                </div>
+
+                <!-- YENİ TEMA TOGGLE BUTONU -->
+                <button id="themeToggle" onclick="toggleTheme()" class="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 shadow-md bg-gray-100">
+                    <!-- Başlangıçta Gündüz (Sun), CSS ile FULL BLACK yapılır -->
+                    <i id="themeIcon" class="fa-solid fa-sun transition-all duration-300"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- NAVIGATION TABS -->
+    <div class="bg-white shadow-md sticky top-0 z-50 transition-colors duration-300">
+        <div class="container mx-auto px-4">
+            <nav class="flex space-x-1 md:space-x-8 justify-center md:justify-start overflow-x-auto">
+                <button onclick="switchTab('detaylar')" id="btn-detaylar" class="tab-btn py-4 px-6 border-b-4 border-corp-yellow font-medium transition-colors text-corp-black">
+                    <i class="fa-solid fa-circle-info mr-2"></i>Kampanya Detayları
+                </button>
+                <button onclick="switchTab('sss')" id="btn-sss" class="tab-btn py-4 px-6 border-b-4 border-transparent text-gray-500 hover:text-corp-black font-medium transition-colors">
+                    <i class="fa-solid fa-circle-question mr-2"></i>Soru - Cevap Klavuzu
+                </button>
+                <button onclick="switchTab('hesaplama')" id="btn-hesaplama" class="tab-btn py-4 px-6 border-b-4 border-transparent text-gray-500 hover:text-corp-black font-medium transition-colors">
+                    <i class="fa-solid fa-calculator mr-2"></i>Prim Hesaplama
+                </button>
+            </nav>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-grow container mx-auto px-4 py-8">
+
+        <!-- TAB 1: DETAYLAR -->
+        <div id="detaylar" class="tab-content active">
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200 transition-colors duration-300">
+                <div class="bg-corp-black p-4 border-b border-corp-yellow text-white transition-colors duration-300">
+                    <h2 class="font-bold text-lg"><i class="fa-solid fa-list-check mr-2 text-corp-yellow"></i>Kampanya Koşulları ve Kapsam</h2>
+                </div>
+                
+                <div class="p-6 grid md:grid-cols-2 gap-8">
+                    <!-- Kapsam -->
+                    <div>
+                        <h3 class="font-bold text-md mb-3 border-b pb-2 text-corp-black">Kapsam ve Kriterler</h3>
+                        <ul class="space-y-3 text-sm text-gray-600">
+                            <li class="flex items-start"><i class="fa-solid fa-check text-green-500 mt-1 mr-2"></i> <span><strong>Tarih Aralığı:</strong> 01 Aralık 2025 – 31 Mart 2026</span></li>
+                            <li class="flex items-start"><i class="fa-solid fa-check text-green-500 mt-1 mr-2"></i> <span><strong>Takip Tarihi:</strong> 01.06.2025 ve öncesinde takibe intikal etmiş dosyalar.</span></li>
+                            <li class="flex items-start"><i class="fa-solid fa-check text-green-500 mt-1 mr-2"></i> <span><strong>Tahsilat Durumu:</strong> Son 6 ay içinde tahsilat sağlanmamış olmalı.</span></li>
+                            <li class="flex items-start"><i class="fa-solid fa-check text-green-500 mt-1 mr-2"></i> <span><strong>Bireysel Limit:</strong> Asıl Alacak + Masraf Bakiyesi &lt; 250.000 TL</span></li>
+                            <li class="flex items-start"><i class="fa-solid fa-check text-green-500 mt-1 mr-2"></i> <span><strong>Ticari Limit:</strong> Asıl Alacak + Masraf Bakiyesi &lt; 500.000 TL</span></li>
+                        </ul>
+                    </div>
+
+                    <!-- Ödül Sistemi -->
+                    <div>
+                        <h3 class="font-bold text-md mb-3 border-b pb-2 text-corp-black">Ödül ve Prim Sistemi</h3>
+                        <ul class="space-y-3 text-sm text-gray-600">
+                            <li class="flex items-start"><i class="fa-solid fa-star text-corp-yellow mt-1 mr-2"></i> <span><strong>Maksimum Havuz:</strong> Toplam vekalet ücretinin (KTVÜ) en fazla %50’si.</span></li>
+                            <li class="flex items-start"><i class="fa-solid fa-star text-corp-yellow mt-1 mr-2"></i> <span><strong>Kişi Başı Tavan:</strong> Bir müşteriden en fazla <strong>40.000 TL</strong> puan kazanılabilir.</span></li>
+                            <li class="flex items-start"><i class="fa-solid fa-star text-corp-yellow mt-1 mr-2"></i> <span><strong>Performans Şartı:</strong> Prim ödemesi için performans kotası aranmaz.</span></li>
+                            <li class="flex items-start"><i class="fa-solid fa-triangle-exclamation text-red-400 mt-1 mr-2"></i> <span>Avukat ve Genel Müdürlük tahsilatları kapsam dışıdır.</span></li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Faiz Tablosu Görselleştirme -->
+                <div class="bg-gray-50 p-6 border-t border-gray-200 transition-colors duration-300">
+                    <h3 class="font-bold text-md mb-4 text-center text-corp-black">Faiz Oranına Göre Prim Etkisi</h3>
+                    <div class="flex flex-col md:flex-row justify-center items-center gap-4">
+                        <div class="w-full md:w-1/3 bg-white p-4 rounded shadow border-l-4 border-red-500 transition-colors duration-300">
+                            <div class="text-xs font-bold text-gray-500 uppercase">Min. Prim</div>
+                            <div class="text-xl font-bold text-corp-black">%0 - %0.99 Faiz</div>
+                            <div class="text-sm text-gray-600 mt-1">Sabit %30 Prim Oranı</div>
+                        </div>
+                        <div class="hidden md:block text-gray-400"><i class="fa-solid fa-arrow-right"></i></div>
+                        <div class="w-full md:w-1/3 bg-white p-4 rounded shadow border-l-4 border-corp-yellow transition-colors duration-300">
+                            <div class="text-xs font-bold text-gray-500 uppercase">Değişken Prim</div>
+                            <div class="text-xl font-bold text-corp-black">%1 - %19.99 Faiz</div>
+                            <div class="text-sm text-gray-600 mt-1">%30'dan Maksimuma Artış</div>
+                        </div>
+                        <div class="hidden md:block text-gray-400"><i class="fa-solid fa-arrow-right"></i></div>
+                        <div class="w-full md:w-1/3 bg-white p-4 rounded shadow border-l-4 border-green-600 transition-colors duration-300">
+                            <div class="text-xs font-bold text-gray-500 uppercase">Maks. Prim</div>
+                            <div class="text-xl font-bold text-corp-black">%20+ Faiz</div>
+                            <div class="text-sm text-gray-600 mt-1">Dosya Yaşına Göre Max Oran</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: SORU - CEVAP KLAVUZU -->
+        <div id="sss" class="tab-content">
+            <div class="max-w-4xl mx-auto">
+                <h2 class="text-2xl font-bold text-corp-black mb-6 border-l-8 border-corp-yellow pl-4 transition-colors duration-300">Soru - Cevap Klavuzu</h2>
+                
+                <div class="space-y-3" id="faq-container">
+                    <!-- Javascript ile doldurulacak -->
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: HESAPLAMA ARACI -->
+        <div id="hesaplama" class="tab-content">
+            <div class="max-w-5xl mx-auto">
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col md:flex-row border border-gray-200 transition-colors duration-300">
+                    
+                    <!-- Form Alanı -->
+                    <div class="w-full md:w-5/12 p-6 bg-gray-50 border-r border-gray-200 transition-colors duration-300">
+                        <h2 class="text-xl font-bold text-corp-black mb-1">Tahmini Prim Hesaplama Modülü</h2>
+                        <p class="text-xs text-gray-500 mb-4">Hak Edeceğiniz Tahmini Primi Hesaplayın  </p>
+                        
+                        <form id="calcForm" onsubmit="calculatePremium(event)" class="space-y-4">
+                            
+                            <!-- Bakiye -->
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1 text-corp-black">Anapara + Masraf Bakiyesi (TL)</label>
+                                <input type="number" id="balance" required class="w-full p-2 text-sm border border-gray-300 rounded focus:border-corp-yellow focus:ring-1 focus:ring-corp-yellow transition" placeholder="Örn: 100000">
+                            </div>
+
+                            <!-- Dosya Yaşı -->
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1 text-corp-black">Dosya Yaşı (Takibe Aktarımdan Bugüne Kadar Geçen Süre)</label>
+                                <select id="fileAge" class="w-full p-2 text-sm border border-gray-300 rounded focus:border-corp-yellow bg-white">
+                                    <option value="5+">5+ Yıl</option> 
+                                    <option value="1-5">1 - 5 Yıl</option> 
+                                    <option value="0-1">0 - 1 Yıl</option>
+                                </select>
+                            </div>
+
+                            <!-- KTVÜ -->
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1 text-corp-black">Toplam Vekalet Ücreti (KTVÜ) (TL)</label>
+                                <input type="number" id="ktvu" required class="w-full p-2 text-sm border border-gray-300 rounded focus:border-corp-yellow transition" placeholder="Örn: 50000">
+                            </div>
+
+                            <!-- Faiz Oranı -->
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1 text-corp-black">Ödeme Planı Faiz Oranı (%)</label>
+                                <input type="number" id="interestRate" step="0.01" required class="w-full p-2 text-sm border border-gray-300 rounded focus:border-corp-yellow transition" placeholder="Örn: 10">
+                            </div>
+
+                            <!-- Tahsilat Tipi -->
+                            <div class="p-3 bg-white rounded border border-gray-200 transition-colors duration-300">
+                                <label class="block text-xs font-bold text-gray-700 mb-2 text-corp-black">Tahsilat Tipi</label>
+                                <div class="flex space-x-4 mb-2">
+                                    <label class="flex items-center space-x-2 cursor-pointer">
+                                        <input type="radio" name="paymentType" value="defaten" checked onchange="toggleInstallmentFields()" class="text-corp-yellow focus:ring-corp-black">
+                                        <span class="text-sm">Defaten Kapama</span>
+                                    </label>
+                                    <label class="flex items-center space-x-2 cursor-pointer">
+                                        <input type="radio" name="paymentType" value="taksitli" onchange="toggleInstallmentFields()" class="text-corp-yellow focus:ring-corp-black">
+                                        <span class="text-sm">Taksitli Ödeme</span>
+                                    </label>
+                                </div>
+
+                                <!-- Taksitli ise açılacak alanlar -->
+                                <div id="installmentFields" class="hidden space-y-3 border-t pt-2 mt-2">
+                                    <div class="bg-yellow-50 p-2 rounded border border-yellow-100 mb-2">
+                                        <p class="text-[10px] text-yellow-800 font-semibold"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Dikkat: Taksitli işlemlerde prim, toplam ödeme planı tutarına oranlanır.</p>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-gray-700 mb-1 text-corp-black">Ödeme Planı Toplam Tutarı (TL) <span class="text-red-500">*</span></label>
+                                        <input type="number" id="totalPlanAmount" class="w-full p-2 text-sm border border-gray-300 rounded bg-white" placeholder="Faiz Dahil Toplam Ödeme Planı Tutarı">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-gray-700 mb-1 text-corp-black">Peşinat Tutarı (TL)</label>
+                                        <input type="number" id="downPayment" class="w-full p-2 text-sm border border-gray-300 rounded" placeholder="İlk Taksit Tutarı">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-gray-700 mb-1 text-corp-black">Toplam Taksit Sayısı</label>
+                                        <input type="number" id="installmentCount" class="w-full p-2 text-sm border border-gray-300 rounded" placeholder="Örn: 12" max="12">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="w-full bg-corp-black text-white font-bold py-3 rounded hover:bg-gray-800 transition transform active:scale-95 shadow-lg flex justify-center items-center border border-gray-700">
+                                <i class="fa-solid fa-calculator mr-2 text-corp-yellow"></i> HESAPLA
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Sonuç Alanı -->
+                    <div class="w-full md:w-7/12 bg-corp-black text-white p-8 flex flex-col justify-center relative overflow-hidden transition-colors duration-300">
+                        <div class="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-corp-yellow rounded-full opacity-10"></div>
+                        <div class="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-corp-yellow rounded-full opacity-10"></div>
+
+                        <div id="resultContainer" class="hidden relative z-10">
+                            
+                            <!-- Üst Bilgi: Oranlar -->
+                            <div class="grid grid-cols-2 gap-4 mb-6 text-sm">
+                                <div class="bg-white/10 p-3 rounded">
+                                    <div class="text-gray-400 text-xs">Uygulanan Prim Oranı</div>
+                                    <div class="text-xl font-bold text-corp-yellow" id="resultRate">%0</div>
+                                </div>
+                                <div class="bg-white/10 p-3 rounded">
+                                    <div class="text-gray-400 text-xs">Hesaplanan Prim Havuzu (Limitsiz)</div>
+                                    <div class="text-xl font-bold text-white" id="uncappedTotal">0 TL</div>
+                                </div>
+                            </div>
+
+                            <!-- Ana Sonuçlar -->
+                            <div class="space-y-6">
+                                <div>
+                                    <h3 class="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">TOPLAM HAK EDİLECEK TAHMİNİ PRİM (LİMİTLİ)</h3>
+                                    <div class="text-4xl font-bold text-white tracking-tight" id="totalPremium">0 TL</div>
+                                    <div class="text-xs text-red-400 mt-1 hidden" id="capWarning"><i class="fa-solid fa-circle-exclamation mr-1"></i>40.000 TL Müşteri Başı Limiti Uygulandı</div>
+                                </div>
+
+                                <div id="installmentResultBox" class="hidden bg-corp-yellow/10 border border-corp-yellow/30 p-4 rounded-lg">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <span class="text-corp-yellow font-bold text-sm"><i class="fa-solid fa-money-bill-wave mr-2"></i>   TAHMİNİ PEŞİNAT PRİMİ</span>
+                                        <span class="text-2xl font-bold text-white" id="firstInstallmentPremium">0 TL</span>
+                                    </div>
+                                    <div class="text-xs text-gray-400 border-t border-gray-700 pt-2 flex justify-between">
+                                        <span>Kalan Taksit Başına Düşen Tahmini Prim:</span>
+                                        <span class="text-white" id="perInstallmentPremium">0 TL</span>
+                                    </div>
+                                    <div class="text-[10px] text-gray-500 mt-2 italic">
+                                        Hesaplama: (Limitli Toplam Prim) x (Peşinat / Toplam Plan Tutarı)
+                                    </div>
+                                </div>
+
+                                <div class="text-xs text-gray-500 italic mt-4">
+                                    * Hesaplama Ek-2'deki matrise dayanır. %0-%0.99 faiz %30'dan başlar, %20 faiz Maksimum Orana ulaşır.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="initialState" class="text-center text-gray-600 relative z-10">
+                            <i class="fa-solid fa-calculator text-6xl mb-4 opacity-20 text-white"></i>
+                            <p class="text-gray-400">Sonucu görmek için sol taraftaki formu doldurup "Hesapla" butonuna basınız.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-black text-gray-500 py-6 text-center text-sm mt-auto border-t border-gray-900">
+        <div class="container mx-auto">
+            <p>&copy; 2025 RİSK TASFİYE KOORDİNASYON MÜDÜRLÜĞÜ - Şube İçi Kullanım İçindir.</p>
+        </div>
+    </footer>
+
+    <!-- JAVASCRIPT KODLARI -->
+    <script>
+        // --- UI Yardımcıları ---
+        let isDarkMode = false; // Varsayılan: Gündüz Modu (false)
+
+        function toggleTheme() {
+            const body = document.body;
+            const icon = document.getElementById('themeIcon');
+            const toggleBtn = document.getElementById('themeToggle');
+            
+            isDarkMode = !isDarkMode; // Durumu değiştir
+            
+            if (isDarkMode) {
+                // GECE MODUNA GEÇ (Simsiyah Tema)
+                body.classList.remove('day-mode');
+                body.classList.add('dark-mode');
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+                toggleBtn.classList.add('bg-gray-700');
+                toggleBtn.classList.remove('bg-gray-100');
+            } else {
+                // GÜNDÜZ MODUNA GEÇ (Açık Tema, FULL SİYAH Başlık)
+                body.classList.remove('dark-mode');
+                body.classList.add('day-mode');
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+                toggleBtn.classList.add('bg-gray-100');
+                toggleBtn.classList.remove('bg-gray-700');
+            }
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('border-corp-yellow');
+                btn.classList.add('border-transparent', 'text-gray-500');
+                btn.classList.remove('text-corp-black', 'text-corp-yellow'); // Her şeyi sıfırla
+            });
+
+            document.getElementById(tabId).classList.add('active');
+            const activeBtn = document.getElementById('btn-' + tabId);
+            activeBtn.classList.remove('text-gray-500', 'border-transparent');
+            activeBtn.classList.add('border-corp-yellow');
+            
+            // Temaya göre metin rengini ayarla
+            if (document.body.classList.contains('dark-mode')) {
+                 activeBtn.classList.add('text-corp-yellow');
+            } else {
+                 activeBtn.classList.add('text-corp-black');
+            }
+        }
+
+        function toggleAnswer(answerId) {
+            const answer = document.getElementById(answerId);
+            const icon = document.getElementById('icon-' + answerId);
+            
+            if (answer.classList.contains('hidden') || !answer.classList.contains('open')) {
+                answer.classList.remove('hidden');
+                setTimeout(() => answer.classList.add('open'), 10);
+                icon.classList.remove('fa-plus');
+                icon.classList.add('fa-minus');
+            } else {
+                answer.classList.remove('open');
+                icon.classList.remove('fa-minus');
+                icon.classList.add('fa-plus');
+                setTimeout(() => answer.classList.add('hidden'), 300);
+            }
+        }
+
+const qaData = [
+    { q: "SORU 1: Kampanya hangi tarih aralığını kapsamaktadır?", a: "Kampanya <b>01 Aralık 2025 – 31 Mart 2026</b> tarihleri arasında geçerli olacaktır." },
+
+    { q: "SORU 2: Kampanyaya dahil müşteri kitlesine nereden ulaşabilirim?", a: "VIT’te yer alan \"<b>Kümelendirilmiş Takip Envanteri Ekranı</b>\" menüsü üzerinden “Dosya Kategori” sekmesindeki “<b>Prim Ödüllü Kampanya Bireysel - Prim Ödüllü Kampanya Ticari</b>” filtre seçeneklerini kullanarak şubeniz stoğunda bulunan kampanyaya dahil edilmiş ticari ve bireysel müşterilere ulaşabilirsiniz." },
+
+    { q: "SORU 3: Şubede müşteriler nasıl dağıtılacak, her müşteriye ödeme planı yapabilecek miyim?", a: "<p>Kampanya süreci içerisinde müşterilerin şube çalışanlarına dağıtımı ve tahsilat planlamasının <b>Şube yöneticileri</b> tarafından yapılması önerilmektedir.</p><p>Sistemsel yapı;<br><b>TPY-TPYY-KBP-PSY</b> rollerinin <b>ticari</b> müşteriler için,<br><b>BPY</b> rollerinin <b>bireysel</b> müşteriler için ve<br><b>MOBYP-MOBYB-MOBYM-OPK-MIS</b> rollerinin ise <b>hem ticari hem de bireysel</b> müşteriler için ödeme planı yapmasına imkan verecek şekilde oluşturulmuştur.</p>" },
+
+    { q: "SORU 4: Şube envanterimizdeki kampanyaya dahil müşteriler için primleri nereden görebilirim?", a: "<p>Kampanya dahilindeki bir müşterinin kredi risklerine sağlanacak tahsilat üzerinden dağıtım havuzuna aktarılabilecek azami prim tutarı o müşterinin <b>toplam vekalet ücretinin %50’sidir</b>.</p><p>Kümelendirilmiş takip envanterinin “<b>MÜŞTERİ TOPLAM KTVÜ</b>” başlıklı “<b>T</b>” sütununda müşterinin toplam vekalet ücretini görebilirsiniz. Bu tutarın yarısı bu müşteri için hesaplanacak <b>maksimum primi</b> ifade eder. Dosya bazlı ödeme planı yapılamayacağından dosyaların ayrı ayrı vekalet ücretlerinin bir önemi yoktur.</p><p>Müşterinin takipte geçirdiği süre ve uygulanacak faiz oranı, <b>minimum ve maksimum prim</b> hesaplanmasında kullanılan kıstaslardır.</p>" },
+
+    { q: "SORU 5: Müşterinin başka bir şube envanterinde de riski olduğu durumda ne yapabilirim?", a: "<p>Müşterilerin birden çok şubede riski/dosyası olabileceğinden, müşteri riskinin olduğu <b>her şube</b> müşteri ile görüşerek müşterinin tüm riskleri için (genel kural) <b>tek bir ödeme planı</b> yapabilir.</p><p>Örnek olarak; Aynı müşterinin A şubesinde 5.000,00-TL, B Şubesinde 50.000,00-TL, C şubesinde 60. 000,00-TL riski olduğu durumda her şube müşteri ile görüşerek 115.000 TL’lik bir ödeme planı yapabilir. Prim hesaplamasında müşterinin <b>toplam vekalet ücretinin</b> yarısı dikkate alınır.</p>" },
+
+    { q: "SORU 6: Her müşteri için nasıl daha yüksek prim kazanabilirim?", a: "<p>En yüksek primi kazanmak için:</p><p><b>Faiz Oranını Koruyun</b>: Mümkünse <b>%20 ve üzeri faizle</b> anlaşmaya çalışın (Çarpanı maksimize eder). Özellikle <b>eski dosyalarda</b> faiz oranını mümkün olduğunca yüksek tutmaya çalışın.<br><b>Eski Dosyalara Odaklanın</b>: <b>5+ yıllık</b> dosyaların çarpanı daha yüksektir.<br><b>Defaten kapama</b> yapmaya çalışın, defaten kapama yapılamıyor ise ödeme planında <b>ilk taksiti Yüksek Tutun</b>: İlk taksiti ne kadar yüksek alırsanız, ilk prim hesaplamasında o kadar yüksek oranda primi <b>erken</b> almış olursunuz.</p>" },
+
+    { q: "SORU 7: Ödeme planında prim nasıl oluşur ve hangi dönemde kazanılır?", a: "<p>Defaten (tek taksitli) ve çok taksitli ödeme planı girişi yapan <b>sicil işlemi gerçekleştiren çalışan</b> olarak tespit edilir.</p><p>Ödeme planı başarılı bir şekilde oluştuğunda prime hak kazanılması <b>ödeme planının taksitlerinin ödenmesine</b> bağlıdır. Bu sebeple tek seferde kapatılan risklerde taksit ödemesinin gelmesiyle birlikte primin <b>tamamı</b> oluşmuş olur. Çok taksitli ödeme planlarında ise her taksit <b>tam olarak ödendikçe</b> prime pey der pey hak kazanılır. Prim hesabı <b>taksit tutarı / ödeme planı tutarıdır</b>.</p>" },
+
+    { q: "SORU 8: Müşteri risklerine gelen her ödemede prime hak kazanılır mı?", a: "Ödeme planı yapıldı ise ödeme planının taksitlerinin tahsiline sebep olan <b>her ödeme</b> (icradan, triggerden, kredi kartından vs.) taksit ödemesini karşıladığı sürece taksit ödendiği için prime hak kazandırır." },
+
+    { q: "SORU 9: Ödeme planında ilk taksiti ne kadar süre sonraya verebilirim?", a: "<p>Ödeme planlarında ilk taksit tarihini <b>15 gün sonraya kadar</b> girebilirsiniz.<br>Tarihinde ödenmeyen ilk taksit, <b>5 gün</b> içerisinde ödeme planının iptaline sebep olur.<br>İlk taksitin tahsil olması için en fazla (<b>15+5=</b>)<b>20 günlük</b> bir süre tanınmıştır.<br>Müşteri ilk taksit ödenmediği için tekrar <b>kampanya kapsamına dahil edilir</b>.</p>" },
+
+    { q: "SORU 10: Ödeme planı yaptım, müşteri ilk taksiti ödedi sonrasında ödemedi ne olur?", a: "<p>Ödeme planında <b>1 ve daha fazla tam taksit</b> ödemesi gerçekleştiği durumda tahsil edilen taksit/ödeme planı toplam tutarı oranında <b>prim oluşur</b>. Yani ödeme planının tamamen kapanması beklenmez.</p><p>En az bir adet taksit tahsilatı yapılmış ödeme planlarında taksit ödemesi <b>40 gün</b> gecikirse ödeme planı iptal olur. <b>Tahsilat sağlandığı için</b> müşteri iptalin ardından tekrar kampanya kapsamına <b>dahil edilmez</b>.</p>" },
+
+    { q: "SORU 11: Ödeme planını sisteme girerken nelere dikkat etmeliyim?", a: "<p>VIT uygulamasında ödeme planını sisteme tanımlarken mutlaka:</p><p><b>Prim Ödüllü Takip Kampanyası 2025 Bireysel Faiz İndirimli Defaten</b><br><b>Prim Ödüllü Takip Kampanyası 2025 Bireysel Faiz İndirimli Taksitli</b><br><b>Prim Ödüllü Takip Kampanyası 2025 Bireysel Faiz İndirimsiz Defaten</b><br><b>Prim Ödüllü Takip Kampanyası 2025 Bireysel Faiz İndirimsiz Taksitli</b><br><b>Prim Ödüllü Takip Kampanyası 2025 Ticari Faiz İndirimli Defaten</b><br><b>Prim Ödüllü Takip Kampanyası 2025 Ticari Faiz İndirimli Taksitli</b><br><b>Prim Ödüllü Takip Kampanyası 2025 Ticari Faiz İndirimsiz Defaten</b><br><b>Prim Ödüllü Takip Kampanyası 2025 Ticari Faiz İndirimsiz Taksitli</b></p><p>seçeneklerinden birini seçmelisiniz. Sistemsel girişi yukarıda sayılan 8 adet seçenek dışında yapılan ödeme planlarından sağlanan tahsilatlar için <b>kesinlikle prim ödenmeyecektir</b>.</p>" },
+
+    { q: "SORU 12: Hangi tahsilat yöntemleri kabul edilir?", a: "Ödeme planına Şubeden nakit, Şube takip hesabına havale, mobil ödeme veya VakıfPayS üzerinden kredi kartı ile ödeme gibi <b>her türlü tahsilat kanalı</b> kabul edilecektir." },
+
+    { q: "SORU 13: Müşterinin bütün takip dosyalarına ödeme planı yapılması gerekiyor mu?", a: "<b>Evet</b>. Müşterinin takip hesaplarında izlenen <b>bütün dosyalarına</b> kampanya üzerinden <b>tek bir ödeme planı</b> yapılmalıdır.<p>Örneğin; 3 adet takip dosyası olan bir müşterinin sadece 2 dosyası ödeme planına bağlanıp diğer dosya ödeme planına bağlanmazsa kampanyadan <b>prim hak edilemez</b>.</p>" },
+
+    { q: "SORU 14: Kampanyaya dahil müşteriye sunabileceğim asgari faiz oranı ve azami vade nedir?", a: "<p>Risklerin tasfiyesi için uygulanabilecek <b>asgari faiz oranı %0 (SIFIR)</b> olup, daha yüksek faiz oranlarıyla risklerin tasfiye edilmesine çalışılması, Bankamız faiz gelirini ve karlılığını ve dolayısıyla dağıtılacak prim tutarını arttıracaktır.</p><p>Kampanya döneminde <b>en fazla 12 taksit</b> yapılabilecektir.</p>" },
+
+    { q: "SORU 15: Kampanyaya dahil müşteriye “baştan ödemesiz dönem” veya “ara ödemesiz dönem” verilebilir mi?", a: "<b>Hayır</b>. Verilemez." },
+
+    { q: "SORU 16: Kampanyaya dahil müşteriye balon ödeme veya esnek taksit imkanı verilebilir mi?", a: "<b>Hayır</b>. İlk taksit haricinde verilemez." },
+
+    { q: "SORU 17: Kampanyaya dahil ödeme plan taksitleri eşit olmak zorunda mıdır?", a: "<p><b>Evet</b>. Ancak peşin alınacak olan <b>ilk taksit tutarı değiştirilebilir</b>. İlk taksit haricindeki tüm diğer taksitler birbirine <b>eşit olmak zorundadır</b>.</p><p>İlk taksit tutarı eşit taksit tutarlarının <b>altında olamaz</b>, üzerinde olabilir. İlk taksit tutarının yüksek olması, Bankamız menfaatine olacağından ilk taksit tutarları için müşterilerimizle mümkün olan en yüksek meblağ üzerinde mutabakata varılması beklenmektedir.</p>" },
+
+    { q: "SORU 18: Kampanya kriterlerini karşılayan ve halihazırda ödeme planına bağlı riskleri tekrar ödeme planına bağlayarak prim kazanabilir miyim?", a: "<p>Tek bir takip dosyası bile <b>halihazırda ödeme planına bağlı</b> olan müşteriler <b>kampanya kapsamı dışındadır</b>.</p><p>Kampanyanın başlangıç tarihinden sonra, Genelgenin yayım tarihi öncesinde girişi yapılmış ödeme planlarının iptal edilerek kampanya girişi yapılması halinde personele <b>prim ödemesi yapılmayacaktır</b>.</p>" },
+
+    { q: "SORU 19: Hatalı giriş yaptım veya müşteri ödemedi, planı iptal edip tekrar girebilir miyim?", a: "Eğer ödeme planına <b>hiç tahsilat olmadıysa</b> plan iptal edilip tekrar kampanya kapsamında giriş yapılabilir. Ancak, <b>tahsilat olduktan sonra</b> plan iptal edilirse, o müşteri için tekrar kampanya tipi ödeme planı seçilemez ve dosya kampanya kapsamından çıkar." },
+
+    { q: "SORU 20: Hak edilen prim ödemeleri ne zaman yapılacak?", a: "İlk ödemeler <b>2026 Şubat</b> ayı içerisinde ve son ödeme <b>2027 Mart</b> ayı içerisinde (prim bakiyesinin kesinleşmesinden sonra) yapılacaktır." },
+
+    { q: "SORU 21: Prim tutarı neye göre hesaplanıyor?", a: "<p>Prim, dosyadaki <b>toplam vekalet ücretinin (KTVÜ) en fazla %50'si</b> üzerinden hesaplanır.</p><p>Bu %50’lik oran;<br>* Dosyanın <b>yaşına</b>, (Eski dosyalardan sağlanan tahsilatın prim ödülü daha yüksektir.)<br>* <b>Defaten Kapama</b> ya da <b>taksitli ödeme planına bağlama durumuna</b> (Defaten kapama ile veya az taksitli yapılan ödeme planlarında, primlere daha erken hak kazanılır.)<br>* Dosyanın grubuna ve uygulanan <b>faiz oranına</b> (Daha yüksek faiz oranı üzerinden sağlanan tahsilatın prim ödülü daha yüksektir.) göre değişkenlik gösterir.</p><p>Prim dağıtımı, 2025/15 Sayılı Genelge’de belirtildiği gibi gerçekleştirilecektir. Detay bilgilere buradan ulaşılabilir.</p>" },
+
+    { q: "SORU 22: Taksitli işlemlerde primi ne zaman alırım?", a: "İlk taksit (<b>peşinat</b>) ödendiğinde, peşinatın taksit tutarı toplamına oranı kadar primi <b>hemen izleyen ödeme döneminde</b> alırsınız. Bakiye prim, kalan taksit sayısına bölünür ve <b>her taksit tahsil edildikçe</b> ilgili ödeme dönemlerinde parça parça ödenir." },
+
+    { q: "SORU 23: Kısmi ödeme yapan müşteriden prim alabilir miyim?", a: "<b>Hayır</b>. Bir taksit tutarı <b>tamamen tahsil edilmeden</b> o taksite ilişkin prim hak edilemez. Kısmi tahsilatlar prim hesabına dahil edilmez." }
+];
+
+        function renderFAQ() {
+            const container = document.getElementById('faq-container');
+            let html = '';
+            qaData.forEach((item, index) => {
+                // Markdown'dan HTML'e çeviri fonksiyonu (Basit Bold)
+                const formatText = (text) => {
+                    return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                };
+                
+                html += `
+                <div class="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition">
+                    <button onclick="toggleAnswer('q${index}')" class="w-full text-left p-4 font-semibold text-corp-black hover:bg-gray-50 transition flex justify-between items-center">
+                        <span class="pr-4">${item.q}</span>
+                        <i id="icon-q${index}" class="fa-solid fa-plus text-xs text-corp-yellow p-2 bg-corp-black rounded-full rotate-icon flex-shrink-0"></i>
+                    </button>
+                    <div id="q${index}" class="accordion-content hidden bg-gray-50 border-t border-gray-100">
+                        <div class="p-5 text-sm text-gray-700 leading-relaxed">
+                            ${formatText(item.a)}
+                        </div>
+                    </div>
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        // --- HESAPLAMA MANTIĞI (TAM REVİZE EDİLMİŞ VERSİYON) ---
+        function toggleInstallmentFields() {
+            const type = document.querySelector('input[name="paymentType"]:checked').value;
+            const fields = document.getElementById('installmentFields');
+            const resultBox = document.getElementById('installmentResultBox');
+            
+            if (type === 'taksitli') {
+                fields.classList.remove('hidden');
+                resultBox.classList.remove('hidden');
+                document.getElementById('totalPlanAmount').setAttribute('required', 'true');
+            } else {
+                fields.classList.add('hidden');
+                resultBox.classList.add('hidden');
+                document.getElementById('totalPlanAmount').removeAttribute('required');
+            }
+        }
+
+        function calculatePremium(e) {
+            e.preventDefault();
+
+            // 1. GİRDİLERİ AL
+            const balance = parseFloat(document.getElementById('balance').value);
+            const age = document.getElementById('fileAge').value;
+            const ktvu = parseFloat(document.getElementById('ktvu').value);
+            const interest = parseFloat(document.getElementById('interestRate').value);
+            const paymentType = document.querySelector('input[name="paymentType"]:checked').value;
+            
+            // 2. KATSAYI BELİRLEME (EK-2 MATRİSİ) - Kılavuzdaki örneklerle uyumlu katsayı varsayımı
+            let maxRate = 0;
+
+            if (age === '5+') {
+                if(balance < 100000) maxRate = 46;       
+                else if(balance < 200000) maxRate = 48;  
+                else maxRate = 50;                       
+            } else if (age === '1-5') {
+                if(balance < 100000) maxRate = 41;       
+                else if(balance < 200000) maxRate = 43;  
+                else maxRate = 45;                       
+            } else { // 0-1 Yıl
+                if(balance < 100000) maxRate = 36;
+                else if(balance < 200000) maxRate = 38;
+                else maxRate = 40;
+            }
+
+            // 3. FAİZ ORANINA GÖRE NİHAİ ORAN İNTERPOLASYONU
+            // Formül: 30 + (Faiz/20 * (Max - 30))
+            
+            let finalRate = 0;
+            if (interest < 0.01) { // %0 kabulü
+                finalRate = 30;
+            } else if (interest >= 20) {
+                finalRate = maxRate;
+            } else {
+                // %0'dan %20'ye lineer artış
+                finalRate = 30 + ((interest / 20) * (maxRate - 30));
+            }
+
+            // 4. TOPLAM POTANSİYEL PRİM HESABI (KTVÜ Üzerinden)
+            let totalPotentialPremium = ktvu * (finalRate / 100);
+
+            // 5. LİMİT KONTROLÜ (40.000 TL)
+            const CAP_AMOUNT = 40000;
+            let cappedPremium = totalPotentialPremium;
+            let isCapped = false;
+            
+            if (totalPotentialPremium > CAP_AMOUNT) {
+                cappedPremium = CAP_AMOUNT;
+                isCapped = true;
+            }
+
+            // 6. TAKSİT DAĞITIM HESABI (PEŞİNAT ORANI)
+            let firstInstallmentPremium = cappedPremium; // Defaten ise hepsi
+            let perRemainingInstallment = 0;
+
+            if (paymentType === 'taksitli') {
+                const totalPlanAmount = parseFloat(document.getElementById('totalPlanAmount').value);
+                const downPayment = parseFloat(document.getElementById('downPayment').value) || 0;
+                const installments = parseInt(document.getElementById('installmentCount').value) || 1;
+                
+                if(totalPlanAmount > 0) {
+                    const ratio = downPayment / totalPlanAmount;
+                    firstInstallmentPremium = cappedPremium * ratio;
+                } else {
+                    firstInstallmentPremium = 0;
+                }
+                
+                const remainingPremium = cappedPremium - firstInstallmentPremium;
+                const remainingInstallments = installments - 1;
+
+                if (remainingInstallments > 0) {
+                    perRemainingInstallment = remainingPremium / remainingInstallments;
+                } else {
+                    // Tek taksit (Peşinat = Plan Tutarı) veya hatalı giriş
+                    perRemainingInstallment = 0;
+                }
+            }
+
+            // 7. SONUÇLARI EKRANA YAZ
+            document.getElementById('initialState').classList.add('hidden');
+            document.getElementById('resultContainer').classList.remove('hidden');
+            
+            const formatter = new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' });
+
+            document.getElementById('resultRate').innerText = `%${finalRate.toFixed(2)}`;
+            document.getElementById('uncappedTotal').innerText = formatter.format(totalPotentialPremium);
+            document.getElementById('totalPremium').innerText = formatter.format(cappedPremium);
+            
+            // Limit Uyarısı
+            if(isCapped) document.getElementById('capWarning').classList.remove('hidden');
+            else document.getElementById('capWarning').classList.add('hidden');
+
+            // Taksit Detayları
+            if (paymentType === 'taksitli') {
+                document.getElementById('installmentResultBox').classList.remove('hidden');
+                document.getElementById('firstInstallmentPremium').innerText = formatter.format(firstInstallmentPremium);
+                document.getElementById('perInstallmentPremium').innerText = formatter.format(perRemainingInstallment);
+            } else {
+                document.getElementById('installmentResultBox').classList.add('hidden');
+            }
+        }
+
+        window.onload = function() {
+            renderFAQ();
+            switchTab('detaylar');
+        };
+    </script>
+</body>
+</html>

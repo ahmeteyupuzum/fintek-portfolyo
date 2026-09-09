@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kurumsal CV Hazırlama Aracı</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <style>
+        :root {
+            --lh-yellow: #FFB81C;
+            --lh-black: #05164d;
+            --lh-dark: #000000;
+            --white: #ffffff;
+            --border-color: #dcdcdc;
+            --placeholder-color: #999;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: #eaeff2;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            line-height: 1.3;
+            font-size: 13px;
+        }
+
+        .app-header {
+            background-color: var(--lh-dark);
+            color: var(--white);
+            padding: 0.8rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 4px solid var(--lh-yellow);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        /* DEĞİŞİKLİK YAPILAN BÖLÜM BAŞLANGICI */
+        .app-title {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .app-title svg {
+            height: 45px;
+            width: auto;
+            display: block;
+        }
+
+        .app-title h1 { 
+            margin: 0; 
+            font-size: 1.3rem; 
+            font-weight: 700; 
+            letter-spacing: 0.5px; 
+            white-space: nowrap;
+        }
+
+        .app-title small { 
+            opacity: 0.8; 
+            font-size: 0.8rem; 
+            font-weight: 300; 
+            display: block; 
+        }
+        /* DEĞİŞİKLİK YAPILAN BÖLÜM SONU */
+
+        .btn {
+            border: none;
+            padding: 6px 14px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.75rem;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            background-color: var(--lh-yellow);
+            color: var(--lh-dark);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        
+        .btn:hover {
+            background-color: var(--lh-dark);
+            color: var(--lh-yellow);
+            transform: translateY(-1px);
+        }
+
+        .btn-success { background-color: #27ae60; color: white; }
+        .btn-success:hover { background-color: #1e8449; color: white; }
+        
+        .btn-danger { 
+            background-color: #d9534f; 
+            color: white; 
+            padding: 3px 6px; 
+            font-size: 0.7rem; 
+            border-radius: 2px;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-danger:hover { background-color: #c9302c; color: white; }
+
+        .btn-ghost { 
+            background-color: var(--lh-yellow); 
+            color: var(--lh-dark); 
+            border: 1px solid var(--lh-yellow); 
+            width: 100%; 
+            justify-content: center; 
+            margin-top: 8px;
+            padding: 5px;
+            font-size: 0.75rem;
+        }
+        .btn-ghost:hover { 
+            background-color: var(--lh-dark); 
+            color: var(--lh-yellow); 
+            border-color: var(--lh-dark);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 0 15px 40px 15px;
+        }
+
+        .card {
+            background: var(--white);
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            padding: 15px;
+            margin-bottom: 15px;
+            border-top: 3px solid transparent;
+        }
+        .card-cv { border-top-color: var(--lh-yellow); }
+
+        .card-header {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--lh-dark);
+        }
+        .card-header i { 
+            font-size: 1rem; 
+            color: var(--lh-yellow); 
+            background: var(--lh-dark); 
+            padding: 4px; 
+            border-radius: 50%; 
+            width: 20px; 
+            height: 20px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+        }
+        .card-header h3 { margin: 0; font-size: 1rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .form-group { margin-bottom: 8px; }
+        .form-group label {
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: #666;
+            margin-bottom: 3px;
+            text-transform: uppercase;
+            display: block;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 4px 6px;
+            border: 1px solid var(--border-color);
+            border-radius: 2px;
+            font-size: 0.85rem;
+            background-color: #fafafa;
+            color: #000;
+            font-weight: 500;
+            box-sizing: border-box;
+            height: auto; 
+            min-height: 28px;
+            resize: vertical;
+            overflow: hidden;
+            font-family: inherit;
+            line-height: 1.2;
+        }
+        
+        .form-control.is-placeholder {
+            color: var(--placeholder-color);
+            font-style: italic;
+        }
+
+        .form-control:focus {
+            border-color: var(--lh-yellow);
+            background-color: #fff;
+            outline: none;
+            box-shadow: 0 0 0 1px var(--lh-yellow);
+        }
+
+        textarea.form-control {
+            min-height: 28px;
+            display: block;
+        }
+
+        .table-responsive { overflow-x: auto; overflow-y: visible; }
+        .styled-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 0.85rem;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            table-layout: fixed; 
+        }
+        .styled-table th {
+            background-color: var(--lh-dark);
+            color: var(--white);
+            font-weight: 600;
+            text-align: left;
+            padding: 6px 8px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            word-wrap: break-word;
+            vertical-align: middle;
+        }
+        .styled-table td {
+            padding: 4px 6px;
+            border-bottom: 1px solid #eee;
+            vertical-align: top;
+            word-wrap: break-word;
+        }
+        .styled-table tr:last-child td { border-bottom: none; }
+        
+        .row-action-cell { width: 35px; text-align: center; vertical-align: middle !important; }
+
+        .photo-upload-section {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 15px;
+            align-items: flex-start;
+        }
+        
+        .photo-preview-container {
+            width: 130px;
+            height: 160px;
+            border: 2px dashed var(--lh-yellow);
+            background-color: #f9f9f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            border-radius: 3px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .photo-preview-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+
+        .photo-placeholder {
+            text-align: center;
+            color: #999;
+            font-size: 0.75rem;
+            padding: 5px;
+        }
+
+        .photo-placeholder i {
+            font-size: 1.5rem;
+            margin-bottom: 4px;
+            display: block;
+            color: var(--lh-yellow);
+        }
+
+        #photoInput { display: none; }
+
+        .cv-details-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        @media print {
+            body { background: white; font-size: 10px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .app-header, .btn, .row-action-cell, .btn-ghost, .photo-placeholder, .no-print { display: none !important; }
+            .container { max-width: 100%; padding: 0; margin: 0; box-shadow: none; width: 100%; }
+            .card { box-shadow: none; border: none; padding: 0; margin-bottom: 12px; page-break-inside: avoid; border-top: none; }
+            .card-header { border-bottom: 1px solid #000; margin-bottom: 6px; padding-bottom: 3px; color: #000; }
+            .card-header i { display: none; }
+            .card-header h3 { font-size: 9pt; color: #000; font-weight: bold; }
+            
+            .form-control, select, textarea { 
+                border: none; background: transparent; padding: 0; height: auto; 
+                font-size: 8.5pt; resize: none; color: #000; margin: 0; line-height: 1.2;
+            }
+            
+            .form-control.is-placeholder {
+                color: transparent !important;
+            }
+            
+            .styled-table { border: 1px solid #000; width: 100%; }
+            .styled-table th { 
+                background-color: #f5f5f5 !important; color: #000; border: 1px solid #000; 
+                font-size: 8pt; padding: 3px 4px; font-weight: bold; text-transform: uppercase;
+            }
+            .styled-table td { 
+                border: 1px solid #000; font-size: 8.5pt; padding: 3px 4px; 
+                white-space: pre-wrap; vertical-align: top;
+            }
+            
+            .styled-table tr.hidden-row { display: none !important; }
+            
+            .photo-preview-container {
+                border: 1px solid #000; background: white; width: 110px; height: 140px; margin-bottom: 5px;
+            }
+            .photo-preview-container img { display: block !important; }
+            
+            @page { margin: 1cm; }
+        }
+    </style>
+</head>
+<body>
+
+<header class="app-header">
+    <div class="app-title">
+        <!-- Logo SVG -->
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" height="45" width="45"><defs><clipPath id="7590b00e14"><path d="M 1 8.074219 L 47.507812 8.074219 L 47.507812 38.929688 L 1 38.929688 Z M 1 8.074219 " clip-rule="nonzero"></path></clipPath></defs><g clip-path="url(#7590b00e14)"><path fill="#fbc34e" d="M 46.933594 16.664062 C 47.515625 13.335938 44.453125 8.699219 36.109375 8.699219 L 15.382812 8.699219 C 9.703125 8.699219 6.140625 12.597656 5.507812 16.527344 L 1.304688 38.636719 C 4.996094 38.625 29.320312 38.636719 29.269531 38.636719 L 30.851562 38.636719 C 39.5625 38.585938 44.578125 36.628906 45.496094 30.304688 C 46.101562 26.050781 42.367188 23.300781 39.3125 22.71875 C 42.402344 22.15625 46.152344 21.105469 46.933594 16.664062 Z M 46.933594 16.664062 " fill-opacity="1" fill-rule="nonzero"></path></g><path fill="#ffffff" d="M 27.46875 17.960938 C 25.355469 20.640625 17.671875 29.933594 16.117188 31.695312 C 12.648438 35.644531 5.492188 35.054688 5.445312 34.957031 C 5.445312 34.953125 8.023438 22.75 8.859375 19.308594 C 11.152344 9.957031 19.0625 12.171875 19.0625 12.171875 C 19.0625 12.171875 16.953125 12.472656 15.464844 14.371094 C 13.957031 16.296875 12.246094 25.671875 11.28125 30.054688 C 15.8125 24.753906 22.023438 17.921875 23.082031 16.640625 C 27.597656 11.175781 34.667969 11.929688 34.667969 11.929688 31.914062 12.3125 27.46875 17.960938 Z M 27.46875 17.960938 " fill-opacity="1" fill-rule="nonzero"></path></svg>
+        
+        <div>
+            <h1>KREDİ RİSK TASFİYE BAŞKANLIĞI</h1>
+            <small>Risk Tasfiye Koordinasyon Müdürlüğü</small>
+        </div>
+    </div>
+    <div class="action-bar">
+        <button class="btn btn-primary" onclick="window.print()"><i class="fas fa-print"></i> Yazdır</button>
+        <button class="btn btn-success" onclick="exportToPDF()"><i class="fas fa-file-pdf"></i> PDF Kaydet</button>
+    </div>
+</header>
+
+<div class="container" id="formContent">
+
+    <div class="card card-cv">
+        <div class="card-header"><i class="fas fa-user-circle"></i><h3>Kişisel Bilgiler</h3></div>
+        
+        <div class="photo-upload-section">
+            <div class="photo-preview-container" onclick="document.getElementById('photoInput').click()">
+                <div class="photo-placeholder" id="photoPlaceholder">
+                    <i class="fas fa-camera"></i>
+                    <span>Fotoğraf Yükle</span>
+                </div>
+                <img id="photoPreview" src="" alt="CV Fotoğrafı">
+            </div>
+            <input type="file" id="photoInput" accept="image/*" onchange="loadPhoto(event)">
+
+            <div class="cv-details-grid">
+                <div class="form-group">
+                    <label>Adı Soyadı</label>
+                    <input type="text" class="form-control" data-hint="Adınız Soyadınız">
+                </div>
+                <div class="form-group">
+                    <label>Unvan / Pozisyon</label>
+                    <input type="text" class="form-control" data-hint="Örn: Kıdemli Uzman">
+                </div>
+                <div class="form-group">
+                    <label>Doğum Tarihi</label>
+                    <input type="date" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Doğum Yeri</label>
+                    <input type="text" class="form-control" data-hint="Şehir / Ülke">
+                </div>
+                <div class="form-group">
+                    <label>Medeni Hal</label>
+                    <select class="form-control">
+                        <option value="">Seçiniz</option>
+                        <option value="Bekar">Bekar</option>
+                        <option value="Evli">Evli</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Telefon</label>
+                    <input type="text" class="form-control" data-hint="0 (5XX) XXX XX XX">
+                </div>
+                <div class="form-group">
+                    <label>E-Posta</label>
+                    <input type="email" class="form-control" data-hint="email@vakifbank.com.tr">
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Açık Adres</label>
+            <textarea class="form-control" rows="2" data-hint="Tam adres bilgisi..."></textarea>
+        </div>
+        
+        <div class="form-group">
+            <label>Hakkımda / Özet</label>
+            <textarea class="form-control" rows="3" data-hint="Kariyer hedefleriniz ve yetkinlikleriniz hakkında kısa bir özet..."></textarea>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header"><i class="fas fa-building"></i><h3>Banka İçi Görev Yerleri</h3></div>
+        <div class="table-responsive">
+            <table class="styled-table" id="tableBankExperience">
+                <thead>
+                    <tr>
+                        <th width="35%">Birim / Şube</th>
+                        <th width="20%">Ünvan</th>
+                        <th width="10%">Başlangıç</th>
+                        <th width="10%">Bitiş</th>
+                        <th width="25%">Görev Tanımı</th>
+                        <th class="row-action-cell"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><textarea class="form-control" rows="1" data-hint="Örn: Genel Müdürlük"></textarea></td>
+                        <td><input type="text" class="form-control" data-hint="Pozisyon"></td>
+                        <td><input type="number" class="form-control" data-hint="Yıl"></td>
+                        <td><input type="number" class="form-control" data-hint="Yıl"></td>
+                        <td><textarea class="form-control" rows="1" data-hint="Yapılan işler..."></textarea></td>
+                        <td class="row-action-cell"><button class="btn btn-danger" onclick="removeRow(this)"><i class="fas fa-trash"></i></button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <button class="btn btn-ghost" onclick="addRow('tableBankExperience')">+ Görev Yeri Ekle</button>
+    </div>
+
+    <div class="card">
+        <div class="card-header"><i class="fas fa-briefcase"></i><h3>İş Deneyimi</h3></div>
+        <div class="table-responsive">
+            <table class="styled-table" id="tableExperience">
+                <thead>
+                    <tr>
+                        <th width="35%">Şirket Adı</th>
+                        <th width="20%">Ünvan</th>
+                        <th width="10%">Başlangıç</th>
+                        <th width="10%">Bitiş</th>
+                        <th width="30%">Görev Tanımı</th>
+                        <th class="row-action-cell"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><textarea class="form-control" rows="1" data-hint="Şirket Adı"></textarea></td>
+                        <td><input type="text" class="form-control" data-hint="Ünvan"></td>
+                        <td><input type="number" class="form-control" data-hint="Yıl"></td>
+                        <td><input type="number" class="form-control" data-hint="Yıl"></td>
+                        <td><textarea class="form-control" rows="1" data-hint="Yapılan işler..."></textarea></td>
+                        <td class="row-action-cell"><button class="btn btn-danger" onclick="removeRow(this)"><i class="fas fa-trash"></i></button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <button class="btn btn-ghost" onclick="addRow('tableExperience')">+ Deneyim Ekle</button>
+    </div>
+
+    <div class="card">
+        <div class="card-header"><i class="fas fa-graduation-cap"></i><h3>Eğitim Bilgileri</h3></div>
+        <div class="table-responsive">
+            <table class="styled-table" id="tableEducation">
+                <thead>
+                    <tr>
+                        <th width="40%">Okul / Üniversite</th>
+                        <th width="25%">Bölüm</th>
+                        <th width="20%">Derece</th>
+                        <th width="15%">Mez. Yılı</th>
+                        <th class="row-action-cell"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><textarea class="form-control" rows="1" data-hint="Üniversite Adı"></textarea></td>
+                        <td><input type="text" class="form-control" data-hint="Bölüm"></td>
+                        <td><input type="text" class="form-control" data-hint="Lisans/YL/Doktora"></td>
+                        <td><input type="number" class="form-control" data-hint="Yıl"></td>
+                        <td class="row-action-cell"><button class="btn btn-danger" onclick="removeRow(this)"><i class="fas fa-trash"></i></button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <button class="btn btn-ghost" onclick="addRow('tableEducation')">+ Eğitim Ekle</button>
+    </div>
+
+    <div class="card">
+        <div class="card-header"><i class="fas fa-tools"></i><h3>Yetenekler ve Sertifikalar</h3></div>
+        <div class="table-responsive">
+            <table class="styled-table" id="tableSkills">
+                <thead>
+                    <tr>
+                        <th width="40%">Yetenek / Sertifika Adı</th>
+                        <th width="40%">Kurum</th>
+                        <th width="20%">Yıl</th>
+                        <th class="row-action-cell"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><input type="text" class="form-control" data-hint="Örn: İleri Excel"></td>
+                        <td><input type="text" class="form-control" data-hint="SPK"></td>
+                        <td><input type="number" class="form-control" data-hint="Yıl"></td>
+                        <td class="row-action-cell"><button class="btn btn-danger" onclick="removeRow(this)"><i class="fas fa-trash"></i></button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <button class="btn btn-ghost" onclick="addRow('tableSkills')">+ Yetenek Ekle</button>
+    </div>
+
+    <div class="card">
+        <div class="card-header"><i class="fas fa-language"></i><h3>Yabancı Diller</h3></div>
+        <div class="table-responsive">
+            <table class="styled-table" id="tableLanguages">
+                <thead>
+                    <tr>
+                        <th width="25%">Dil</th>
+                        <th width="25%">Puan</th>
+                        <th width="25%">Kurum</th>
+                        <th width="15%">Yıl</th>
+                        <th class="row-action-cell"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><input type="text" class="form-control" data-hint="İngilizce"></td>
+                        <td><input type="text" class="form-control" data-hint="Örn: 90"></td>
+                        <td><input type="text" class="form-control" data-hint="Örn: YDS"></td>
+                        <td><input type="number" class="form-control" data-hint="Yıl"></td>
+                        <td class="row-action-cell"><button class="btn btn-danger" onclick="removeRow(this)"><i class="fas fa-trash"></i></button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <button class="btn btn-ghost" onclick="addRow('tableLanguages')">+ Dil Ekle</button>
+    </div>
+
+<script>
+    // İPUCU YÖNETİMİ (Placeholder yerine dinamik metin)
+    document.addEventListener('DOMContentLoaded', () => {
+        const inputs = document.querySelectorAll('.form-control[data-hint]');
+        
+        inputs.forEach(input => {
+            const hint = input.getAttribute('data-hint');
+            
+            // Sayfa yüklenince ipucunu göster
+            if (!input.value) {
+                input.value = hint;
+                input.classList.add('is-placeholder');
+            }
+
+            // Tıklayınca (Focus) ipucunu sil
+            input.addEventListener('focus', () => {
+                if (input.classList.contains('is-placeholder')) {
+                    input.value = '';
+                    input.classList.remove('is-placeholder');
+                }
+            });
+
+            // Çıkınca (Blur) boşsa ipucunu geri koy
+            input.addEventListener('blur', () => {
+                if (!input.value.trim()) {
+                    input.value = hint;
+                    input.classList.add('is-placeholder');
+                }
+            });
+        });
+    });
+
+    function loadPhoto(event) {
+        const input = event.target;
+        const preview = document.getElementById('photoPreview');
+        const placeholder = document.getElementById('photoPlaceholder');
+
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+                placeholder.style.display = 'none';
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function addRow(tableId) {
+        const table = document.getElementById(tableId).getElementsByTagName('tbody')[0];
+        const newRow = table.rows[0].cloneNode(true);
+        const inputs = newRow.querySelectorAll('input, select, textarea');
+        
+        inputs.forEach(input => {
+            // Yeni satırda ipucu mantığını yeniden başlat
+            if(input.hasAttribute('data-hint')) {
+                const hint = input.getAttribute('data-hint');
+                input.value = hint;
+                input.classList.add('is-placeholder');
+                
+                // Event listenerları klonlanan elemanlar için yeniden eklemek gerekebilir ama
+                // global DOMContentLoaded'da tanımlı olanlar genellikle çalışır. 
+                // Garantisi için manuel ekleyelim:
+                input.onfocus = function() {
+                    if (this.classList.contains('is-placeholder')) {
+                        this.value = '';
+                        this.classList.remove('is-placeholder');
+                    }
+                };
+                input.onblur = function() {
+                    if (!this.value.trim()) {
+                        this.value = hint;
+                        this.classList.add('is-placeholder');
+                    }
+                };
+            } else if(input.type === 'date' || input.type === 'number') {
+                input.value = '';
+            } else if (input.tagName === 'SELECT') {
+                input.selectedIndex = 0;
+            }
+        });
+        table.appendChild(newRow);
+    }
+
+    function removeRow(btn) {
+        const row = btn.closest('tr');
+        const tbody = row.parentElement;
+        if(tbody.rows.length > 1) {
+            tbody.removeChild(row);
+        } else {
+            alert("En az bir satır kalmalıdır.");
+        }
+    }
+
+    document.addEventListener('input', function (e) {
+        if (e.target.tagName === 'TEXTAREA') {
+            e.target.style.height = 'auto';
+            e.target.style.height = e.target.scrollHeight + 'px';
+        }
+        // Kullanıcı yazarken is-placeholder sınıfını kaldır (eğer varsa)
+        if (e.target.classList.contains('is-placeholder')) {
+            e.target.classList.remove('is-placeholder');
+        }
+    });
+
+    // GERÇEK DEĞER KONTROLÜ (İpucu metnini yoksayar)
+    function isRowEmpty(row) {
+        const inputs = row.querySelectorAll('input, textarea, select');
+        for (let input of inputs) {
+            // Eğer eleman hala 'is-placeholder' sınıfına sahipse, kullanıcı bir şey yazmamış demektir.
+            if (input.classList.contains('is-placeholder')) {
+                continue; // Bunu boş kabul et, döngüye devam et
+            }
+            
+            // Select box kontrolü
+            if (input.tagName === 'SELECT' && input.value === "") {
+                continue;
+            }
+
+            // Normal değer kontrolü
+            if (input.value && input.value.trim() !== '') {
+                return false; // Gerçek bir veri bulundu
+            }
+        }
+        return true; // Hiç gerçek veri yok
+    }
+
+function exportToPDF() {
+        // 1. ADIM: İsim Soyisim Alanını Bul ve Dosya Adı Oluştur
+        const nameInput = document.querySelector('input[placeholder*="Adınız"], input[data-hint*="Adınız"]'); 
+        // Not: Yeni kodda placeholder yerine data-hint kullandığımız için her iki durumu da kontrol eden basit bir seçici veya doğrudan ilk inputu hedefleyebiliriz.
+        // En garanti yöntem, Kişisel Bilgilerdeki ilk inputu (Ad Soyad) almaktır:
+        const nameField = document.querySelector('.cv-details-grid .form-control'); 
+        let fileName = "Kurumsal_CV.pdf"; // Varsayılan isim
+        
+        if (nameField && nameField.value && !nameField.classList.contains('is-placeholder')) {
+            // İsmi al, özel karakterleri temizle ve dosya adı yap
+            const cleanName = nameField.value.trim().replace(/[^a-zA-Z0-9ğüşıöçĞÜŞİÖÇ\s-]/g, "").replace(/\s+/g, "_");
+            if (cleanName) {
+                fileName = cleanName + "_CV.pdf";
+            }
+        }
+
+        const element = document.getElementById('formContent');
+        const scrollPosition = window.scrollY;
+        window.scrollTo(0, 0);
+
+        const buttons = document.querySelectorAll('.btn, .row-action-cell, .photo-placeholder');
+        const originalDisplays = [];
+        
+        buttons.forEach((btn, index) => {
+            originalDisplays[index] = btn.style.display;
+            btn.style.display = 'none';
+        });
+
+        const allTables = document.querySelectorAll('.styled-table');
+        const hiddenRows = [];
+
+        allTables.forEach(table => {
+            const rows = table.querySelectorAll('tbody tr');
+            rows.forEach(row => {
+                if (isRowEmpty(row)) {
+                    row.classList.add('hidden-row');
+                    hiddenRows.push(row);
+                }
+            });
+        });
+
+        const opt = {
+            margin:       [5, 5, 5, 5], 
+            filename:     fileName,
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { 
+                scale: 2, 
+                useCORS: true,
+                letterRendering: true,
+                windowWidth: document.documentElement.offsetWidth,
+                scrollX: 0,
+                scrollY: -window.scrollY,
+                onclone: (clonedDoc) => {
+                    const clonedBody = clonedDoc.body;
+                    clonedBody.style.margin = '0';
+                    clonedBody.style.padding = '0';
+                    clonedBody.style.backgroundColor = '#ffffff';
+                    clonedBody.style.fontFamily = "'Segoe UI', Arial, sans-serif";
+                    
+                    const clonedCards = clonedDoc.querySelectorAll('.card');
+                    clonedCards.forEach(card => {
+                        card.style.boxShadow = 'none';
+                        card.style.border = 'none';
+                        card.style.padding = '0';
+                        card.style.marginBottom = '8mm';
+                        card.style.borderTop = 'none';
+                    });
+
+                    const clonedHeaders = clonedDoc.querySelectorAll('.card-header');
+                    clonedHeaders.forEach(header => {
+                        header.style.borderBottom = '1px solid #000';
+                        header.style.color = '#000';
+                        header.style.marginBottom = '4mm';
+                        header.style.paddingBottom = '2mm';
+                        const icon = header.querySelector('i');
+                        if(icon) icon.style.display = 'none';
+                    });
+                    const clonedH3 = clonedDoc.querySelectorAll('.card-header h3');
+                    clonedH3.forEach(h => {
+                        h.style.color = '#000';
+                        h.style.fontSize = '9pt';
+                        h.style.fontWeight = 'bold';
+                    });
+
+                    const clonedControls = clonedDoc.querySelectorAll('.form-control, select, textarea');
+                    clonedControls.forEach(ctrl => {
+                        ctrl.style.border = 'none';
+                        ctrl.style.background = 'transparent';
+                        ctrl.style.padding = '0';
+                        ctrl.style.fontSize = '8.5pt';
+                        ctrl.style.resize = 'none';
+                        ctrl.style.lineHeight = '1.2';
+                        
+                        // Klonlanmış belgede de ipucu metinlerini temizle
+                        if (ctrl.classList.contains('is-placeholder')) {
+                            ctrl.style.color = 'transparent'; 
+                            ctrl.value = ''; // Değeri de boşalt ki kesinlikle çıkmasın
+                        } else {
+                            ctrl.style.color = '#000';
+                        }
+                    });
+
+                    const clonedTable = clonedDoc.querySelectorAll('.styled-table');
+                    clonedTable.forEach(tbl => {
+                        tbl.style.border = '1px solid #000';
+                        tbl.style.width = '100%';
+                    });
+                    
+                    const clonedTh = clonedDoc.querySelectorAll('.styled-table th');
+                    clonedTh.forEach(th => {
+                        th.style.backgroundColor = '#f0f0f0';
+                        th.style.color = '#000';
+                        th.style.border = '1px solid #000';
+                        th.style.fontSize = '7.5pt';
+                        th.style.padding = '2px 3px'; 
+                        th.style.fontWeight = 'bold';
+                        th.style.textTransform = 'uppercase';
+                    });
+
+                    const clonedTd = clonedDoc.querySelectorAll('.styled-table td');
+                    clonedTd.forEach(td => {
+                        td.style.border = '1px solid #000';
+                        td.style.fontSize = '8.5pt';
+                        td.style.padding = '2px 3px'; 
+                        td.style.color = '#000';
+                        td.style.verticalAlign = 'top';
+                    });
+
+                    const clonedPhotoContainer = clonedDoc.querySelector('.photo-preview-container');
+                    if(clonedPhotoContainer) {
+                        clonedPhotoContainer.style.border = '1px solid #000';
+                        clonedPhotoContainer.style.background = 'white';
+                        clonedPhotoContainer.style.width = '110px';
+                        clonedPhotoContainer.style.height = '140px';
+                        const img = clonedPhotoContainer.querySelector('img');
+                        if(img) img.style.display = 'block';
+                    }
+                }
+            },
+            jsPDF: { 
+                unit: 'mm', 
+                format: 'a4', 
+                orientation: 'portrait',
+                compress: true
+            },
+            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+        };
+
+        html2pdf().set(opt).from(element).save().then(() => {
+            buttons.forEach((btn, index) => {
+                btn.style.display = originalDisplays[index];
+            });
+            hiddenRows.forEach(row => {
+                row.classList.remove('hidden-row');
+            });
+            window.scrollTo(0, scrollPosition);
+        });
+    }
+</script>
+</body>
+</html>

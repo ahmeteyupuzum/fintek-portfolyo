@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kurumsal Müşteri Föyü - Final Revize v11</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --lh-yellow: #FFB81C;
+            --lh-black: #05164d;
+            --lh-dark: #000000;
+            --white: #ffffff;
+            --grey-light: #f2f2f2;
+            --border-color: #dcdcdc;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: #eaeff2;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            line-height: 1.4;
+            font-size: 13px;
+        }
+
+        .app-header {
+            background-color: var(--lh-dark);
+            color: var(--white);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 4px solid var(--lh-yellow);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .app-title h1 { margin: 0; font-size: 1.4rem; font-weight: 700; letter-spacing: 0.5px; }
+        .app-title small { opacity: 0.8; font-size: 0.85rem; font-weight: 300; }
+
+        /* BUTONLAR */
+        .btn {
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            background-color: var(--lh-yellow);
+            color: var(--lh-dark);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .btn:hover {
+            background-color: var(--lh-dark);
+            color: var(--lh-yellow);
+        }
+
+        .btn-success { background-color: #27ae60; color: white; }
+        .btn-success:hover { background-color: #1e8449; color: white; }
+        
+        .btn-danger { background-color: #d9534f; color: white; padding: 4px 8px; font-size: 0.75rem; border-radius: 3px;}
+        .btn-danger:hover { background-color: #c9302c; color: white; }
+
+        .btn-sm { padding: 4px 8px; font-size: 0.75rem; }
+        
+        .btn-ghost { 
+            background-color: var(--lh-yellow); 
+            color: var(--lh-dark); 
+            border: 1px solid var(--lh-yellow); 
+            width: 100%; 
+            justify-content: center; 
+            margin-top: 10px;
+            padding: 6px;
+        }
+        .btn-ghost:hover { 
+            background-color: var(--lh-dark); 
+            color: var(--lh-yellow); 
+            border-color: var(--lh-dark);
+        }
+
+        .container {
+            max-width: 1150px;
+            margin: 20px auto;
+            padding: 0 15px 60px 15px;
+        }
+
+        .card {
+            background: var(--white);
+            border-radius: 6px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+            padding: 20px;
+            margin-bottom: 20px;
+            border-top: 3px solid transparent;
+        }
+        .card-customer { border-top-color: var(--lh-yellow); }
+
+        .card-header {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--lh-dark);
+        }
+        .card-header i { font-size: 1.1rem; color: var(--lh-yellow); background: #333; padding: 6px; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; }
+        .card-header h3 { margin: 0; font-size: 1.1rem; font-weight: 700; text-transform: uppercase; }
+
+        /* Müşteri Bilgileri Tablosu */
+        .customer-info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 10px;
+        }
+        .customer-info-table td {
+            padding: 8px;
+            vertical-align: top;
+            border: 1px solid #f0f0f0;
+        }
+        .customer-info-table tr:first-child td { border-top: none; }
+        .customer-info-table tr td:first-child { border-left: none; }
+        .customer-info-table tr td:last-child { border-right: none; }
+        
+        .form-group label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #555;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            display: block;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 6px 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 3px;
+            font-size: 0.9rem;
+            background-color: #fafafa;
+            color: #000;
+            font-weight: 500;
+            box-sizing: border-box;
+            height: 32px;
+        }
+        .form-control:focus {
+            border-color: var(--lh-yellow);
+            background-color: #fff;
+            outline: none;
+        }
+
+        .input-wrapper { position: relative; display: flex; align-items: center; width: 100%;}
+        .currency-suffix {
+            position: absolute;
+            right: 10px;
+            color: #999;
+            font-size: 0.8rem;
+            pointer-events: none;
+        }
+        
+        .risk-input .form-control { font-size: 1.1rem; border-color: #ccc; background-color: #fffdf5; height: 38px; }
+
+        .table-responsive { overflow-x: auto; overflow-y: visible; }
+        .styled-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 0.85rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            table-layout: fixed; 
+        }
+        .styled-table th {
+            background-color: var(--lh-dark);
+            color: var(--white);
+            font-weight: 600;
+            text-align: left;
+            padding: 8px 10px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            word-wrap: break-word;
+        }
+        .styled-table td {
+            padding: 5px 8px;
+            border-bottom: 1px solid #eee;
+            vertical-align: middle;
+            word-wrap: break-word;
+        }
+        .styled-table tr:last-child td { border-bottom: none; }
+        
+        /* Extra Info Table */
+        .extra-info-table td { padding: 6px 8px; font-size: 0.8rem; border-bottom: 1px solid #eee; }
+        .extra-info-table tr:nth-child(even) { background-color: #fcfcfc; }
+
+        /* Mortgage Styles - Yenilenmiş */
+        .mortgage-block {
+            border: 1px solid #ddd;
+            border-left: 4px solid var(--lh-yellow);
+            margin-bottom: 15px;
+            background: #fff;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .mortgage-header-table td { border: none; padding: 4px; vertical-align: bottom; }
+        .field-label {
+            display: block;
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: #666;
+            margin-bottom: 3px;
+            white-space: nowrap;
+        }
+        .degree-table {
+            width: 100%;
+            background-color: #fffbf0;
+            border: 1px solid #eee;
+            margin-top: 5px;
+            border-radius: 4px;
+        }
+        .degree-table th { background-color: #f0f0f0; color: #333; font-size: 0.7rem; padding: 4px; border-bottom: 1px solid #ddd; }
+        .degree-table td { padding: 4px; border-bottom: 1px solid #eee; }
+        
+        .owners-table {
+            width: 100%;
+            background-color: #fff;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            margin-top: 5px;
+        }
+        .owners-table th { background-color: #f0f0f0; color: #333; font-size: 0.7rem; padding: 4px; }
+        .owners-table td { padding: 4px; border-bottom: 1px solid #eee; }
+
+        .multi-select-wrapper { position: relative; width: 100%; min-width: 160px; }
+        .multi-select-trigger {
+            width: 100%; padding: 6px 8px; border: 1px solid var(--border-color); border-radius: 3px;
+            font-size: 0.85rem; background-color: #fafafa; color: #000; cursor: pointer;
+            display: flex; justify-content: space-between; align-items: center; height: 32px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .multi-select-trigger:after { content: '\f078'; font-family: "Font Awesome 5 Free"; font-weight: 900; font-size: 0.6rem; margin-left: 8px; color: #666;}
+        .multi-select-content {
+            display: none; position: absolute; top: 100%; left: 0; width: 100%; min-width: 200px;
+            max-height: 200px; overflow-y: auto; background-color: #fff; border: 1px solid var(--lh-yellow);
+            border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 1000; padding: 5px 0;
+        }
+        .multi-select-content.show { display: block; }
+        .risk-item { padding: 6px 10px; cursor: pointer; display: flex; align-items: center; transition: background 0.2s; font-size: 0.85rem;}
+        .risk-item:hover { background-color: #f9f9f9; }
+        .risk-item input[type="checkbox"] { margin-right: 8px; transform: scale(1.1); }
+
+        .hidden-section { display: none; }
+        .row-action-cell { width: 40px; text-align: center; }
+        
+        /* Add Section Panel */
+        .add-section-panel { background: #fff; padding: 15px; border-radius: 6px; border: 1px solid #ddd; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 20px;}
+        .btn-add-section { 
+            background-color: var(--lh-yellow); 
+            color: var(--lh-dark); 
+            border: 1px solid var(--lh-yellow); 
+            padding: 8px 12px; 
+            border-radius: 4px; 
+            font-weight: 600; 
+            display: flex; 
+            align-items: center; 
+            gap: 6px; 
+            transition: all 0.2s; 
+            font-size: 0.8rem;
+        }
+        .btn-add-section:hover { 
+            background-color: var(--lh-dark); 
+            color: var(--lh-yellow); 
+            border-color: var(--lh-dark); 
+        }
+        
+        .info-box { background-color: #fff; border-left: 5px solid var(--lh-yellow); padding: 15px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; border: 1px solid #eee; border-left-width: 5px;}
+
+        .warning-box {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            display: none; 
+        }
+        .warning-box strong { display: block; margin-bottom: 5px; }
+
+        .cheque-details-container {
+            margin-top: 8px;
+            padding: 8px;
+            background-color: #fffcf0;
+            border: 1px dashed #dcdcdc;
+            border-radius: 4px;
+            width: 100%;
+            box-sizing: border-box;
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .cheque-group {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        
+        .cheque-group label {
+            font-size: 0.65rem;
+            font-weight: bold;
+            color: #666;
+            text-transform: uppercase;
+        }
+
+        /* Toplam Gösterge Stili */
+        .total-display {
+            background-color: #333;
+            color: #fff;
+            padding: 8px 15px;
+            border-radius: 4px;
+            font-weight: bold;
+            text-align: right;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            border-left: 5px solid var(--lh-yellow);
+        }
+
+        @media print {
+            body { background: white; font-size: 10px; }
+            .app-header, .btn, .row-action-cell, .add-section-panel, .info-box, .warning-box { display: none !important; }
+            .container { max-width: 100%; padding: 0; margin: 0; }
+            .card { box-shadow: none; border: none; padding: 0; margin-bottom: 15px; page-break-inside: avoid; border-top: none; }
+            .card-header { border-bottom: 2px solid #000; margin-bottom: 5px; padding-bottom: 2px; color: #000; }
+            .card-header i { display: none; }
+            .form-control, select { border: none; background: transparent; padding: 0; height: auto; font-size: 10px; -webkit-appearance: none; }
+            .currency-suffix { display: none; }
+            .styled-table th { background-color: #eee !important; color: #000; border: 1px solid #000; font-size: 9px; padding: 2px; }
+            .styled-table td { border: 1px solid #000; font-size: 9px; padding: 2px; }
+            .field-label { color: #000; font-weight: bold; }
+            .multi-select-trigger { border: none; padding: 0; background: transparent; }
+            .multi-select-trigger:after { display: none; }
+            .multi-select-content { display: none !important; }
+            .mortgage-block { border: none; border-bottom: 2px solid #000; padding: 0; margin-bottom: 10px; }
+            .cheque-details-container { border: none; background: transparent; padding:0; margin-top:2px; }
+            .total-display { border: 1px solid #000; background: #eee; color: #000; border-left: 2px solid #000; text-align: right; }
+        }
+    </style>
+</head>
+<body>
+
+<header class="app-header">
+    <div class="app-title">
+        <h1>Takipli Müşteri Föyü</h1>
+        <small>Risk Tasfiye Koordinasyon Müdürlüğü</small>
+    </div>
+    <div class="action-bar">
+        <button class="btn btn-primary" onclick="window.print()"><i class="fas fa-print"></i> Yazdır</button>
+        <button class="btn btn-success" onclick="exportToWord()"><i class="fas fa-file-word"></i> Word İndir</button>
+    </div>
+</header>
+
+<div class="container" id="formContent">
+
+    <div class="card card-customer">
+        <div class="card-header"><i class="fas fa-user-tie"></i><h3>Müşteri ve Şube Bilgileri</h3></div>
+        <table class="customer-info-table">
+            <tr>
+                <td width="25%">
+                    <div class="form-group"><label>Müşteri No</label><div class="input-wrapper"><input type="text" class="form-control" placeholder="12345"></div></div>
+                </td>
+                <td width="25%">
+                    <div class="form-group"><label>TCKN / VKN</label><div class="input-wrapper"><input type="text" class="form-control" placeholder="1234567890"></div></div>
+                </td>
+                <td colspan="2">
+                    <div class="form-group"><label>Müşteri Tam Ünvanı</label><div class="input-wrapper"><input type="text" class="form-control" placeholder="Firma Ünvanı"></div></div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2" width="50%">
+                    <div class="form-group"><label>Şube Adı</label><div class="input-wrapper"><input type="text" class="form-control" placeholder="Şube"></div></div>
+                </td>
+                <td colspan="2" width="50%">
+                    <div class="form-group"><label>Bağlı Olduğu Bölge</label><div class="input-wrapper"><input type="text" class="form-control" placeholder="Bölge"></div></div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="4">
+                    <div class="form-group risk-input"><label>Toplam Anapara Riski</label><div class="input-wrapper"><input type="text" class="form-control" placeholder="0,00"><span class="currency-suffix">TL</span></div></div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="4" style="padding-top: 15px;">
+                    <label style="margin-bottom: 5px;">FİRMA ORTAKLIK YAPISI</label>
+                    <table class="styled-table" id="tableOrtaklik">
+                        <thead><tr><th>Adı Soyadı / Ünvanı</th><th>VKN / TCKN</th><th>Hisse Oranı (%)</th><th class="row-action-cell"></th></tr></thead>
+                        <tbody><tr><td><input type="text" class="form-control"></td><td><input type="text" class="form-control"></td><td><input type="text" class="form-control"></td><td class="row-action-cell"><button class="btn btn-danger" onclick="removeRow(this)"><i class="fas fa-trash"></i></button></td></tr></tbody>
+                    </table>
+                    <button class="btn btn-ghost" style="width: auto;" onclick="addRow('tableOrtaklik')">+ Ortak Ekle</button>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="4" style="padding-top: 15px;">
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 5px;">
+                        <label style="margin: 0;">RİSK GRUBU VAR MI?</label>
+                        <select class="form-control" style="width: 100px;" onchange="toggleRiskGroup(this)"><option value="Hayır">Hayır</option><option value="Evet">Evet</option></select>
+                    </div>
+                    <div id="riskGroupPanel" class="hidden-section" style="background: #fffdf5; padding: 10px; border: 1px solid #eee;">
+                        <label style="margin-bottom: 5px;">RİSK GRUBU ÜYELERİ</label>
+                        <table class="styled-table" id="tableRiskGroup">
+                            <thead><tr><th>Adı Soyadı / Ünvanı</th><th>VKN / TCKN</th><th class="row-action-cell"></th></tr></thead>
+                            <tbody><tr><td><input type="text" class="form-control"></td><td><input type="text" class="form-control"></td><td class="row-action-cell"><button class="btn btn-danger" onclick="removeRow(this)"><i class="fas fa-trash"></i></button></td></tr></tbody>
+                        </table>
+                        <button class="btn btn-ghost" style="width: auto;" onclick="addRow('tableRiskGroup')">+ Kişi Ekle</button>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="card">
+        <div class="card-header"><i class="fas fa-search-dollar"></i><h3>İstihbarat ve Yasal Durum</h3></div>
+        <table class="styled-table">
+            <tr><td width="40%">Takip Öncesinde Yapılandırma Yapıldı mı?</td><td><select class="form-control" style="width: auto;"><option value="">Seçiniz</option><option>Evet</option><option>Hayır</option></select></td></tr>
+            <tr><td>İzleme Aşamasında Firmaya İhtar Çekildi mi?</td><td><select class="form-control" style="width: auto;"><option value="">Seçiniz</option><option>Evet</option><option>Hayır</option></select></td></tr>
+            <tr><td>İcra İşlemleri Başladı mı?</td><td><select class="form-control" style="width: auto;"><option value="">Seçiniz</option><option>Başlatıldı</option><option>Başlatılmadı</option></select></td></tr>
+            <tr><td>İflas / Konkordato Durumu</td><td><select class="form-control"><option value="Yok">Yok</option><option value="İflas">İflas</option><option value="Konkordato">Konkordato</option></select></td></tr>
+            <tr>
+                <td>KGF / İGE Kredisi Var mı?</td>
+                <td>
+                    <div style="display: flex; flex-direction: column; gap: 5px;">
+                        <select class="form-control" style="width: 120px;" onchange="toggleKgfDetay(this)"><option value="Yok">Yok</option><option value="Var">Var</option></select>
+                        <div id="kgfKatman1" class="hidden-section" style="background: #f9f9f9; padding: 5px; border: 1px solid #eee;">
+                            <div style="display: flex; align-items: center; justify-content: space-between;"><label style="font-size: 0.75rem; margin:0;">Yapılandırıldı mı?</label><select class="form-control" style="width: 80px;" onchange="toggleKgfKatman2(this)"><option value="">Seç</option><option value="Evet">Evet</option><option value="Hayır">Hayır</option></select></div>
+                            <div id="kgfKatman2" class="hidden-section" style="margin-top: 5px; padding-top:5px; border-top: 1px dashed #ccc;"><div style="display: flex; align-items: center; justify-content: space-between;"><label style="font-size: 0.75rem; margin:0;">İhtar çekildi mi?</label><select class="form-control" style="width: 80px;"><option value="">Seç</option><option value="Evet">Evet</option><option value="Hayır">Hayır</option></select></div></div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>Kefil Olduğu Müşteri Var mı?</td>
+                <td>
+                    <div style="display: flex; flex-direction: column; gap: 5px;">
+                         <select class="form-control" style="width: 120px;" onchange="toggleKefilDetay(this)"><option value="Hayır">Hayır</option><option value="Evet">Evet</option></select>
+                         <div class="kefil-detay-panel" style="display: none; background: #fffdf5; padding: 8px; border: 1px solid #eee;">
+                            <div class="form-group" style="margin-bottom: 5px;"><label>Borçlu Müşteri Ünvanı</label><input type="text" class="form-control"></div>
+                            <div class="form-group"><label>Kefalet Tutarı</label><div class="input-wrapper"><input type="text" class="form-control" placeholder="0,00"><span class="currency-suffix">TL</span></div></div>
+                         </div>
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+        <div style="margin-top: 20px; border-top: 2px solid #eee; padding-top: 15px;">
+            <h4 style="font-size: 0.95rem; margin-bottom: 10px; color: var(--lh-black); text-transform: uppercase; font-weight: 700;">Diğer İstihbarat ve Alacak Durumu</h4>
+            <table class="styled-table extra-info-table">
+                <tr style="background-color: #fffdf5;">
+                    <td colspan="2" style="vertical-align: top;">
+                        <div style="display:flex; flex-direction:column; gap:5px;">
+                            <span style="font-weight:600;">Müşteriye Verilmiş Dolaşımda Çek Yaprakları Var mı?</span>
+                            <div style="margin-top:5px;">
+                                <select class="form-control" style="width: 80px; display:inline-block;" onchange="toggleChequeRow(this)">
+                                    <option value="Yok">Yok</option><option value="Var">Var</option>
+                                </select>
+                                <div class="cheque-details-container hidden-section" style="display:none;">
+                                    <div class="cheque-group">
+                                        <label>Adet</label>
+                                        <input type="text" class="form-control" style="width: 60px; text-align:center;" placeholder="0">
+                                    </div>
+                                    <div class="cheque-group" style="flex:1;">
+                                        <label>Tutar (TL)</label>
+                                        <div class="input-wrapper">
+                                            <input type="text" class="form-control" style="width:100%; min-width:180px;" placeholder="500.000.000.000">
+                                            <span class="currency-suffix" style="right:5px; font-size:0.7rem;">TL</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td colspan="2" style="vertical-align: top;">
+                        <div style="display:flex; flex-direction:column; gap:5px;">
+                            <span style="font-weight:600;">Başka Müşterinin Teminatına Verilmiş Çek Var mı?</span>
+                             <div style="margin-top:5px;">
+                                <select class="form-control" style="width: 80px; display:inline-block;" onchange="toggleChequeRow(this)">
+                                    <option value="Yok">Yok</option><option value="Var">Var</option>
+                                </select>
+                                <div class="cheque-details-container hidden-section" style="display:none;">
+                                    <div class="cheque-group">
+                                        <label>Adet</label>
+                                        <input type="text" class="form-control" style="width: 60px; text-align:center;" placeholder="0">
+                                    </div>
+                                    <div class="cheque-group" style="flex:1;">
+                                        <label>Tutar (TL)</label>
+                                        <div class="input-wrapper">
+                                            <input type="text" class="form-control" style="width:100%; min-width:180px;" placeholder="500.000.000.000">
+                                            <span class="currency-suffix" style="right:5px; font-size:0.7rem;">TL</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td width="35%">Gayrinakdi Kredi</td><td width="15%"><select class="form-control"><option>Yok</option><option>Var</option><option>Evet</option><option>Hayır</option></select></td>
+                    <td width="35%">Nakit Yönetimi Ürünü</td><td width="15%"><select class="form-control"><option>Yok</option><option>Var</option><option>Evet</option><option>Hayır</option></select></td>
+                </tr>
+                <tr>
+                    <td>Teminat Malik Durumu</td><td><select class="form-control"><option>Yok</option><option>Var</option><option>Evet</option><option>Hayır</option></select></td>
+                    <td>Kapatılmamış İhracat Taahhütü</td><td><select class="form-control"><option>Yok</option><option>Var</option><option>Evet</option><option>Hayır</option></select></td>
+                </tr>
+                <tr>
+                    <td>Tahsil Edilmemiş POS Bedeli</td><td><select class="form-control"><option>Yok</option><option>Var</option><option>Evet</option><option>Hayır</option></select></td>
+                    <td>Tahsil Edilmemiş Yatırım Hesabı Alacağı</td><td><select class="form-control"><option>Yok</option><option>Var</option><option>Evet</option><option>Hayır</option></select></td>
+                </tr>
+                <tr>
+                    <td>Tahsil Edilmemiş Kiralık Kasa Alacağı</td><td><select class="form-control"><option>Yok</option><option>Var</option><option>Evet</option><option>Hayır</option></select></td>
+                    <td>Başka Müşterinin Teminatına Verilmiş Senet</td><td><select class="form-control"><option>Yok</option><option>Var</option><option>Evet</option><option>Hayır</option></select></td>
+                </tr>
+                <tr>
+                    <td>Tahsil Edilmemiş İstihbarat Op. Ücretleri</td><td><select class="form-control"><option>Yok</option><option>Var</option><option>Evet</option><option>Hayır</option></select></td>
+                    <td>Tahsil Edilmemiş Teminat Mektubu Kom.</td><td><select class="form-control"><option>Yok</option><option>Var</option><option>Evet</option><option>Hayır</option></select></td>
+                </tr>
+                <tr>
+                    <td>Tahsil Edilmemiş Gayrinakdi Kredi Kom.</td><td><select class="form-control"><option>Yok</option><option>Var</option><option>Evet</option><option>Hayır</option></select></td>
+                    <td>Tahsil Edilmemiş DBS Komisyon Alacağı</td><td><select class="form-control"><option>Yok</option><option>Var</option><option>Evet</option><option>Hayır</option></select></td>
+                </tr>
+                <tr>
+                    <td>Tahsil Edilmemiş Garantili Fatura Alacağı DBS</td><td><select class="form-control"><option>Yok</option><option>Var</option><option>Evet</option><option>Hayır</option></select></td>
+                    <td>Vinov Ödenmemiş Garantili Ödemeler</td><td><select class="form-control"><option>Yok</option><option>Var</option><option>Evet</option><option>Hayır</option></select></td>
+                </tr>
+                <tr>
+                    <td>Müşteri Kambiyo Takibi</td><td><select class="form-control"><option>Yok</option><option>Var</option><option>Evet</option><option>Hayır</option></select></td>
+                    <td>VBanko Çek Garanti Bedeli</td><td><select class="form-control"><option>Yok</option><option>Var</option><option>Evet</option><option>Hayır</option></select></td>
+                </tr>
+                <tr>
+                    <td>Müşteri Teminatında Yer Alan Kambiyo Takibi</td><td><select class="form-control"><option>Yok</option><option>Var</option><option>Evet</option><option>Hayır</option></select></td>
+                    <td>Müşteri Dosya Temlik Durumu</td><td><select class="form-control"><option>Yok</option><option>Var</option><option>Evet</option><option>Hayır</option></select></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header"><i class="fas fa-chart-line"></i><h3>Takip Hesaplarına Aktarılan Krediler</h3></div>
+        <div class="table-responsive">
+            <table class="styled-table" id="tableTakip">
+                <thead><tr><th>Kredi Türü</th><th>Risk No</th><th>Anapara Riski</th><th>Sözleşme Tarihi</th><th>Açıklama</th><th class="row-action-cell"></th></tr></thead>
+                <tbody><tr><td><input type="text" class="form-control"></td><td><input type="text" class="form-control risk-no-input" oninput="updateGuarantorRiskOptions()"></td><td><input type="text" class="form-control"></td><td><input type="date" class="form-control contract-date-input" onchange="updateGuarantorDates()"></td><td><input type="text" class="form-control"></td><td class="row-action-cell"><button class="btn btn-danger" onclick="removeRow(this)"><i class="fas fa-trash"></i></button></td></tr></tbody>
+            </table>
+        </div>
+        <button class="btn btn-ghost" onclick="addRow('tableTakip')">+ Satır Ekle</button>
+    </div>
+
+    <div class="info-box no-print" id="infoAsliKredi">
+        <div class="info-box-text"><i class="fas fa-info"></i><span>Canlı Kredi Kontrolü: Firmanın canlı (asli) hesaplarında izlenen kredisi var mı?</span></div>
+        <button class="btn-info-action" onclick="activateSection('secAsli', 'infoAsliKredi')" style="background:var(--lh-yellow); color:black; border:none; padding:5px 10px; border-radius:4px; font-weight:bold; cursor:pointer;">Evet, Ekle</button>
+    </div>
+    <div class="card hidden-section" id="secAsli">
+        <div class="card-header"><i class="fas fa-briefcase"></i><h3>Asli Hesaplarda İzlenen Krediler</h3><button class="btn btn-danger btn-sm" style="margin-left:auto;" onclick="deactivateSection('secAsli', 'infoAsliKredi')">Kaldır</button></div>
+        <div class="table-responsive">
+            <table class="styled-table" id="tableAsli">
+                <thead><tr><th>Kredi Türü</th><th>Risk No</th><th>Anapara Riski</th><th>Aksama Gün</th><th>Açıklama</th><th class="row-action-cell"></th></tr></thead>
+                <tbody><tr><td><input type="text" class="form-control"></td><td><input type="text" class="form-control"></td><td><input type="text" class="form-control"></td><td><input type="text" class="form-control"></td><td><input type="text" class="form-control"></td><td class="row-action-cell"><button class="btn btn-danger" onclick="removeRow(this)"><i class="fas fa-trash"></i></button></td></tr></tbody>
+            </table>
+        </div>
+        <button class="btn btn-ghost" onclick="addRow('tableAsli')">+ Satır Ekle</button>
+    </div>
+
+    <div class="add-section-panel no-print">
+        <span style="width:100%; text-align:center; font-weight:700; color:#000; margin-bottom:10px; font-size:0.9rem;">TEMİNAT VE EK BİLGİ EKLE</span>
+        <button class="btn btn-add-section" id="btnAddKefalet" onclick="toggleSection('secKefalet', true)"><i class="fas fa-users"></i> Kefalet</button>
+        <button class="btn btn-add-section" id="btnAddIpotek" onclick="toggleSection('secIpotek', true)"><i class="fas fa-home"></i> İpotek</button>
+        <button class="btn btn-add-section" id="btnAddArac" onclick="toggleSection('secArac', true)"><i class="fas fa-car"></i> Araç Rehni</button>
+        <button class="btn btn-add-section" id="btnAddSenet" onclick="toggleSection('secSenet', true)"><i class="fas fa-file-contract"></i> Senet</button>
+        <button class="btn btn-add-section" id="btnAddCek" onclick="toggleSection('secCek', true)"><i class="fas fa-money-check-alt"></i> Çek</button>
+        <button class="btn btn-add-section" id="btnAddDiger" onclick="toggleSection('secDiger', true)"><i class="fas fa-folder-plus"></i> Diğer</button>
+    </div>
+
+    <div class="card hidden-section" id="secIpotek">
+        <div class="card-header"><i class="fas fa-home"></i><h3>İpotek (Gayrimenkul)</h3><button class="btn btn-danger btn-sm" style="margin-left:auto;" onclick="toggleSection('secIpotek', false)">Kaldır</button></div>
+        <div id="mortgageContainer"></div>
+        <button class="btn btn-ghost" onclick="addMortgageBlock()">+ Yeni Gayrimenkul Bloğu Ekle</button>
+        <div id="mortgageTotalDisplay" class="total-display hidden-section">Toplam Ekspertiz Tutarı: 0,00 TL</div>
+    </div>
+
+    <div class="card hidden-section" id="secKefalet">
+        <div class="card-header"><i class="fas fa-users"></i><h3>Kefalet Bilgileri</h3><button class="btn btn-danger btn-sm" style="margin-left:auto;" onclick="toggleSection('secKefalet', false)">Kaldır</button></div>
+        
+        <div id="tenYearWarning" class="warning-box">
+            <strong><i class="fas fa-exclamation-triangle"></i> DİKKAT: 10 Yıllık Kefalet Süresi Aşımı</strong>
+            Gerçek kişi kefillerde Türk Borçlar Kanunu’nun 598/5 maddesi gereği kefalet süresi, en erken kefaletin sona ermesinden (on yılın bitiminden) bir yıl önce kefilden süre uzatımına ilişkin yazılı talep ve ayrıca evli ise kefilin eşinden eş rıza belgesi alınması kaydıyla kefilin kefalet sözleşmesinin şekline uygun yazılı açıklamasıyla, azami 10 yıllık yeni bir dönem için uzatılabilir. Konuya ilişkin olarak Bankamız genelinde 2012/1608 sayılı Tebliğ yayımlanmıştır.<br><br>
+            Tüzel kişilerde kefalet süreli düzenlenir ise; yasal düzenlemelere uygun olarak süre uzatılabilecektir. Banka uygulamasında; ilgili tahsis birimi tarafından farklı bir kefalet süresi belirtilmedikçe kefalet süresi gerçek kişi kefillerde 10 yıl, tüzel kişi kefillerde sınırsız süre olarak belirlenmektedir.
+        </div>
+
+        <div class="table-responsive" style="overflow: visible;">
+            <table class="styled-table" id="tableKefalet">
+                <thead><tr><th>Sözleşme Tarihi</th><th>Kefil VB No</th><th>Kefil Adı</th><th>Limit (TL)</th><th>Sözleşme No</th><th>İlgili Risk No</th><th class="row-action-cell"></th></tr></thead>
+                <tbody>
+                    <tr>
+                        <td><select class="form-control guarantor-date-select" onchange="checkKefaletDate(this)"><option value="">Tarih Seç</option></select></td>
+                        <td><input type="text" class="form-control"></td><td><input type="text" class="form-control"></td><td><input type="text" class="form-control"></td><td><input type="text" class="form-control"></td> 
+                        <td style="min-width: 160px;"><div class="multi-select-wrapper"><div class="multi-select-trigger" onclick="toggleMultiSelect(this)">Risk Seç...</div><div class="multi-select-content"></div></div></td>
+                        <td class="row-action-cell"><button class="btn btn-danger" onclick="removeRow(this)"><i class="fas fa-trash"></i></button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <button class="btn btn-ghost" onclick="addRow('tableKefalet')">+ Kefil Ekle</button>
+    </div>
+
+    <div class="card hidden-section" id="secArac">
+        <div class="card-header"><i class="fas fa-car"></i><h3>Araç Rehni</h3><button class="btn btn-danger btn-sm" style="margin-left:auto;" onclick="toggleSection('secArac', false)">Kaldır</button></div>
+        <div class="table-responsive">
+            <table class="styled-table" id="tableArac">
+                <thead><tr><th>Plaka</th><th>Marka/Model</th><th>Model Yılı</th><th>Rehin Tarihi</th><th>Rehin Bedeli (TL)</th><th>Hat Değeri (TL)</th><th>Kasko Değeri (TL)</th><th class="row-action-cell"></th></tr></thead>
+                <tbody><tr><td><input type="text" class="form-control"></td><td><input type="text" class="form-control"></td><td><input type="text" class="form-control"></td><td><input type="text" class="form-control"></td><td><input type="text" class="form-control vehicle-pledge-input" oninput="calculateVehicleTotal()"></td><td><input type="text" class="form-control"></td><td><input type="text" class="form-control"></td><td class="row-action-cell"><button class="btn btn-danger" onclick="removeRow(this)"><i class="fas fa-trash"></i></button></td></tr></tbody>
+            </table>
+        </div>
+        <button class="btn btn-ghost" onclick="addRow('tableArac')">+ Araç Ekle</button>
+        <div id="vehicleTotalDisplay" class="total-display hidden-section">Toplam Rehin Bedeli: 0,00 TL</div>
+    </div>
+
+    <div class="card hidden-section" id="secSenet">
+        <div class="card-header"><i class="fas fa-file-contract"></i><h3>Senet Portföyü</h3><button class="btn btn-danger btn-sm" style="margin-left:auto;" onclick="toggleSection('secSenet', false)">Kaldır</button></div>
+        <div class="table-responsive">
+            <table class="styled-table" id="tableSenet"><thead><tr><th>Borçlu Adı</th><th>Vadesi</th><th>Tutarı (TL)</th><th>Açıklama</th><th class="row-action-cell"></th></tr></thead><tbody><tr><td><input type="text" class="form-control"></td><td><input type="text" class="form-control"></td><td><input type="text" class="form-control"></td><td><input type="text" class="form-control"></td><td class="row-action-cell"><button class="btn btn-danger" onclick="removeRow(this)"><i class="fas fa-trash"></i></button></td></tr></tbody></table>
+        </div><button class="btn btn-ghost" onclick="addRow('tableSenet')">+ Senet Ekle</button>
+    </div>
+
+    <div class="card hidden-section" id="secCek">
+        <div class="card-header"><i class="fas fa-money-check-alt"></i><h3>Çek Portföyü</h3><button class="btn btn-danger btn-sm" style="margin-left:auto;" onclick="toggleSection('secCek', false)">Kaldır</button></div>
+        <div class="table-responsive">
+            <table class="styled-table" id="tableCek"><thead><tr><th>Borçlu Adı</th><th>Vadesi</th><th>Tutarı (TL)</th><th>Açıklama</th><th class="row-action-cell"></th></tr></thead><tbody><tr><td><input type="text" class="form-control"></td><td><input type="text" class="form-control"></td><td><input type="text" class="form-control"></td><td><input type="text" class="form-control"></td><td class="row-action-cell"><button class="btn btn-danger" onclick="removeRow(this)"><i class="fas fa-trash"></i></button></td></tr></tbody></table>
+        </div><button class="btn btn-ghost" onclick="addRow('tableCek')">+ Çek Ekle</button>
+    </div>
+    
+    <div class="card hidden-section" id="secDiger">
+        <div class="card-header"><i class="fas fa-folder-plus"></i><h3>Diğer Teminatlar</h3><button class="btn btn-danger btn-sm" style="margin-left:auto;" onclick="toggleSection('secDiger', false)">Kaldır</button></div>
+        <textarea class="form-control" style="width: 100%; height: 80px; resize: vertical;" placeholder="Varsa diğer teminat detaylarını giriniz..."></textarea>
+    </div>
+
+    <div class="form-grid-customer" style="grid-template-columns: 1fr 1fr; align-items: start; margin-top:20px;">
+        <div class="card col-span-1">
+            <div class="card-header"><i class="fas fa-phone-alt"></i><h3>İletişim Bilgileri</h3></div>
+            <table class="styled-table" id="tableTel"><thead><tr><th>Adı Soyadı</th><th>Görevi</th><th>Tel No</th><th class="row-action-cell"></th></tr></thead><tbody><tr><td><input type="text" class="form-control"></td><td><input type="text" class="form-control"></td><td><input type="text" class="form-control"></td><td class="row-action-cell"><button class="btn btn-danger" onclick="removeRow(this)"><i class="fas fa-trash"></i></button></td></tr></tbody></table>
+            <button class="btn btn-ghost" onclick="addRow('tableTel')">+ Kişi Ekle</button>
+        </div>
+        <div class="card col-span-1">
+            <div class="card-header"><i class="fas fa-comment-dots"></i><h3>Şube Görüşü</h3></div>
+            <textarea class="form-control" style="width: 100%; height: 150px; resize: none;" placeholder="Şube görüşünü ve aksiyon planını buraya yazınız..."></textarea>
+        </div>
+    </div>
+    
+    <div class="card">
+         <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+            <div style="width: 60%; font-size: 0.75rem; color: #666;"><strong>NOT:</strong> Açıklama kısımlarında risk veya teminata ilişkin güncel durumlar belirtilmelidir.</div>
+            <div style="text-align: center; width: 30%;">
+                <div class="form-group"><label>Rapor Tarihi</label><input type="date" class="form-control" style="text-align: center;"></div><br><p style="margin-bottom: 20px; font-size:0.9rem;">Saygılarımızla,</p><input type="text" class="form-control" placeholder="Şube Adı" style="text-align: center; font-weight: bold; border: none; border-bottom: 2px solid #000;"><p style="font-size:0.9rem;">ŞUBESİ</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleMultiSelect(trigger) {
+        closeAllMultiSelects(trigger);
+        trigger.nextElementSibling.classList.toggle('show');
+    }
+    window.onclick = function(event) {
+        if (!event.target.matches('.multi-select-trigger')) closeAllMultiSelects();
+    }
+    function closeAllMultiSelects(exceptTrigger) {
+        const dropdowns = document.getElementsByClassName("multi-select-content");
+        for (let i = 0; i < dropdowns.length; i++) {
+            const openDropdown = dropdowns[i];
+            if (openDropdown.previousElementSibling !== exceptTrigger && openDropdown.classList.contains('show')) openDropdown.classList.remove('show');
+        }
+    }
+    function updateMultiSelectLabel(checkbox) {
+        const container = checkbox.closest('.multi-select-content');
+        const trigger = container.previousElementSibling;
+        const checkedBoxes = container.querySelectorAll('input[type="checkbox"]:checked:not([value="all"])');
+        let label = "Risk Seçiniz...";
+        if (checkedBoxes.length > 0) {
+            const values = Array.from(checkedBoxes).map(cb => cb.value);
+            label = values.join(', ');
+        }
+        trigger.innerText = label;
+    }
+    function toggleAllRisks(masterCheckbox) {
+        const container = masterCheckbox.closest('.multi-select-content');
+        const checkboxes = container.querySelectorAll('input[type="checkbox"]:not([value="all"])');
+        checkboxes.forEach(cb => { cb.checked = masterCheckbox.checked; });
+        updateMultiSelectLabel(masterCheckbox);
+    }
+
+    function updateGuarantorRiskOptions() {
+        const riskInputs = document.querySelectorAll('.risk-no-input');
+        const risks = new Set();
+        riskInputs.forEach(input => { if(input.value.trim() !== "") risks.add(input.value.trim()); });
+
+        document.querySelectorAll('.multi-select-content').forEach(content => {
+            const currentChecked = new Set();
+            content.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => { if(cb.value !== 'all') currentChecked.add(cb.value); });
+            content.innerHTML = '';
+            if(risks.size === 0) return;
+
+            const selectAllDiv = document.createElement('div');
+            selectAllDiv.className = 'select-all-container risk-item';
+            selectAllDiv.innerHTML = `<label style="cursor:pointer; width:100%; display:flex; align-items:center;"><input type="checkbox" value="all" onchange="toggleAllRisks(this)"> Tümünü Seç</label>`;
+            content.appendChild(selectAllDiv);
+
+            risks.forEach(risk => {
+                const div = document.createElement('div');
+                div.className = 'risk-item';
+                const isChecked = currentChecked.has(risk) ? 'checked' : '';
+                div.innerHTML = `<label style="cursor:pointer; width:100%; display:flex; align-items:center;"><input type="checkbox" value="${risk}" ${isChecked} onchange="updateMultiSelectLabel(this)"> ${risk}</label>`;
+                content.appendChild(div);
+            });
+            if(currentChecked.size > 0) {
+                 const dummyBox = content.querySelector('input[type="checkbox"]:checked');
+                 if(dummyBox) updateMultiSelectLabel(dummyBox);
+            }
+        });
+    }
+
+    function updateGuarantorDates() {
+        const dateInputs = document.querySelectorAll('.contract-date-input');
+        const dates = new Set();
+        dateInputs.forEach(input => { if(input.value) dates.add(input.value); });
+
+        document.querySelectorAll('.guarantor-date-select').forEach(select => {
+            const currentVal = select.value;
+            select.innerHTML = '<option value="">Tarih Seçiniz</option>';
+            dates.forEach(date => {
+                const option = document.createElement('option');
+                option.value = date;
+                const parts = date.split('-');
+                option.text = `${parts[2]}.${parts[1]}.${parts[0]}`; 
+                select.appendChild(option);
+            });
+            if(dates.has(currentVal)) select.value = currentVal;
+            checkKefaletDate(select);
+        });
+    }
+
+    function checkKefaletDate(selectElement) {
+        if (!selectElement.value) {
+            checkAnyDateWarning();
+            return;
+        }
+        checkAnyDateWarning();
+    }
+
+    function checkAnyDateWarning() {
+        const selects = document.querySelectorAll('.guarantor-date-select');
+        let showWarning = false;
+        const today = new Date();
+        const tenYearsAgo = new Date(today.getFullYear() - 10, today.getMonth(), today.getDate());
+
+        selects.forEach(sel => {
+            if(sel.value) {
+                const d = new Date(sel.value);
+                if(d < tenYearsAgo) showWarning = true;
+            }
+        });
+
+        const warningBox = document.getElementById('tenYearWarning');
+        warningBox.style.display = showWarning ? 'block' : 'none';
+    }
+
+    function toggleChequeRow(selectElement) {
+        const detailsContainer = selectElement.nextElementSibling;
+        if(selectElement.value === "Var") {
+            detailsContainer.style.display = 'flex';
+            detailsContainer.classList.remove('hidden-section');
+        } else {
+            detailsContainer.style.display = 'none';
+            detailsContainer.classList.add('hidden-section');
+            detailsContainer.querySelectorAll('input').forEach(i => i.value = '');
+        }
+    }
+
+    function activateSection(sectionId, infoBoxId) {
+        document.getElementById(sectionId).style.display = 'block';
+        document.getElementById(sectionId).classList.remove('hidden-section');
+        document.getElementById(infoBoxId).style.display = 'none';
+    }
+    function deactivateSection(sectionId, infoBoxId) {
+        const section = document.getElementById(sectionId);
+        section.style.display = 'none';
+        section.classList.add('hidden-section');
+        section.querySelectorAll('input, textarea').forEach(input => input.value = '');
+        if(infoBoxId) document.getElementById(infoBoxId).style.display = 'flex';
+    }
+    function toggleKefilDetay(selectElement) {
+        const detayDiv = selectElement.nextElementSibling;
+        detayDiv.style.display = (selectElement.value === "Evet") ? "block" : "none";
+        if(selectElement.value !== "Evet") detayDiv.querySelectorAll('input').forEach(inp => inp.value = '');
+    }
+    function toggleRiskGroup(selectElement) {
+        const panel = document.getElementById('riskGroupPanel');
+        panel.style.display = (selectElement.value === "Evet") ? "block" : "none";
+        panel.classList.toggle('hidden-section', selectElement.value !== "Evet");
+        if(selectElement.value !== "Evet") {
+            const table = document.getElementById('tableRiskGroup').getElementsByTagName('tbody')[0];
+            while(table.rows.length > 1) table.deleteRow(1);
+            table.rows[0].querySelectorAll('input').forEach(i => i.value = '');
+        }
+    }
+    function toggleKgfDetay(selectElement) {
+        const katman1 = document.getElementById('kgfKatman1');
+        const katman2 = document.getElementById('kgfKatman2');
+        if (selectElement.value === 'Var') {
+            katman1.style.display = 'block';
+            katman1.classList.remove('hidden-section');
+        } else {
+            katman1.style.display = 'none'; katman1.classList.add('hidden-section');
+            katman2.style.display = 'none'; katman2.classList.add('hidden-section');
+            katman1.querySelectorAll('select').forEach(s => s.value = '');
+        }
+    }
+    function toggleKgfKatman2(selectElement) {
+        const katman2 = document.getElementById('kgfKatman2');
+        if (selectElement.value === 'Hayır') {
+            katman2.style.display = 'block';
+            katman2.classList.remove('hidden-section');
+        } else {
+            katman2.style.display = 'none';
+            katman2.classList.add('hidden-section');
+            katman2.querySelectorAll('select').forEach(s => s.value = '');
+        }
+    }
+
+    function toggleGroupDetails(selectElement) {
+        const container = selectElement.parentElement.nextElementSibling;
+        if(selectElement.value === "Evet") {
+            container.style.display = "block";
+            container.classList.remove('hidden-section');
+        } else {
+            container.style.display = "none";
+            container.classList.add('hidden-section');
+            container.querySelector('input').value = "";
+        }
+    }
+
+    function toggleJointOwnership(selectElement) {
+        // Find the container for multiple owners (in new layout)
+        // Select is in: div(flex-center) -> div(flex-col) -> div.owner-container
+        const mainCol = selectElement.closest('.mortgage-main-column');
+        const multipleOwnerContainer = mainCol.querySelector('.owner-container');
+        
+        // Find single owner wrapper
+        // Structure: .mortgage-main-column -> div(flex-row) -> div.single-owner-wrapper
+        const singleOwnerWrapper = mainCol.querySelector('.single-owner-wrapper');
+
+        if (selectElement.value === 'Evet') {
+            multipleOwnerContainer.style.display = 'block'; 
+            singleOwnerWrapper.style.display = 'none'; // Hide single input
+            singleOwnerWrapper.querySelector('input').value = ''; // Clear
+        } else {
+            multipleOwnerContainer.style.display = 'none'; 
+            singleOwnerWrapper.style.display = 'block'; // Show single input
+            
+            const tbody = multipleOwnerContainer.querySelector('tbody');
+            while(tbody.rows.length > 1) tbody.deleteRow(1);
+            multipleOwnerContainer.querySelectorAll('input').forEach(i => i.value='');
+        }
+    }
+
+    function addOwnerRow(btn) {
+        const table = btn.previousElementSibling;
+        const tbody = table.querySelector('tbody');
+        const newRow = tbody.rows[0].cloneNode(true);
+        newRow.querySelectorAll('input').forEach(i => i.value = '');
+        tbody.appendChild(newRow);
+    }
+
+    function removeOwnerRow(btn) {
+        const row = btn.closest('tr');
+        const tbody = row.parentElement;
+        if(tbody.rows.length > 1) tbody.removeChild(row);
+    }
+
+    // --- YENİ İPOTEK YAPISI ---
+    function addMortgageBlock() {
+        const container = document.getElementById('mortgageContainer');
+        const blockDiv = document.createElement('div');
+        blockDiv.className = 'mortgage-block';
+        
+        blockDiv.innerHTML = `
+            <div style="display:flex; justify-content:space-between; border-bottom:1px solid #eee; padding-bottom:5px; margin-bottom:5px;">
+                <span style="font-weight:bold; color:var(--lh-black);">Gayrimenkul Bilgileri</span>
+                <button class="btn btn-danger btn-sm" onclick="removeMortgageBlock(this)">Bloğu Sil</button>
+            </div>
+            
+            <table class="styled-table mortgage-header-table">
+                <tr>
+                    <td width="33%"><span class="field-label">İl</span><input type="text" class="form-control" placeholder="İl Giriniz"></td>
+                    <td width="33%"><span class="field-label">İlçe</span><input type="text" class="form-control" placeholder="İlçe Giriniz"></td>
+                    <td width="34%"><span class="field-label">Mahalle/Köy</span><input type="text" class="form-control"></td>
+                </tr>
+                <tr>
+                    <td><span class="field-label">Ada</span><input type="text" class="form-control"></td>
+                    <td><span class="field-label">Parsel</span><input type="text" class="form-control"></td>
+                    <td>
+                        <div style="display:flex; gap:10px;">
+                            <div style="flex:1;"><span class="field-label">Blok</span><input type="text" class="form-control"></div>
+                            <div style="flex:1;"><span class="field-label">BB No</span><input type="text" class="form-control"></div>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td><span class="field-label">Ekspertiz Tarihi</span><input type="date" class="form-control"></td>
+                    <td colspan="2"><span class="field-label">Ekspertiz Tutarı</span><input type="text" class="form-control mortgage-appraisal-input" style="font-weight:bold;" oninput="calculateMortgageTotal()"></td>
+                </tr>
+                <tr>
+                    <td colspan="3" style="border-top:1px dashed #ddd; padding-top:10px;">
+                        <div class="mortgage-main-column" style="display:flex; flex-direction:column; gap:10px;">
+                            <div style="display:flex; align-items:flex-start; gap:10px; flex-wrap:wrap;">
+                                 <div style="flex:1; min-width:300px;" class="single-owner-wrapper"><span class="field-label">Malik Adı</span><input type="text" class="form-control"></div>
+                                 
+                                 <div style="display:flex; flex-direction:column; gap:5px;">
+                                    <div style="display:flex; align-items:center; gap:5px;">
+                                        <span class="field-label" style="margin:0;">Grup Teminatı mı?</span>
+                                        <select class="form-control" style="width:80px;" onchange="toggleGroupDetails(this)">
+                                            <option value="Hayır">Hayır</option>
+                                            <option value="Evet">Evet</option>
+                                        </select>
+                                    </div>
+                                    <div class="group-name-container hidden-section" style="display:none;">
+                                        <input type="text" class="form-control" placeholder="Grup Adı/Unvanı Giriniz" style="margin-top:2px; font-size:0.8rem;">
+                                    </div>
+                                 </div>
+
+                                 <div style="display:flex; align-items:center; gap:5px; height:32px;">
+                                    <span class="field-label" style="margin:0;">Hisseli mi?</span>
+                                    <select class="form-control" style="width:80px;" onchange="toggleJointOwnership(this)">
+                                        <option value="Hayır">Hayır</option>
+                                        <option value="Evet">Evet</option>
+                                    </select>
+                                 </div>
+                            </div>
+                            
+                            <div class="owner-container" style="display:none; width:100%; border-top:1px dashed #ccc; margin-top:5px; padding-top:5px;">
+                                <table class="owners-table"><thead><tr><th>Malik Adı Soyadı</th><th width="30%">Hisse</th><th width="30px"></th></tr></thead><tbody><tr><td><input type="text" class="form-control input-sm"></td><td><input type="text" class="form-control input-sm"></td><td><button class="btn btn-danger btn-sm" onclick="removeOwnerRow(this)">X</button></td></tr></tbody></table>
+                                <button class="btn btn-ghost btn-sm" onclick="addOwnerRow(this)">+ Ekle</button>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+
+            <div style="margin-top:10px; border-top:1px dashed #ccc; padding-top:5px;">
+                <span style="font-size:0.8rem; font-weight:bold; display:block; margin-bottom:5px;">İPOTEK DERECELERİ</span>
+                <table class="degree-table">
+                    <thead><tr><th width="15%">Derece</th><th width="25%">Yevmiye No</th><th width="25%">Tescil Tarihi</th><th width="30%">Tutar (TL)</th><th width="5%"></th></tr></thead>
+                    <tbody>
+                        <tr>
+                            <td><input type="text" class="form-control" placeholder="1. Derece"></td>
+                            <td><input type="text" class="form-control"></td>
+                            <td><input type="date" class="form-control"></td>
+                            <td><input type="text" class="form-control" style="font-weight:bold;"></td>
+                            <td class="row-action-cell"><button class="btn btn-danger btn-sm" onclick="removeDegreeRow(this)"><i class="fas fa-trash"></i></button></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button class="btn btn-ghost btn-sm" style="width:auto; margin-top:5px;" onclick="addDegreeRow(this)">+ Derece Ekle</button>
+            </div>
+        `;
+        container.appendChild(blockDiv);
+        calculateMortgageTotal(); // Update visibility
+    }
+
+    function addDegreeRow(btn) {
+        const tableBody = btn.previousElementSibling.querySelector('tbody');
+        const newRow = tableBody.rows[0].cloneNode(true);
+        newRow.querySelectorAll('input').forEach(i => i.value = '');
+        tableBody.appendChild(newRow);
+    }
+
+    function removeDegreeRow(btn) {
+        const row = btn.closest('tr');
+        const tbody = row.parentElement;
+        if(tbody.rows.length > 1) {
+            tbody.removeChild(row);
+        } else {
+            alert("En az bir derece satırı kalmalıdır.");
+        }
+    }
+
+    function removeMortgageBlock(btn) {
+        const block = btn.closest('.mortgage-block');
+        block.remove();
+        calculateMortgageTotal();
+    }
+
+    function toggleSection(sectionId, shouldShow) {
+        const section = document.getElementById(sectionId);
+        const btnId = sectionId.replace('sec', 'btnAdd');
+        const btn = document.getElementById(btnId);
+        if(shouldShow) {
+            section.style.display = 'block'; section.classList.remove('hidden-section'); 
+            if(btn) btn.style.display = 'none'; 
+            if(sectionId === 'secIpotek' && document.getElementById('mortgageContainer').children.length === 0) addMortgageBlock();
+        } else {
+            section.style.display = 'none'; section.classList.add('hidden-section');
+            if(btn) btn.style.display = 'flex'; 
+            if(sectionId === 'secIpotek') document.getElementById('mortgageContainer').innerHTML = '';
+            else section.querySelectorAll('input, textarea').forEach(input => input.value = '');
+            
+            // Hide totals if section hidden
+            if(sectionId === 'secIpotek') document.getElementById('mortgageTotalDisplay').classList.add('hidden-section');
+            if(sectionId === 'secArac') document.getElementById('vehicleTotalDisplay').classList.add('hidden-section');
+        }
+    }
+
+    function addRow(tableId) {
+        const table = document.getElementById(tableId).getElementsByTagName('tbody')[0];
+        const newRow = table.rows[0].cloneNode(true);
+        newRow.querySelectorAll('input, select').forEach(input => input.value = '');
+        if(tableId === 'tableKefalet') {
+            const content = newRow.querySelector('.multi-select-content');
+            const trigger = newRow.querySelector('.multi-select-trigger');
+            if(content) content.innerHTML = '';
+            if(trigger) trigger.innerText = 'Risk Seçiniz...';
+            if(content) content.classList.remove('show');
+        }
+        table.appendChild(newRow);
+        if(tableId === 'tableKefalet') { updateGuarantorDates(); updateGuarantorRiskOptions(); }
+        if(tableId === 'tableArac') { calculateVehicleTotal(); }
+    }
+
+    function removeRow(btn) {
+        const row = btn.closest('tr');
+        const tbody = row.parentElement;
+        if(tbody.rows.length > 1) {
+            tbody.removeChild(row);
+            if(tbody.parentElement.id === 'tableTakip') { updateGuarantorDates(); updateGuarantorRiskOptions(); }
+            if(tbody.parentElement.id === 'tableKefalet') { checkAnyDateWarning(); }
+            if(tbody.parentElement.id === 'tableArac') { calculateVehicleTotal(); }
+        } else alert("En az bir satır kalmalıdır.");
+    }
+
+    // --- HELPER: Parse Currency ---
+    function parseCurrency(str) {
+        if (!str) return 0;
+        // Remove thousands separators (.) and replace decimal separator (,) with (.)
+        const cleanStr = str.replace(/\./g, '').replace(',', '.');
+        return parseFloat(cleanStr) || 0;
+    }
+
+    function formatCurrency(num) {
+        return num.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    // --- CALCULATION FUNCTIONS ---
+    function calculateVehicleTotal() {
+        const inputs = document.querySelectorAll('.vehicle-pledge-input');
+        let total = 0;
+        inputs.forEach(input => {
+            total += parseCurrency(input.value);
+        });
+        
+        const display = document.getElementById('vehicleTotalDisplay');
+        if(inputs.length > 1) {
+            display.classList.remove('hidden-section');
+            display.style.display = 'block';
+            display.textContent = 'Toplam Rehin Bedeli: ' + formatCurrency(total) + ' TL';
+        } else {
+            display.classList.add('hidden-section');
+            display.style.display = 'none';
+        }
+    }
+
+    function calculateMortgageTotal() {
+        const inputs = document.querySelectorAll('.mortgage-appraisal-input');
+        let total = 0;
+        inputs.forEach(input => {
+            total += parseCurrency(input.value);
+        });
+
+        const display = document.getElementById('mortgageTotalDisplay');
+        if(inputs.length > 1) {
+            display.classList.remove('hidden-section');
+            display.style.display = 'block';
+            display.textContent = 'Toplam Ekspertiz Tutarı: ' + formatCurrency(total) + ' TL';
+        } else {
+            display.classList.add('hidden-section');
+            display.style.display = 'none';
+        }
+    }
+
+    function exportToWord() {
+        let content = document.getElementById('formContent').cloneNode(true);
+        
+        // --- DATA SYNC ---
+        const originalInputs = document.querySelectorAll('input, select, textarea');
+        const clonedInputs = content.querySelectorAll('input, select, textarea');
+        
+        for(let i=0; i<originalInputs.length; i++) {
+            clonedInputs[i].value = originalInputs[i].value;
+            if(originalInputs[i].type === 'checkbox' || originalInputs[i].type === 'radio') {
+                clonedInputs[i].checked = originalInputs[i].checked;
+                if(originalInputs[i].checked) clonedInputs[i].setAttribute('checked', 'checked');
+            }
+        }
+
+        // --- Cleanup ---
+        content.querySelectorAll('.hidden-section, .info-box, .add-section-panel, .btn, button, .row-action-cell, .currency-suffix').forEach(el => el.remove());
+        content.querySelectorAll('*').forEach(el => { 
+            // Keep specific displays visible if valid
+            if(el.classList.contains('cheque-details-container') && el.querySelectorAll('input')[0].value !== '') {
+               // keep
+            } 
+            else if(el.classList.contains('total-display') && el.style.display !== 'none') {
+                // keep totals visible, styling for word
+                el.style.border = "1px solid #000"; 
+                el.style.backgroundColor = "#eee";
+                el.style.textAlign = "right";
+                el.style.fontWeight = "bold";
+            }
+            else if(el.style.display === 'none') {
+                el.remove(); 
+            }
+        });
+        
+        content.querySelectorAll('.kefil-detay-panel, #riskGroupPanel, #kgfKatman1, #kgfKatman2, .cheque-details-container').forEach(panel => {
+             panel.style.border = "none"; panel.style.padding = "0"; panel.style.background = "transparent";
+        });
+
+        // --- RISK NO FIX ---
+        const originalWrappers = document.querySelectorAll('.multi-select-wrapper');
+        const clonedWrappers = content.querySelectorAll('.multi-select-wrapper');
+        
+        originalWrappers.forEach((origWrapper, index) => {
+            if(clonedWrappers[index]) {
+                const checkedBoxes = origWrapper.querySelectorAll('input[type="checkbox"]:checked:not([value="all"])');
+                const values = Array.from(checkedBoxes).map(cb => cb.value);
+                const text = values.length > 0 ? values.join(', ') : '';
+                const span = document.createElement('span');
+                span.textContent = text; span.style.fontWeight = "bold";
+                clonedWrappers[index].parentNode.replaceChild(span, clonedWrappers[index]);
+            }
+        });
+
+        // --- Standard Inputs to Text ---
+        const inputs = content.querySelectorAll('input, textarea, select');
+        inputs.forEach(el => {
+            let value = el.value;
+            if(el.tagName === 'SELECT') {
+                value = el.options[el.selectedIndex] ? el.options[el.selectedIndex].text : '';
+                if(value.includes('Seç') || value.includes('Önce')) value = '';
+            }
+            if(el.type === 'date' && value) value = value.split('-').reverse().join('.');
+            
+            const span = document.createElement('span');
+            span.textContent = value; span.style.fontWeight = "bold"; 
+            if(!value) span.innerHTML = "&nbsp;";
+            el.parentNode.replaceChild(span, el);
+        });
+
+        content.querySelectorAll('i').forEach(i => i.remove());
+
+        // --- Word Header ---
+        const wordHeader = `
+            <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+            <head><meta charset='utf-8'><title>Müşteri Föyü</title>
+            <style>
+                @page { margin: 0.5in; size: A4; }
+                body { font-family: 'Arial', sans-serif; font-size: 10pt; }
+                table { border-collapse: collapse; width: 100%; table-layout: fixed; margin-bottom: 10px; }
+                td, th { border: 1px solid black; padding: 4px; font-size: 9pt; vertical-align: top; word-wrap: break-word; }
+                th { background-color: #f0f0f0; font-weight: bold; text-align: left; }
+                h3 { font-size: 11pt; margin-top: 10px; margin-bottom: 5px; text-decoration: underline; color: black; text-transform: uppercase; }
+                .field-label { font-size: 7pt; color: #555; display:block; font-weight:bold; margin-bottom: 2px; }
+                .card { margin-bottom: 15px; border: 1px solid #ddd; padding: 5px; page-break-inside: avoid; }
+                .mortgage-block { border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 10px; }
+                .degree-table { width: 100%; border: 1px solid #000; margin-top: 5px; }
+                .degree-table th { background-color: #eee; }
+                .warning-box { border:1px solid #000; padding:5px; margin-bottom:10px; background-color:#eee; font-size:8pt; }
+                .customer-info-table { border: 1px solid #000; }
+                .customer-info-table td { border: 1px solid #000; }
+                .total-display { border: 1px solid #000; background: #eee; color: #000; padding: 5px; text-align: right; font-weight: bold; margin-top:5px; }
+            </style>
+            </head><body>`;
+        
+        const finalHtml = wordHeader + content.innerHTML + "</body></html>";
+        const blob = new Blob(['\ufeff', finalHtml], { type: 'application/msword' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url; link.download = 'Musteri_Foyu.doc';
+        document.body.appendChild(link); link.click(); document.body.removeChild(link);
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+# Yerel inceleme ve çalışma notları
+.portfolio-audit-work/
+123.txt
+.codex/
+.agents/
+
+# Ortam ve kimlik bilgileri
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Kullanıcı girdileri ve üretilmiş raporlar
+*.xlsx
+*.xls
+*.csv
+*.tsv
+*.zip
+*.log
+*.sqlite
+*.sqlite3
+*.db
+exports/
+output/
+private-data/
+
+# Demo verileri bilinçli olarak ayrıca eklenebilir
+!examples/**/*.csv
+!examples/**/*.tsv
+
+# Henüz portföy görseli olarak seçilmeyen yerel dosyalar
+Gemini_Generated_Image_*.png
+katip admin.png
+
+# İşletim sistemi / bağımlılıklar
+Thumbs.db
+Desktop.ini
+.DS_Store
+node_modules/
+
+# Not: Bu kurallar HTML içine gömülü veriyi veya mevcut Git geçmişini temizlemez.
