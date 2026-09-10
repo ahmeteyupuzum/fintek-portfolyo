@@ -1,6 +1,6 @@
 # Finansal Operasyon ve Veri Araçları
 
-Excel tabanlı operasyonları, raporlamayı ve belge hazırlamayı tarayıcı üzerinden destekleyen 19 HTML uygulamasından oluşan portföy.
+Excel tabanlı operasyonları, raporlamayı ve belge hazırlamayı tarayıcı üzerinden destekleyen 21 HTML uygulamasından oluşan portföy.
 
 ## Genel bakış
 
@@ -31,6 +31,8 @@ Her grubun özellikleri, giriş dosyaları ve kullanım adımları için [proje 
 | [Müşteri föyü](Takipli-musteri-foyu.HTML) | Kurumsal müşteri bilgilerini yapılandırılmış formda hazırlama |
 | [Özgeçmiş hazırlama](ÖZGEÇMİŞ%20OLUŞTURMA%20ARACI.html) | Form üzerinden özgeçmiş oluşturma ve PDF çıktısı alma |
 | [Tahsilat projeksiyonu](tahsilat%20projeksiyonu.html) | Aylık tahsilatlardan yıl sonu projeksiyonu ve hedef simülasyonu; [README ve örnek veri](docs/projects/collection-projection/README.md) |
+| [Portföy vaziyeti ve risk sinyal kokpiti](Portföy%20vaziyeti%20ve%20risk%20sinyal%20kokpiti.html) | Portföy, risk sinyalleri ve aksiyon öncelikleri; [README](docs/projects/portfolio-risk-cockpit/README.md) |
+| [V-İZLEME kredi portföy radarı](V-IZLEME_KREDI_PORTFOY_RADARI.html) | Dönem/bölge/şube karşılaştırmaları; [README](docs/projects/credit-monitoring-radar/README.md) |
 
 ## Teknolojiler
 
@@ -44,7 +46,7 @@ Her uygulama bu bağımlılıkların yalnızca ihtiyaç duyduğu bölümünü ku
 
 Genel akış: kullanıcı formu veya dosya seçimi → tarayıcıda işleme → tablo, grafik veya belge → dosya indirme/yazdırma.
 
-Bazı uygulamalar görüntüleme tercihlerini veya şablonlarını `localStorage` içinde tutar. Bazı HTML rapor çıktıları veriyi doğrudan dosyaya gömer. Mesafe aracı koordinatları OSRM'ye gönderir; harita ve CDN bağımlılıkları da ağ erişimi kullanır. Bu nedenle koleksiyonun tamamı için “tamamen çevrimdışı” ifadesi kullanılmaz.
+Risk sinyal kokpiti dönem arşivini IndexedDB içinde tutar. Bazı uygulamalar görüntüleme tercihlerini veya şablonlarını `localStorage` içinde tutar. Bazı HTML rapor çıktıları veriyi doğrudan dosyaya gömer. Mesafe aracı koordinatları OSRM'ye gönderir; harita ve CDN bağımlılıkları da ağ erişimi kullanır. Bu nedenle koleksiyonun tamamı için “tamamen çevrimdışı” ifadesi kullanılmaz.
 
 ## Kurulum ve kullanım
 

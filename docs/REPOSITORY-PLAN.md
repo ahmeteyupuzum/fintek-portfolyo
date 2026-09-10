@@ -19,6 +19,8 @@ Bu aşamada kaynak dosyalar taşınmadı veya yeniden adlandırılmadı. Aşağ�
 | `branch-route-tools` | Excel koordinatlarından harita ve OSRM mesafe sorgulama | javascript, leaflet, osrm |
 | `browser-resume-builder` | Form tabanlı özgeçmiş ve PDF çıktısı | javascript, html2pdf, resume-builder |
 | `collection-projection` | Aylık tahsilatlardan projeksiyon ve hedef simülasyonu | javascript, chartjs, sheetjs, simulation |
+| `portfolio-risk-cockpit` | Portföy, risk sinyalleri ve aksiyon öncelikleri | javascript, indexeddb, dashboard |
+| `credit-monitoring-radar` | Dönemsel kredi portföyü karşılaştırmaları | javascript, chartjs, exceljs |
 
 ## Bağımsız repository için asgari düzen
 
@@ -43,6 +45,6 @@ KATIP gibi iki girişli uygulamalarda `admin.html` ve `viewer.html` kullanılabi
 
 ## Mevcut GitHub durumu
 
-İlk incelemede [fintek-portfolyo](https://github.com/ahmeteyupuzum/fintek-portfolyo) herkese açıktı; `main` dalında 13 HTML dosyası vardı. Bu yayın paketi yerel 19 HTML uygulamasını, ana README'yi ve 13 proje grubunun kullanım sayfalarını içerir. Önceden yüklenen 10 eski dosya ve yönlendirme kaldırılmıştır; ana README yalnızca güncel 19 uygulama girişini listeler. Önceki kaynak sürümleri Git geçmişinde korunur.
+İlk incelemede [fintek-portfolyo](https://github.com/ahmeteyupuzum/fintek-portfolyo) herkese açıktı; `main` dalında 13 HTML dosyası vardı. Bu yayın paketi yerel 21 HTML uygulamasını, ana README'yi ve 15 proje grubunun kullanım sayfalarını içerir. Önceden yüklenen 10 eski dosya ve yönlendirme kaldırılmıştır; ana README yalnızca güncel 21 uygulama girişini listeler. Önceki kaynak sürümleri Git geçmişinde korunur.
 
-Bu çalışma kaynak kod değişikliği veya yeni bir deployment yapılandırması içermez. Mevcut GitHub Pages ayarları yayından sonra otomatik çalışabilir. `.gitignore`, GitHub'da zaten izlenen dosyaları veya geçmiş commit'leri kaldırmaz.
+Bu ekleme mevcut hesaplama mantığını değiştirmez; yeni bir deployment yapılandırması içermez. Mevcut GitHub Pages ayarları yayından sonra otomatik çalışabilir. `.gitignore`, GitHub'da zaten izlenen dosyaları veya geçmiş commit'leri kaldırmaz.
