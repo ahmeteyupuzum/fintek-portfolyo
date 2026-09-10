@@ -31,9 +31,15 @@ Giriş dosyasını indirip masaüstü tarayıcıda açın. CDN kullanan dosyalar
 
 ## Mevcut sınırlar
 
-İzleme dosyasında 17 kategori ve 96 içerik şablonu bulunur. Mod ayrımı tarayıcı arayüzündedir; bir sunucu kimlik doğrulama sistemi olarak sunulmaz.
+Her iki dosya ilk açılışta 17 kategori ve 96 sentetik belge örneği sunar. Genel belge başlıkları korunmuş, eski belge gövdeleri tamamen demo içerikle değiştirilmiştir. Örnekler asıl hukuki/kurumsal şablon metinlerinin yerine kullanılamaz. Mod ayrımı tarayıcı arayüzündedir; bir sunucu kimlik doğrulama sistemi olarak sunulmaz.
 
-Otomatik test ve CI kurulumu bu aşamanın kapsamı dışındadır. Bu sayfa testlerin geçtiği veya yeni bir demo yayımlandığı iddiasını içermez.
+Uygulama logoları aynen korunmuştur. Kişi, kurum, şube, bölge, adres, dosya referansı ve tutarlar sentetiktir. T.C. kimlik ve iletişim bilgileri kaldırılmıştır. Eski belge gövdelerindeki görsel/ekler demo paketine alınmamıştır.
+
+Demo `katip_public_demo_v1` saklama anahtarını kullanır; eski tarayıcı kayıtlarını otomatik yüklemez veya silmez. Sonradan içe aktarılan dosyalar otomatik anonimleştirilmez.
+
+Sınırlı kontroller: JavaScript sözdizimi, iki modun başlangıç verisi, 17 kategori / 96 belge bağlantıları, taşınabilir JSON dönüşümü ve uygulama logolarının değişmediği doğrulandı. Logo dışındaki kaynakta 11 haneli sayı veya e-posta kalmadığı kontrol edildi. Tam tarayıcı/editör/çıktı testi ve CI kurulumu yapılmadı.
+
+Bu güncelleme Git geçmişindeki eski dosyaları kaldırmaz. [Demo inceleme notları](../../PUBLIC-DEMO-NOTES.md).
 
 ## Portföyde gösterdiği çalışmalar
 
