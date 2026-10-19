@@ -1,6 +1,8 @@
 # Proje Tanıtım ve Kullanım Sayfaları
 
-21 HTML dosyası, ilişkili mod ve araçları birlikte tutan 15 proje grubunda açıklanmıştır. Aşağıdaki adlar önerilen repository adlarıdır; kaynaklar taşınmamıştır.
+22 HTML dosyası, ilişkili mod ve araçları birlikte tutan 16 proje grubunda açıklanmıştır. Aşağıdaki adlar önerilen repository adlarıdır; kaynaklar taşınmamıştır.
+
+- [Tahsilat Hedefleme ve Senaryo Platformu](collection-targeting/README.md): İl/EYO ve ortak EYO geçmişini birleştiren parametrik hedefleme; sentetik demo, hayali SQL şeması ve otomatik testler.
 
 - [Kredi Portföyü ve Takip Paneli](credit-portfolio-dashboard/README.md): Kredi portföyü ve takip verilerini grafikler, tablolar ve taşınabilir raporlarla incelemeyi sağlayan tarayıcı uygulaması.
 - [Tahsilat Performans Panelleri](collection-performance-dashboard/README.md): Bölgesel ve merkezi tahsilat verilerini hedeflerle karşılaştırmaya yönelik iki raporlama aracı.
@@ -20,3 +22,4 @@
 - [V-İZLEME Kredi Portföy Radarı](credit-monitoring-radar/README.md): Dönem, bölge ve şube bazında karşılaştırmalı raporlama.
 
 [Ana portföy](../../README.md) · [Repository planı](../REPOSITORY-PLAN.md)
+

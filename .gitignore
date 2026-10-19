@@ -24,6 +24,10 @@
 exports/
 output/
 private-data/
+HEDEF_PROJE_*.json
+*real_test*
+__pycache__/
+*.pyc
 
 # Demo verileri bilinçli olarak ayrıca eklenebilir
 !examples/**/*.csv
@@ -41,3 +45,4 @@ Desktop.ini
 node_modules/
 
 # Not: Bu kurallar HTML içine gömülü veriyi veya mevcut Git geçmişini temizlemez.
+

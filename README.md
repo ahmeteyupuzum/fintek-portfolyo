@@ -1,6 +1,6 @@
 # Finansal Operasyon ve Veri Araçları
 
-Excel tabanlı operasyonları, raporlamayı ve belge hazırlamayı tarayıcı üzerinden destekleyen 21 HTML uygulamasından oluşan portföy.
+Excel tabanlı operasyonları, raporlamayı ve belge hazırlamayı tarayıcı üzerinden destekleyen 22 HTML uygulamasından oluşan portföy.
 
 ## Genel bakış
 
@@ -12,6 +12,7 @@ Her grubun özellikleri, giriş dosyaları ve kullanım adımları için [proje 
 
 | Uygulama / giriş dosyası | Amaç |
 | --- | --- |
+| [Tahsilat Hedefleme ve Senaryo Platformu](TAHSILAT-HEDEFLEME-DEMO.html) | İl + EYO / Bölge ortak EYO oranları, performans katsayısı ve bağımsız Bölge/Merkez yönetim hedefleri; [tanıtım, sentetik veri ve testler](docs/projects/collection-targeting/README.md) |
 | [Bölge bazlı Excel ayırıcı](ayırıcı3.html) | Çalışma sayfasını bölgelere ayırıp Excel ve ZIP çıktısı oluşturma |
 | [Excel → JSON](EXCELLTOJSONCONVERTER.html) | İlk çalışma sayfasını JSON'a dönüştürme ve önizleme |
 | [Şube ve bölge haritası](harita%20oluştur.html) | Excel koordinatlarını haritada gösterme, HTML çıktısı alma |
@@ -57,7 +58,7 @@ Risk sinyal kokpiti dönem arşivini IndexedDB içinde tutar. Bazı uygulamalar 
 
 Örnek: Excel → JSON aracı `.xlsx`, `.xls` ve `.csv` dosyası kabul eder; ilk sayfayı okur, ilk beş kaydı önizler ve JSON indirir. Bölge ayırıcıda `BÖLGE ADI` sütunu kullanılır. Harita aracının beklediği sütunlar `SubeAdi`, `SubeLat`, `SubeLong`, `BolgeAdi`, `BolgeLat`, `BolgeLong` ve `Mesafe` şeklindedir.
 
-Mevcut kaynaklarda environment variable üzerinden yapılandırma altyapısı yoktur; bu nedenle `.env.example` eklenmemiştir. Finansal parametreler ve dönem kuralları ilgili dosyadan kontrol edilmelidir; burada güncel kurum politikalarıyla uyumluluk iddia edilmez.
+Mevcut kaynaklarda environment variable üzerinden yapılandırma altyapısı yoktur; bu nedenle `.env.example` eklenmemiştir. Finansal parametreler ve dönem kuralları ilgili dosyadan kontrol edilmelidir; burada güncel kurum politikalarıyla uyumluluk iddia edilmez. Yeni hedefleme demosu bağımsız bir sentetik veri seti ve hayali şema/tablo/kaynak sütunları içeren SQL örnekleriyle sunulur.
 
 ## Klasör yapısı
 
@@ -71,7 +72,7 @@ docs/projects/            Proje gruplarının ayrıntılı tanıtım ve kullanı
 
 ## Doğrulama ve mevcut sınırlar
 
-Bu düzenleme dokümantasyon ve repository hazırlığı kapsamındadır. Kullanıcı tercihi doğrultusunda kod kalitesi analizi ve test geliştirme aşaması durdurulmuştur. Uygulamaların uçtan uca doğrulandığı veya finansal hesapların onaylandığı iddia edilmez. Mevcut koleksiyonda otomatik test/CI altyapısı bulunmaz.
+Önceki dokümantasyon düzenlemesinde koleksiyon genelinde kod kalitesi analizi ve test geliştirme yapılmamıştır. Uygulamaların tümünün uçtan uca doğrulandığı veya finansal hesapların onaylandığı iddia edilmez. Yeni Tahsilat Hedefleme demosunun `tests/collection-targeting/` altında modele, işlevsel DOM/Excel/JSON akışlarına, sentetik SQL'e ve içerik kontrollerine özel testleri vardır; bunlar diğer uygulamaları kapsamaz. Gerçek tarayıcı yerleşimi ve canlı Oracle testi yapılmamıştır. Repository genelinde CI kurulmamıştır.
 
 CDN erişimi, giriş dosyasının sütunları ve uygulamaya gömülü dönem parametreleri çalışmayı etkiler. Gömülü rapor verilerinin sentetik olduğu doğrulanmamıştır. Kurum içi kullanım ile herkese açık demo içeriği ayrı değerlendirilmelidir.
 
@@ -85,3 +86,4 @@ CDN erişimi, giriş dosyasının sütunları ve uygulamaya gömülü dönem par
 ## Lisans
 
 Henüz bir açık kaynak lisansı seçilmemiştir. Bu dosya bir lisans vermez; kaynak kod, üçüncü taraf bileşenler, kurum işaretleri ve gömülü içerik için kullanım/paylaşım hakları ayrıca değerlendirilmelidir.
+
